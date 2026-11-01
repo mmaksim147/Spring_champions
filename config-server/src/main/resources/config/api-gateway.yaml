@@ -61,3 +61,6 @@ logging:
   level:
     org.springframework.cloud.gateway: DEBUG
     org.springframework.cloud.loadbalancer: DEBUG
+
+jwt:
+  secret: C+BL4pqxgVW4m9dkPUszLdTihaxjkubBZGXnJe5s1Bg=
