@@ -2,14 +2,8 @@ server:
   port: 8080
 
 spring:
-  application:
-    name: api-gateway
   cloud:
     gateway:
-      discovery:
-        locator:
-          enabled: true
-          lower-case-service-id: true
       routes:
         - id: auth-service
           uri: lb://auth-service
@@ -17,24 +11,65 @@ spring:
             - Path=/api/auth/**
           filters:
             - StripPrefix=1
+            - name: CircuitBreaker
+              args:
+                name: authServiceCB
+                fallbackUri: forward:/fallback/auth
+
         - id: product-service
           uri: lb://product-service
           predicates:
             - Path=/api/products/**,/api/categories/**,/api/builds/**
           filters:
             - StripPrefix=1
+            - name: CircuitBreaker
+              args:
+                name: productServiceCB
+                fallbackUri: forward:/fallback/product
+
         - id: compatibility-service
           uri: lb://compatibility-service
           predicates:
             - Path=/api/compatibility/**
           filters:
             - StripPrefix=1
+            - name: CircuitBreaker
+              args:
+                name: compatibilityServiceCB
+                fallbackUri: forward:/fallback/compatibility
+
         - id: order-service
           uri: lb://order-service
           predicates:
             - Path=/api/orders/**
           filters:
             - StripPrefix=1
+            - name: CircuitBreaker
+              args:
+                name: orderServiceCB
+                fallbackUri: forward:/fallback/order
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      authServiceCB:
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
+        permittedNumberOfCallsInHalfOpenState: 3
+        registerHealthIndicator: true
+      productServiceCB:
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
+      compatibilityServiceCB:
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
+      orderServiceCB:
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
 
 eureka:
   client:
@@ -52,7 +87,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,gateway
+        include: health,info,gateway,metrics,env
   health:
     circuitbreakers:
       enabled: true
@@ -61,3 +96,6 @@ logging:
   level:
     org.springframework.cloud.gateway: DEBUG
     org.springframework.cloud.loadbalancer: DEBUG
+
+jwt:
+  secret: C+BL4pqxgVW4m9dkPUszLdTihaxjkubBZGXnJe5s1Bg=

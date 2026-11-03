@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Вход</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f4f7; }
+        .auth { max-width: 400px; margin: 100px auto; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        h1 { text-align: center; margin-bottom: 20px; }
+        input { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
+        button { width: 100%; padding: 10px; background: #2563eb; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 15px; }
+        button:hover { background: #1d4ed8; }
+        .error { color: red; text-align: center; margin-bottom: 10px; }
+        .success { color: green; text-align: center; margin-bottom: 10px; }
+        a { display: block; text-align: center; margin-top: 10px; color: #2563eb; }
+    </style>
+</head>
+<body>
+<div class="auth">
+    <h1>Вход</h1>
+    <div th:if="${error}" class="error" th:text="${error}"></div>
+    <div th:if="${param.registered}" class="success">Регистрация успешна, войдите</div>
+    <form method="post" action="/login">
+        <input type="text" name="username" placeholder="Логин" required>
+        <input type="password" name="password" placeholder="Пароль" required>
+        <button type="submit">Войти</button>
+    </form>
+    <a href="/register">Регистрация</a>
+</div>
+</body>
+</html>
