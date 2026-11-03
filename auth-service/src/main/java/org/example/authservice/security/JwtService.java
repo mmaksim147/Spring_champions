@@ -2,16 +2,15 @@ package org.example.authservice.security;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import org.example.authservice.model.Role;
+import org.example.authservice.model.User;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.function.Function;
 
 @Service
@@ -27,15 +26,19 @@ public class JwtService {
         return Keys.hmacShaKeyFor(secret.getBytes());
     }
 
-    public String generateToken(UserDetails userDetails) {
-        Map<String, Object> claims = new HashMap<>();
-        claims.put("roles", userDetails.getAuthorities());
+    public String generateToken(User user) {
+        Date now = new Date();
+        Date expiry = new Date(now.getTime() + expiration);
+
         return Jwts.builder()
-                .claims(claims)
-                .subject(userDetails.getUsername())
-                .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + expiration))
-                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+                .subject(user.getUsername())
+                .claim("userId", user.getId())
+                .claim("roles", user.getRoles().stream()
+                        .map(Role::getName)
+                        .toList())
+                .issuedAt(now)
+                .expiration(expiry)
+                .signWith(getSigningKey())
                 .compact();
     }
 

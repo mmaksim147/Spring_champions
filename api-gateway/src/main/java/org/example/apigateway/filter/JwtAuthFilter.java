@@ -15,6 +15,7 @@ import reactor.core.publisher.Mono;
 
 import javax.crypto.SecretKey;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 public class JwtAuthFilter implements GlobalFilter, Ordered {
@@ -23,10 +24,10 @@ public class JwtAuthFilter implements GlobalFilter, Ordered {
     private String secret;
 
     private static final List<String> PUBLIC_PATHS = List.of(
-            "/api/auth/login",
-            "/api/auth/register",
+            "/api/auth/",
             "/swagger-ui",
-            "/v3/api-docs"
+            "/v3/api-docs",
+            "/actuator/"
     );
 
     private SecretKey getSigningKey() {
@@ -57,11 +58,17 @@ public class JwtAuthFilter implements GlobalFilter, Ordered {
                     .getPayload();
 
             String username = claims.getSubject();
+            Long userId = claims.get("userId", Long.class);
             List<?> roles = claims.get("roles", List.class);
 
+            String rolesString = roles != null
+                    ? roles.stream().map(Object::toString).collect(Collectors.joining(","))
+                    : "";
+
             ServerHttpRequest mutatedRequest = request.mutate()
+                    .header("X-User-Id", userId != null ? userId.toString() : "")
                     .header("X-User-Name", username)
-                    .header("X-User-Roles", roles != null ? roles.toString() : "")
+                    .header("X-User-Roles", rolesString)
                     .build();
 
             return chain.filter(exchange.mutate().request(mutatedRequest).build());

@@ -26,7 +26,6 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
-    private final CustomUserDetailsService userDetailsService;
 
     public AuthService(UserRepository userRepository,
                        RoleRepository roleRepository,
@@ -39,7 +38,6 @@ public class AuthService {
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.authenticationManager = authenticationManager;
-        this.userDetailsService = userDetailsService;
     }
 
     public AuthResponse register(RegisterRequest request) {
@@ -61,8 +59,7 @@ public class AuthService {
         user.setRoles(Set.of(userRole));
         userRepository.save(user);
 
-        UserDetails userDetails = userDetailsService.loadUserByUsername(user.getUsername());
-        String token = jwtService.generateToken(userDetails);
+        String token = jwtService.generateToken(user);
 
         return new AuthResponse(
                 token,
@@ -79,8 +76,7 @@ public class AuthService {
         User user = userRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        UserDetails userDetails = userDetailsService.loadUserByUsername(user.getUsername());
-        String token = jwtService.generateToken(userDetails);
+        String token = jwtService.generateToken(user);
 
         return new AuthResponse(
                 token,

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Каталог</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f4f7; margin: 0; }
+        .header { background: #1e293b; color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; }
+        .container { max-width: 1200px; margin: 20px auto; padding: 0 20px; }
+        .products { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; }
+        .product { background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .product h3 { margin: 0 0 10px; font-size: 16px; }
+        .price { color: #2563eb; font-weight: 700; }
+        .error { color: red; }
+        a { color: #2563eb; }
+    </style>
+</head>
+<body>
+<div class="header">
+    <span>Вы вошли как <b th:text="${username}"></b></span>
+    <a href="/logout" style="color: white;">Выйти</a>
+</div>
+
+<div class="container">
+    <h1>Каталог компонентов</h1>
+    <div th:if="${error}" class="error" th:text="${error}"></div>
+
+    <div class="products">
+        <div class="product" th:each="product : ${products}">
+            <h3 th:text="${product.name}"></h3>
+            <p class="price" th:text="${product.price} + ' ₽'"></p>
+        </div>
+    </div>
+</body>
+</html>
