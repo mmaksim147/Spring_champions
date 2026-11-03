@@ -1,4 +1,4 @@
-package org.example.productservice.controller;
+/*package org.example.productservice.controller;
 
 import org.example.productservice.dto.ProductDto;
 import org.springframework.http.ResponseEntity;
@@ -16,4 +16,4 @@ public class ProductController {
                 new ProductDto(2L, "Product 2", 2000.0)
         ));
     }
-}
+}*/

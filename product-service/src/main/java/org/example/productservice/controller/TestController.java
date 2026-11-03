@@ -1,4 +1,4 @@
-package org.example.productservice.controller;
+/*package org.example.productservice.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,4 +21,4 @@ public class TestController {
                 "X-User-Roles", roles != null ? roles : "null"
         ));
     }
-}
+}*/

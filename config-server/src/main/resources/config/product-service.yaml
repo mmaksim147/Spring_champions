@@ -1,3 +1,6 @@
+server:
+  port: 8082
+  forward-headers-strategy: framework
 spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/product_db
@@ -28,5 +31,5 @@ management:
       show-details: always
 
 springdoc:
-  swagger-ui:
-    path: /swagger-ui.html
+  server:
+    url: http://localhost:8080/api/products

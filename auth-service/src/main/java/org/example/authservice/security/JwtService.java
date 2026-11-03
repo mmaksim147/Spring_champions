@@ -3,6 +3,7 @@ package org.example.authservice.security;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
 import org.example.authservice.model.Role;
 import org.example.authservice.model.User;
 import org.springframework.beans.factory.annotation.Value;
@@ -66,5 +67,24 @@ public class JwtService {
 
     private boolean isTokenExpired(String token) {
         return extractClaim(token, Claims::getExpiration).before(new Date());
+    }
+
+    private String getSecretFingerprint() {
+        try {
+            byte[] hash = java.security.MessageDigest
+                    .getInstance("SHA-256")
+                    .digest(secret.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+
+            return java.util.HexFormat.of().formatHex(hash);
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    @PostConstruct
+    public void printSecretFingerprint() {
+
+        System.out.println("JWT SECRET FINGERPRINT: " + getSecretFingerprint());
+
     }
 }

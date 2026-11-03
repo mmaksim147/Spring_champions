@@ -1,3 +1,6 @@
+server:
+  port: 8083
+  forward-headers-strategy: framework
 spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/order_db
@@ -12,6 +15,10 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
+  cloud:
+    openfeign:
+      okhttp:
+        enabled: true
 
 eureka:
   client:
@@ -46,5 +53,5 @@ management:
       show-details: always
 
 springdoc:
-  swagger-ui:
-    path: /swagger-ui.html
+  server:
+    url: http://localhost:8080/api/orders

@@ -1,3 +1,4 @@
+
 server:
   port: 8080
 
@@ -5,7 +6,45 @@ spring:
   cloud:
     gateway:
       routes:
-        - id: auth-service
+        - id: auth-swagger
+          uri: lb://auth-service
+          predicates:
+            - Path=/v3/api-docs/auth
+          filters:
+            - SetPath=/v3/api-docs
+
+        - id: product-swagger
+          uri: lb://product-service
+          predicates:
+            - Path=/v3/api-docs/product
+          filters:
+            - SetPath=/v3/api-docs
+
+        - id: compatibility-swagger
+          uri: lb://compatibility-service
+          predicates:
+            - Path=/v3/api-docs/compatibility
+          filters:
+            - SetPath=/v3/api-docs
+
+        - id: order-swagger
+          uri: lb://order-service
+          predicates:
+            - Path=/v3/api-docs/order
+          filters:
+            - SetPath=/v3/api-docs
+
+        - id: auth-api-short
+          uri: lb://auth-service
+          predicates:
+            - Path=/auth/login,/auth/register,/admin/**,/users/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: authServiceCB
+                fallbackUri: forward:/fallback/auth
+
+        - id: auth-api
           uri: lb://auth-service
           predicates:
             - Path=/api/auth/**
@@ -16,10 +55,20 @@ spring:
                 name: authServiceCB
                 fallbackUri: forward:/fallback/auth
 
-        - id: product-service
+        - id: product-api-short
           uri: lb://product-service
           predicates:
-            - Path=/api/products/**,/api/categories/**,/api/builds/**
+            - Path=/components,/components/**,/categories,/categories/**,/builds,/builds/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: productServiceCB
+                fallbackUri: forward:/fallback/product
+
+        - id: product-api
+          uri: lb://product-service
+          predicates:
+            - Path=/api/products/**,/api/categories/**,/api/builds/**,/api/components/**
           filters:
             - StripPrefix=1
             - name: CircuitBreaker
@@ -27,7 +76,17 @@ spring:
                 name: productServiceCB
                 fallbackUri: forward:/fallback/product
 
-        - id: compatibility-service
+        - id: compatibility-api-short
+          uri: lb://compatibility-service
+          predicates:
+            - Path=/compatibility,/compatibility/**,/check,/check/**,/rules,/rules/**,/logs,/logs/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: compatibilityServiceCB
+                fallbackUri: forward:/fallback/compatibility
+
+        - id: compatibility-api
           uri: lb://compatibility-service
           predicates:
             - Path=/api/compatibility/**
@@ -38,7 +97,17 @@ spring:
                 name: compatibilityServiceCB
                 fallbackUri: forward:/fallback/compatibility
 
-        - id: order-service
+        - id: order-api-short
+          uri: lb://order-service
+          predicates:
+            - Path=/orders,/orders/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: orderServiceCB
+                fallbackUri: forward:/fallback/order
+
+        - id: order-api
           uri: lb://order-service
           predicates:
             - Path=/api/orders/**
@@ -81,7 +150,7 @@ eureka:
 management:
   endpoint:
     gateway:
-      enabled: true   # <-- КРИТИЧЕСКИ ВАЖНО: без этой строки /actuator/gateway/routes вернёт 404
+      enabled: true
     health:
       show-details: always
   endpoints:
@@ -98,4 +167,16 @@ logging:
     org.springframework.cloud.loadbalancer: DEBUG
 
 jwt:
-  secret: C+BL4pqxgVW4m9dkPUszLdTihaxjkubBZGXnJe5s1Bg=
+  secret: 1h0FhMtnHGyjVa6yMJh4Si5TgOJNuzl7IGLcY9LXIc=
+
+springdoc:
+  swagger-ui:
+    urls:
+      - name: Auth Service
+        url: /v3/api-docs/auth
+      - name: Product Service
+        url: /v3/api-docs/product
+      - name: Compatibility Service
+        url: /v3/api-docs/compatibility
+      - name: Order Service
+        url: /v3/api-docs/order
