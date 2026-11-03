@@ -1,3 +1,4 @@
+
 package org.example.authservice.security;
 
 import org.springframework.context.annotation.Bean;
@@ -38,7 +39,8 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
                                 "/v3/api-docs/**",
-                                "/actuator/**"
+                                "/actuator/**",
+                                "/error"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
