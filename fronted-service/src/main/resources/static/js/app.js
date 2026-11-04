@@ -1,168 +1,150 @@
-let state = { categories: [], components: [], builds: [] };
+// Глобальные данные
+let allProducts = [];
+let allCategories = [];
 
-async function initApp() {
+// Инициализация при загрузке
+window.onload = async () => {
+    checkAuthState();
+    await loadCategoriesAndProducts();
+};
+
+// --- АВТОРИЗАЦИЯ ---
+
+function checkAuthState() {
     const token = localStorage.getItem('token');
-    const root = document.getElementById('app-root');
+    const authBtns = document.getElementById('auth-buttons');
+    const userProfile = document.getElementById('user-profile');
 
-    if (!token) {
-        await loadPage('login', root);
-        return;
+    if (token) {
+        authBtns.classList.add('hidden');
+        userProfile.classList.remove('hidden');
+    } else {
+        authBtns.classList.remove('hidden');
+        userProfile.classList.add('hidden');
     }
-
-    root.innerHTML = `
-        <div style="display: flex; flex-direction: column; height: 100vh;">
-            <header>
-                <div>
-                    <h1>⚙️ PC Builder Admin</h1>
-                    <nav>
-                        <button class="active" onclick="switchTab('components', this)">Комплектующие</button>
-                        <button onclick="switchTab('categories', this)">Категории</button>
-                        <button onclick="switchTab('builds', this)">Сборки</button>
-                    </nav>
-                </div>
-                <button class="danger" style="width: auto; padding: 8px 16px;" onclick="logout()">Выйти</button>
-            </header>
-            <div id="dynamic-content" style="flex: 1; overflow: hidden;"></div>
-        </div>
-    `;
-
-    await loadPage('components', document.getElementById('dynamic-content'));
-    await loadPage('categories', document.getElementById('dynamic-content'));
-    await loadPage('builds', document.getElementById('dynamic-content'));
-
-    await loadAllData();
-    switchTab('components', document.querySelector('nav button'));
 }
 
-async function loadPage(pageName, container) {
-    const res = await fetch(`/pages/${pageName}.html`);
-    const html = await res.text();
-    container.insertAdjacentHTML('beforeend', html);
+function openAuth(type) {
+    document.getElementById('auth-modal').classList.remove('hidden');
+    document.getElementById('auth-error').innerText = '';
+
+    if (type === 'login') {
+        document.getElementById('modal-title').innerText = 'Вход в аккаунт';
+        document.getElementById('login-form').classList.remove('hidden');
+        document.getElementById('register-form').classList.add('hidden');
+    } else {
+        document.getElementById('modal-title').innerText = 'Создание аккаунта';
+        document.getElementById('login-form').classList.add('hidden');
+        document.getElementById('register-form').classList.remove('hidden');
+    }
 }
 
-function switchTab(tabId, btn) {
-    document.querySelectorAll('.page-container').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
-    document.getElementById('page-' + tabId).classList.add('active');
-    btn.classList.add('active');
+function closeAuth() {
+    document.getElementById('auth-modal').classList.add('hidden');
 }
 
-async function loadAllData() {
+function logout() {
+    localStorage.removeItem('token');
+    checkAuthState();
+    location.reload(); // Перезагружаем, чтобы сбросить состояние
+}
+
+// Обработка форм
+document.getElementById('login-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const username = document.getElementById('login-username').value;
+    const password = document.getElementById('login-password').value;
+
     try {
-        state.categories = await apiRequest('/categories');
-        state.components = await apiRequest('/components');
-        state.builds = await apiRequest('/builds');
+        const data = await apiRequest('/auth/login', 'POST', { username, password });
+        localStorage.setItem('token', data.token);
+        closeAuth();
+        checkAuthState();
+        // Можно перезагрузить страницу, чтобы применить права
+        location.reload();
+    } catch (err) {
+        document.getElementById('auth-error').innerText = err.message;
+    }
+});
 
-        if(state.categories.content) state.categories = state.categories.content;
-        if(state.components.content) state.components = state.components.content;
-        if(state.builds.content) state.builds = state.builds.content;
+document.getElementById('register-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const username = document.getElementById('reg-username').value;
+    const email = document.getElementById('reg-email').value;
+    const password = document.getElementById('reg-password').value;
+
+    try {
+        await apiRequest('/auth/register', 'POST', { username, email, password });
+        alert('Регистрация успешна! Теперь войдите.');
+        openAuth('login');
+    } catch (err) {
+        document.getElementById('auth-error').innerText = err.message;
+    }
+});
+
+// --- КАТАЛОГ ---
+
+async function loadCategoriesAndProducts() {
+    try {
+        // Загружаем категории
+        allCategories = await apiRequest('/categories');
+        if (allCategories.content) allCategories = allCategories.content; // Если пагинация
+
+        // Загружаем товары
+        allProducts = await apiRequest('/components');
+        if (allProducts.content) allProducts = allProducts.content; // Если пагинация
 
         renderCategories();
-        renderComponents();
-        renderBuilds();
-    } catch (e) { console.error(e); }
+        renderProducts(allProducts);
+    } catch (err) {
+        console.error('Ошибка загрузки:', err);
+        document.getElementById('products-grid').innerHTML = '<p>Не удалось загрузить каталог.</p>';
+    }
 }
 
 function renderCategories() {
-    const grid = document.getElementById('categories-grid');
-    const select = document.getElementById('comp-category');
-    if(!grid) return;
-    grid.innerHTML = '';
-    select.innerHTML = '<option value="">Выбери категорию</option>';
-
-    state.categories.forEach(c => {
-        grid.innerHTML += `
-            <div class="card">
-                <h4>${c.name}</h4>
-                <div class="actions"><button class="danger" onclick="deleteCategory(${c.id})">Удалить</button></div>
-            </div>`;
-        select.innerHTML += `<option value="${c.id}">${c.name}</option>`;
+    const container = document.getElementById('category-filters');
+    allCategories.forEach(cat => {
+        container.innerHTML += `
+            <button class="filter-btn" onclick="filterCatalog(${cat.id}, this)">${cat.name}</button>
+        `;
     });
 }
 
-function renderComponents() {
-    const grid = document.getElementById('components-grid');
-    if(!grid) return;
+function filterCatalog(categoryId, btn) {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    if (categoryId === null) {
+        renderProducts(allProducts);
+    } else {
+        const filtered = allProducts.filter(p => p.categoryId === categoryId || p.category?.id === categoryId);
+        renderProducts(filtered);
+    }
+}
+
+function renderProducts(products) {
+    const grid = document.getElementById('products-grid');
     grid.innerHTML = '';
 
-    state.components.forEach(c => {
-        const cat = state.categories.find(cat => cat.id === (c.categoryId || c.category?.id));
-        const catName = cat ? cat.name : 'Без категории';
+    if (products.length === 0) {
+        grid.innerHTML = '<p style="color: var(--text-muted)">В этой категории пока нет товаров.</p>';
+        return;
+    }
+
+    products.forEach(p => {
         grid.innerHTML += `
-            <div class="card">
-                <div class="brand">${c.manufacturer || 'Unknown'} | ${catName}</div>
-                <h4>${c.name}</h4>
-                <div class="price">${c.price} ₽</div>
-                <div style="font-size: 12px; color: #94a3b8; margin-top: 5px;">На складе: ${c.stockQuantity || 0}</div>
-                <div class="actions"><button class="danger" onclick="deleteComponent(${c.id})">Удалить</button></div>
-            </div>`;
+            <div class="product-card">
+                <div class="brand">${p.manufacturer || 'No Name'}</div>
+                <h4>${p.name}</h4>
+                <div class="price">${p.price.toLocaleString('ru-RU')} ₽</div>
+                <button class="buy-btn" onclick="addToCart(${p.id})">В корзину</button>
+            </div>
+        `;
     });
 }
 
-function renderBuilds() {
-    const grid = document.getElementById('builds-grid');
-    if(!grid) return;
-    grid.innerHTML = '';
-    state.builds.forEach(b => {
-        grid.innerHTML += `
-            <div class="card" style="grid-column: span 2;">
-                <h4>Сборка: ${b.name} (ID: ${b.id})</h4>
-                <div class="price">Итого: ${b.totalPrice || 0} ₽</div>
-                <div class="add-item-row">
-                    <select id="add-item-${b.id}">
-                        ${state.components.map(c => `<option value="${c.id}">${c.name} (${c.price} ₽)</option>`).join('')}
-                    </select>
-                    <button onclick="addItemToBuild(${b.id})">Добавить</button>
-                </div>
-                <div class="actions"><button class="danger" onclick="deleteBuild(${b.id})">Удалить</button></div>
-            </div>`;
-    });
+// --- КОРЗИНА (Заглушка для будущего) ---
+function addToCart(productId) {
+    alert('Товар добавлен в корзину! (Логику корзины допишет твой друг)');
 }
-
-async function createCategory() {
-    const name = document.getElementById('cat-name').value;
-    if (!name) return alert('Введи название');
-    await apiRequest('/categories', 'POST', { name });
-    document.getElementById('cat-name').value = '';
-    loadAllData();
-}
-async function deleteCategory(id) {
-    if(!confirm('Удалить?')) return;
-    await apiRequest('/categories/' + id, 'DELETE');
-    loadAllData();
-}
-async function createComponent() {
-    const name = document.getElementById('comp-name').value;
-    const manufacturer = document.getElementById('comp-manuf').value;
-    const price = parseFloat(document.getElementById('comp-price').value);
-    const stockQuantity = parseInt(document.getElementById('comp-stock').value);
-    const categoryId = parseInt(document.getElementById('comp-category').value);
-    if (!name || isNaN(price) || isNaN(categoryId)) return alert('Заполни поля');
-    await apiRequest('/components', 'POST', { name, manufacturer, price, stockQuantity, categoryId });
-    loadAllData();
-}
-async function deleteComponent(id) {
-    if(!confirm('Удалить?')) return;
-    await apiRequest('/components/' + id, 'DELETE');
-    loadAllData();
-}
-async function createBuild() {
-    const name = document.getElementById('build-name').value;
-    if (!name) return alert('Введи название');
-    await apiRequest('/builds', 'POST', { name, userId: 1 });
-    document.getElementById('build-name').value = '';
-    loadAllData();
-}
-async function deleteBuild(id) {
-    if(!confirm('Удалить?')) return;
-    await apiRequest('/builds/' + id, 'DELETE');
-    loadAllData();
-}
-async function addItemToBuild(buildId) {
-    const select = document.getElementById('add-item-' + buildId);
-    const componentId = parseInt(select.value);
-    await apiRequest(`/builds/${buildId}/items`, 'POST', { componentId, quantity: 1 });
-    loadAllData();
-}
-
-window.onload = initApp;
