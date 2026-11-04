@@ -1,0 +1,38 @@
+:root {
+    --bg: #121212; --surface: #1e1e1e; --primary: #8b5cf6;
+    --text: #e2e8f0; --text-muted: #94a3b8; --border: #333;
+    --danger: #ef4444; --success: #10b981;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+body { background: var(--bg); color: var(--text); height: 100vh; display: flex; flex-direction: column; }
+
+.page-container { display: none; flex: 1; padding: 30px; overflow-y: auto; }
+.page-container.active { display: block; }
+
+input, select { width: 100%; padding: 12px; margin-bottom: 15px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: white; }
+input:focus, select:focus { outline: none; border-color: var(--primary); }
+button { padding: 12px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; width: 100%; transition: 0.2s; }
+button:hover { background: #7c3aed; }
+button.danger { background: var(--danger); }
+button.danger:hover { background: #dc2626; }
+
+header { background: var(--surface); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
+header h1 { font-size: 20px; color: var(--primary); margin-bottom: 10px; }
+nav { display: flex; gap: 10px; }
+nav button { width: auto; background: transparent; color: var(--text-muted); border: 1px solid var(--border); padding: 8px 16px; }
+nav button.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+.form-panel { background: var(--surface); padding: 20px; border-radius: 12px; margin-bottom: 20px; display: flex; gap: 15px; flex-wrap: wrap; align-items: flex-end; border: 1px solid var(--border); }
+.form-panel input, .form-panel select { margin-bottom: 0; flex: 1; min-width: 150px; }
+.form-panel button { width: auto; min-width: 130px; }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; position: relative; }
+.card .brand { font-size: 12px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; }
+.card .price { color: var(--success); font-size: 22px; font-weight: bold; margin-top: 10px; }
+.card .actions { position: absolute; top: 15px; right: 15px; }
+.card .actions button { width: auto; padding: 6px 12px; font-size: 12px; }
+
+.add-item-row { display: flex; gap: 10px; margin-top: 15px; }
+.add-item-row select { margin-bottom: 0; }
+.add-item-row button { width: auto; padding: 0 20px; }
