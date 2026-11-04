@@ -78,7 +78,7 @@ function renderProducts(products) {
     grid.innerHTML = '';
 
     if (products.length === 0) {
-        grid.innerHTML = '<p style="color: var(--text-muted)">В этой категории пока нет товаров.</p>';
+        grid.innerHTML = '<p style="color: #64748b;">В этой категории пока нет товаров.</p>';
         return;
     }
 
