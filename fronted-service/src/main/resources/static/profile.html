@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Личный кабинет - PC Builder</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header class="site-header">
+    <a href="/" class="logo">⚙️ PC Builder</a>
+    <div class="auth-buttons">
+        <a href="/" class="btn btn-outline">На главную</a>
+        <button class="btn btn-primary" onclick="logout()">Выйти</button>
+    </div>
+</header>
+
+<div class="container">
+    <h2>Мои сборки</h2>
+    <a href="/builder.html" class="btn btn-primary" style="margin: 20px 0; display: inline-block;">+ Собрать новый ПК</a>
+    <div id="my-builds" class="grid"></div>
+</div>
+<script src="/api.js"></script>
+<script>
+    window.onload = async () => {
+        checkAuth();
+        try {
+            // Тут нужно, чтобы бэк вернул сборки текущего юзера.
+            // Если ручка /builds возвращает все, друг должен добавить фильтр по userId.
+            const builds = await apiRequest('/builds');
+            const list = builds.content || builds;
+            const grid = document.getElementById('my-builds');
+
+            if (list.length === 0) {
+                grid.innerHTML = '<p>У вас пока нет сборок.</p>';
+                return;
+            }
+
+            list.forEach(b => {
+                grid.innerHTML += `
+                        <div class="product-card">
+                            <h4>${b.name}</h4>
+                            <div class="price">${(b.totalPrice || 0).toLocaleString('ru-RU')} ₽</div>
+                            <button class="btn-outline" onclick="viewBuild(${b.id})">Посмотреть</button>
+                        </div>
+                    `;
+            });
+        } catch (e) { console.log(e); }
+    };
+    function logout() { localStorage.removeItem('token'); window.location.href = '/'; }
+</script>
+</body>
+</html>

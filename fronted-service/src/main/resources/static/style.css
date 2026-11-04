@@ -1,85 +1,21 @@
-:root {
-    --bg: #f8fafc;          /* Светлый фон для магазина */
-    --surface: #ffffff;
-    --text: #1e293b;
-    --text-muted: #64748b;
-    --primary: #8b5cf6;     /* Фиолетовый */
-    --primary-hover: #7c3aed;
-    --border: #e2e8f0;
-    --danger: #ef4444;
-}
-* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
-body { background: var(--bg); color: var(--text); }
+/* --- Стили для личного кабинета и админки --- */
+.dashboard-layout { display: flex; min-height: 80vh; }
+.sidebar { width: 250px; background: var(--surface); border-right: 1px solid var(--border); padding: 20px; }
+.sidebar a { display: block; padding: 12px; color: var(--text-muted); text-decoration: none; border-radius: 8px; margin-bottom: 5px; }
+.sidebar a:hover, .sidebar a.active { background: rgba(139, 92, 246, 0.1); color: var(--primary); font-weight: 600; }
+.dashboard-content { flex: 1; padding: 30px; }
 
-/* Шапка */
-.site-header {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 15px 50px; background: var(--surface);
-    border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100;
-}
-.logo { font-size: 24px; font-weight: bold; color: var(--primary); cursor: pointer; }
-.main-nav a { text-decoration: none; color: var(--text-muted); margin: 0 15px; font-weight: 500; transition: 0.2s; }
-.main-nav a:hover, .main-nav a.active { color: var(--primary); }
-.auth-buttons button { margin-left: 10px; }
+/* Таблицы */
+table { width: 100%; border-collapse: collapse; margin-top: 20px; background: var(--surface); border-radius: 12px; overflow: hidden; }
+th, td { padding: 15px; text-align: left; border-bottom: 1px solid var(--border); }
+th { background: #f1f5f9; font-weight: 600; color: var(--text-muted); text-transform: uppercase; font-size: 12px; letter-spacing: 1px; }
+tr:hover { background: #f8fafc; }
 
-/* Кнопки */
-button { cursor: pointer; border-radius: 8px; font-weight: 600; transition: 0.2s; }
-.btn-primary { background: var(--primary); color: white; border: none; padding: 10px 20px; }
-.btn-primary:hover { background: var(--primary-hover); }
-.btn-outline { background: transparent; color: var(--primary); border: 2px solid var(--primary); padding: 8px 18px; }
-.btn-outline:hover { background: var(--primary); color: white; }
-.btn-large { padding: 15px 30px; font-size: 18px; }
-
-/* Баннер */
-.hero {
-    background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(139, 92, 246, 0.4));
-    height: 60vh; display: flex; align-items: center; justify-content: center; text-align: center;
-}
-.hero-content h1 { font-size: 48px; margin-bottom: 20px; color: var(--text); }
-.hero-content p { font-size: 20px; color: var(--text-muted); margin-bottom: 30px; }
-
-/* Каталог */
-.container { max-width: 1200px; margin: 0 auto; padding: 40px 20px; }
-.catalog-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
-.catalog-header h2 { font-size: 28px; }
-.filters { display: flex; gap: 10px; flex-wrap: wrap; }
-.filter-btn {
-    background: var(--surface); border: 1px solid var(--border);
-    padding: 8px 16px; border-radius: 20px; color: var(--text-muted);
-}
-.filter-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
-
-/* Сетка товаров */
-.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 25px; }
-.product-card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 12px; padding: 20px; display: flex; flex-direction: column;
-    transition: transform 0.2s, box-shadow 0.2s;
-}
-.product-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
-.product-card .brand { font-size: 12px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 5px; }
-.product-card h4 { font-size: 18px; margin-bottom: 10px; flex-grow: 1; }
-.product-card .price { font-size: 24px; font-weight: bold; color: var(--primary); margin-bottom: 15px; }
-.buy-btn { background: var(--text); color: white; border: none; padding: 10px; border-radius: 8px; width: 100%; font-weight: 600; }
-.buy-btn:hover { background: var(--primary); }
-
-/* Модалка */
-.modal-overlay {
-    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-    background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000;
-}
-.modal {
-    background: var(--surface); padding: 40px; border-radius: 16px;
-    width: 100%; max-width: 400px; position: relative;
-}
-.close-btn { position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 24px; color: var(--text-muted); }
-.auth-form input {
-    width: 100%; padding: 12px; margin-bottom: 15px;
-    border: 1px solid var(--border); border-radius: 8px; font-size: 16px;
-}
-.auth-form button { width: 100%; margin-top: 10px; }
-.switch-auth { text-align: center; margin-top: 15px; font-size: 14px; color: var(--text-muted); }
-.switch-auth a { color: var(--primary); text-decoration: none; }
-
-.hidden { display: none !important; }
-.error-msg { color: var(--danger); text-align: center; margin-top: 10px; font-size: 14px; }
+/* Конструктор сборки */
+.builder-grid { display: grid; grid-template-columns: 1fr 300px; gap: 30px; }
+.build-slot { background: var(--surface); border: 2px dashed var(--border); padding: 20px; border-radius: 12px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+.build-slot.filled { border-style: solid; border-color: var(--primary); }
+.build-slot select { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); }
+.build-summary { background: var(--surface); padding: 20px; border-radius: 12px; height: fit-content; position: sticky; top: 20px; border: 1px solid var(--border); }
+.build-summary h3 { margin-bottom: 15px; }
+.build-total { font-size: 28px; font-weight: bold; color: var(--primary); margin: 20px 0; text-align: right; }

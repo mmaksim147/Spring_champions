@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Конструктор ПК - PC Builder</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header class="site-header">
+    <a href="/" class="logo">⚙️ PC Builder</a>
+    <div class="auth-buttons">
+        <a href="/profile.html" class="btn btn-outline">Назад в профиль</a>
+    </div>
+</header>
+
+<div class="container">
+    <h2>Конструктор сборки ПК</h2>
+    <div class="builder-grid" style="margin-top: 30px;">
+        <div id="build-slots">
+            <!-- Слоты подгружаются через JS -->
+        </div>
+        <div class="build-summary">
+            <h3>Ваша сборка</h3>
+            <div id="selected-items-list" style="color: var(--text-muted); font-size: 14px;">Пока ничего не выбрано</div>
+            <div class="build-total" id="total-price">0 ₽</div>
+            <button class="btn-primary" style="width: 100%; padding: 15px;" onclick="saveBuild()">Сохранить сборку</button>
+        </div>
+    </div>
+</div>
+<script src="/api.js"></script>
+<script src="/builder.js"></script>
+</body>
+</html>
