@@ -1,0 +1,383 @@
+
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Мои заказы — Colizant</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Geologica:wght@500;600;700&family=Onest:wght@400;500;600&display=swap"
+          rel="stylesheet">
+
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/dashboard-polish.css}">
+
+    <style>
+        .orders-page {
+            padding-bottom: 80px;
+        }
+
+        .orders-list {
+            display: grid;
+            gap: 20px;
+        }
+
+        .order-card {
+            background: #f8f9fb;
+            border: 1px solid #d6dce4;
+            border-radius: 18px;
+            padding: 26px;
+        }
+
+        .order-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 16px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #dce1e8;
+        }
+
+        .order-title {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .order-title h2 {
+            margin: 0;
+            font-size: 22px;
+            color: #15191f;
+        }
+
+        .order-status {
+            display: inline-flex;
+            align-items: center;
+            padding: 7px 12px;
+            border-radius: 999px;
+            background: #e8ecf2;
+            color: #465164;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .order-status[data-status="NEW"] {
+            background: #e8edff;
+            color: #304dce;
+        }
+
+        .order-status[data-status="PAID"] {
+            background: #e0f5e8;
+            color: #187446;
+        }
+
+        .order-status[data-status="CANCELLED"],
+        .order-status[data-status="CANCELED"] {
+            background: #ffe7e7;
+            color: #b52e35;
+        }
+
+        .order-date {
+            margin: 10px 0 0;
+            color: #657184;
+            font-size: 13px;
+        }
+
+        .order-price {
+            text-align: right;
+        }
+
+        .order-price small {
+            display: block;
+            margin-bottom: 6px;
+            color: #657184;
+        }
+
+        .order-price strong {
+            font-size: 23px;
+            color: #15191f;
+        }
+
+        .order-meta {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 18px;
+            padding: 22px 0;
+        }
+
+        .order-meta span {
+            display: block;
+            margin-bottom: 7px;
+            color: #657184;
+            font-size: 12px;
+        }
+
+        .order-meta strong {
+            font-size: 15px;
+        }
+
+        .order-details {
+            border-top: 1px solid #dce1e8;
+            padding-top: 18px;
+        }
+
+        .order-details summary {
+            cursor: pointer;
+            font-weight: 600;
+            color: #304cff;
+        }
+
+        .order-items {
+            display: grid;
+            gap: 12px;
+            margin-top: 18px;
+        }
+
+        .order-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+            padding: 18px;
+            border: 1px solid #dce1e8;
+            border-radius: 13px;
+            background: #fff;
+        }
+
+        .order-item-info {
+            flex: 1;
+            min-width: 180px;
+        }
+
+        .order-item-info strong {
+            display: block;
+            margin-bottom: 7px;
+            font-size: 15px;
+            color: #15191f;
+        }
+
+        .order-item-info small {
+            color: #657184;
+            font-size: 13px;
+        }
+
+        .order-item-price {
+            min-width: 140px;
+            text-align: right;
+        }
+
+        .order-item-price strong {
+            display: block;
+            margin-bottom: 5px;
+            color: #202630;
+            font-size: 16px;
+        }
+
+        .order-item-price small {
+            color: #657184;
+        }
+
+        .orders-empty {
+            padding: 60px 24px;
+            background: #f8f9fb;
+            border: 1px dashed #cbd3df;
+            border-radius: 18px;
+            text-align: center;
+        }
+
+        .orders-empty h2 {
+            margin-bottom: 10px;
+        }
+
+        .orders-empty p {
+            margin-bottom: 24px;
+            color: #657184;
+        }
+
+        @media (max-width: 650px) {
+            .order-card {
+                padding: 18px;
+            }
+
+            .order-price {
+                width: 100%;
+                text-align: left;
+            }
+
+            .order-meta {
+                grid-template-columns: 1fr;
+            }
+
+            .order-item {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .order-item-price {
+                text-align: left;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div th:replace="~{fragments/layout :: header('orders')}"></div>
+<div th:replace="~{fragments/layout :: alerts}"></div>
+
+<main>
+    <div class="container page orders-page">
+
+        <div class="page-head">
+            <div>
+                <h1>Мои заказы</h1>
+                <p>История покупок и состав оформленных заказов.</p>
+            </div>
+
+            <a th:href="@{/catalog}" class="btn btn-outline">
+                ← Вернуться в каталог
+            </a>
+        </div>
+
+        <div class="orders-empty"
+             th:if="${error == null and (orders == null or #lists.isEmpty(orders))}">
+
+            <h2>Заказов пока нет</h2>
+
+            <p>Выберите комплектующие в каталоге и оформите первый заказ.</p>
+
+            <a th:href="@{/catalog}" class="btn btn-primary">
+                Перейти в каталог
+            </a>
+        </div>
+
+        <section class="orders-list"
+                 th:if="${orders != null and !#lists.isEmpty(orders)}">
+
+            <article class="order-card"
+                     th:each="o : ${orders}">
+
+                <div class="order-top">
+
+                    <div>
+                        <div class="order-title">
+
+                            <h2 th:text="${'Заказ №' + o.id}">
+                                Заказ №1
+                            </h2>
+
+                            <span class="order-status"
+                                  th:attr="data-status=${o.status}"
+                                  th:text="${o.status}">
+                                NEW
+                            </span>
+                        </div>
+
+                        <p class="order-date"
+                           th:text="${o.createdAt != null
+                               ? #strings.replace(o.createdAt.toString(), 'T', ' ')
+                               : 'Дата не указана'}">
+                            Дата заказа
+                        </p>
+                    </div>
+
+                    <div class="order-price">
+                        <small>Общая стоимость</small>
+
+                        <strong th:text="${o.totalPrice != null
+                            ? #numbers.formatDecimal(
+                                o.totalPrice,
+                                1, 'WHITESPACE', 2, 'POINT'
+                              ) + ' ₽'
+                            : '—'}">
+                            0 ₽
+                        </strong>
+                    </div>
+                </div>
+
+                <div class="order-meta">
+
+                    <div>
+                        <span>Номер заказа</span>
+                        <strong th:text="${'#' + o.id}">#1</strong>
+                    </div>
+
+                    <div>
+                        <span>Позиций в заказе</span>
+                        <strong th:text="${o.items != null
+                            ? #lists.size(o.items)
+                            : 0}">
+                            0
+                        </strong>
+                    </div>
+                </div>
+
+                <details class="order-details" open>
+
+                    <summary>Состав заказа</summary>
+
+                    <div class="order-items"
+                         th:if="${o.items != null and !#lists.isEmpty(o.items)}">
+
+                        <div class="order-item"
+                             th:each="item : ${o.items}">
+
+                            <div class="order-item-info">
+
+                                <strong th:text="${componentNames != null
+                                    and componentNames[item.componentId] != null
+                                    ? componentNames[item.componentId]
+                                    : 'Комплектующее ID ' + item.componentId}">
+                                    Название комплектующего
+                                </strong>
+
+                                <small th:text="${'Количество: ' + item.quantity}">
+                                    Количество: 1
+                                </small>
+                            </div>
+
+                            <div class="order-item-price">
+
+                                <strong th:text="${#numbers.formatDecimal(
+                                        item.priceAtPurchase * item.quantity,
+                                        1, 'WHITESPACE', 2, 'POINT'
+                                    ) + ' ₽'}">
+                                    0 ₽
+                                </strong>
+
+                                <small th:text="${#numbers.formatDecimal(
+                                        item.priceAtPurchase,
+                                        1, 'WHITESPACE', 2, 'POINT'
+                                    ) + ' ₽ / шт.'}">
+                                    Цена за штуку
+                                </small>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <p th:if="${o.items == null or #lists.isEmpty(o.items)}">
+                        Состав заказа отсутствует.
+                    </p>
+
+                </details>
+
+            </article>
+        </section>
+    </div>
+</main>
+
+<footer class="site-footer">
+    © 2026 Colizant
+</footer>
+
+</body>
+</html>

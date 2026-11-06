@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Нужно войти: Colizant</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geologica:wght@500;600;700&family=Onest:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- Страница ошибки открывается по любому адресу, поэтому в Spring пути берутся через th:href / th:src.
+         Обычные href / src нужны только для просмотра файла с диска. -->
+    <link rel="stylesheet" href="css/style.css" th:href="@{/css/style.css}">
+</head>
+<body>
+
+    <header class="site-header">
+        <a href="/" class="logo">
+            <img src="logo.png" th:src="@{/images/logo.jpg}" alt="" class="logo-img" width="56" height="56">
+            Colizant
+        </a>
+        <nav class="main-nav">
+            <a href="/">Главная</a>
+            <a href="/catalog">Каталог</a>
+        </nav>
+    </header>
+
+    <main class="error-page">
+        <img class="error-dog" src="error.png" th:src="@{/images/error.png}" alt="">
+        <div class="error-code">401</div>
+        <h1>Нужно войти</h1>
+        <p>Эта страница доступна только после входа в аккаунт.</p>
+        <div class="error-actions">
+            <a href="/login" class="btn btn-primary">Войти</a>
+                    <a href="/register" class="btn btn-outline">Регистрация</a>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        © 2026 Colizant
+    </footer>
+
+</body>
+</html>

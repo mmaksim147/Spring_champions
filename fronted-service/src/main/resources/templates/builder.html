@@ -1,10 +1,566 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+
 <head>
   <meta charset="UTF-8">
-  <title>$Title$</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Конструктор ПК — Colizant</title>
+  <link rel="stylesheet" th:href="@{/css/style.css}">
+  <link rel="stylesheet" th:href="@{/css/dashboard-polish.css}">
 </head>
+
 <body>
-$END$
+
+<div th:replace="~{fragments/layout :: header('builder')}"></div>
+<div th:replace="~{fragments/layout :: alerts}"></div>
+
+<main class="builder-page" style="padding: 2rem 0 4rem 0; min-height: 80vh;">
+  <div class="container">
+
+    <div class="builder-heading">
+      <div>
+        <span class="builder-eyebrow">COLIZANT PC BUILDER</span>
+        <h1>Конструктор ПК</h1>
+        <p>Соберите компьютер из комплектующих и сохраните свою конфигурацию.</p>
+      </div>
+      <div class="builder-heading-icon">⌘</div>
+    </div>
+
+    <!-- Ошибки из параметров URL (для совместимости со старой логикой) -->
+    <div th:if="${param.error != null and error == null}"
+         class="builder-alert"
+         role="alert">
+      <span th:if="${param.error[0] == 'invalid'}">
+        Проверьте название сборки, комплектующие и их количество.
+      </span>
+      <span th:if="${param.error[0] == 'user'}">
+        Не удалось определить пользователя. Войдите в аккаунт заново.
+      </span>
+      <span th:if="${param.error[0] == 'backend'}">
+        Backend отклонил создание сборки. Проверьте данные и попробуйте ещё раз.
+      </span>
+      <span th:if="${param.error[0] == 'save'}">
+        Не удалось сохранить сборку. Попробуйте позже.
+      </span>
+    </div>
+
+    <div th:if="${components == null or #lists.isEmpty(components)}"
+         class="builder-empty">
+      <div class="builder-empty-icon">!</div>
+      <h2>Комплектующие не найдены</h2>
+      <p>Не удалось получить список комплектующих. Попробуйте обновить страницу.</p>
+      <a th:href="@{/builder}" class="btn btn-primary">Обновить страницу</a>
+    </div>
+
+    <form th:if="${components != null and !#lists.isEmpty(components)}"
+          th:action="@{/builder/save}"
+          method="post"
+          id="buildForm"
+          class="builder-layout">
+
+      <section class="builder-main">
+
+        <div class="builder-form-card">
+          <div class="builder-card-heading">
+            <span class="builder-step">01</span>
+            <div>
+              <h2>Название сборки</h2>
+              <p>Придумайте название своей конфигурации.</p>
+            </div>
+          </div>
+
+          <label for="buildName">Название сборки</label>
+
+          <input class="input builder-name-input"
+                 id="buildName"
+                 name="name"
+                 type="text"
+                 maxlength="120"
+                 minlength="2"
+                 required
+                 placeholder="Например, Игровой ПК">
+        </div>
+
+        <div class="builder-form-card">
+          <div class="builder-card-heading">
+            <span class="builder-step">02</span>
+            <div>
+              <h2>Комплектующие</h2>
+              <p>Добавьте необходимые детали компьютера.</p>
+            </div>
+          </div>
+
+          <div id="buildItems" class="builder-items">
+            <div class="build-item">
+
+              <div class="build-field">
+                <label>Комплектующее</label>
+                <select class="select component-select"
+                        name="componentId"
+                        required>
+                  <option value="" disabled selected>
+                    Выберите компонент
+                  </option>
+                  <option th:each="c : ${components}"
+                          th:value="${c.id}"
+                          th:attr="data-price=${c.price}"
+                          th:text="${c.name + ' — ' + c.price + ' ₽'}">
+                  </option>
+                </select>
+              </div>
+
+              <div class="build-field build-quantity">
+                <label>Количество</label>
+                <input class="input quantity-input"
+                       type="number"
+                       name="quantity"
+                       min="1"
+                       max="99"
+                       value="1"
+                       required>
+              </div>
+
+              <button type="button"
+                      class="remove-build-item"
+                      disabled
+                      aria-label="Удалить комплектующее">
+                Удалить
+              </button>
+
+            </div>
+          </div>
+
+          <button type="button"
+                  id="addBuildItem"
+                  class="builder-add-button">
+            <span>+</span> Добавить комплектующее
+          </button>
+
+        </div>
+      </section>
+
+      <aside class="build-sheet">
+
+        <div class="build-sheet-heading">
+          <div>
+            <span class="build-sheet-label">YOUR CONFIGURATION</span>
+            <h2>Ваша сборка</h2>
+          </div>
+          <span class="build-sheet-icon">▦</span>
+        </div>
+
+        <div id="buildSummary" class="build-summary">
+          <p class="build-summary-empty">
+            Вы пока не добавили комплектующие.
+          </p>
+        </div>
+
+        <div class="build-total">
+          <div>
+            <span>Предварительная стоимость</span>
+            <p>Расчёт по выбранным компонентам</p>
+          </div>
+          <strong id="buildTotal">0 ₽</strong>
+        </div>
+
+        <p class="build-disclaimer">
+          Итоговую цену и состав сборки проверит backend при сохранении.
+        </p>
+
+        <button type="submit" class="builder-save-button">
+          Сохранить сборку <span>→</span>
+        </button>
+
+        <a th:href="@{/builds}" class="builder-back-link">
+          Посмотреть мои сборки
+        </a>
+
+      </aside>
+    </form>
+
+  </div>
+</main>
+
+<template id="componentOptions">
+  <option value="" disabled selected>Выберите компонент</option>
+  <option th:each="c : ${components}"
+          th:value="${c.id}"
+          th:attr="data-price=${c.price}"
+          th:text="${c.name + ' — ' + c.price + ' ₽'}">
+  </option>
+</template>
+
+<template id="buildRowTemplate">
+  <div class="build-item">
+
+    <div class="build-field">
+      <label>Комплектующее</label>
+      <select class="select component-select"
+              name="componentId"
+              required></select>
+    </div>
+
+    <div class="build-field build-quantity">
+      <label>Количество</label>
+      <input class="input quantity-input"
+             type="number"
+             name="quantity"
+             min="1"
+             max="99"
+             value="1"
+             required>
+    </div>
+
+    <button type="button"
+            class="remove-build-item"
+            aria-label="Удалить комплектующее">
+      Удалить
+    </button>
+
+  </div>
+</template>
+
+<script>
+  (() => {
+    const list = document.getElementById('buildItems');
+    const addButton = document.getElementById('addBuildItem');
+    const totalElement = document.getElementById('buildTotal');
+    const summary = document.getElementById('buildSummary');
+    const optionsTemplate = document.getElementById('componentOptions');
+    const rowTemplate = document.getElementById('buildRowTemplate');
+    const form = document.getElementById('buildForm');
+    const nameInput = document.getElementById('buildName');
+
+    if (!list || !addButton || !form || !nameInput) {
+      return;
+    }
+
+    /*
+     * Сохраняем черновик в рамках вкладки браузера.
+     *
+     * При ошибке backend возвращает пользователя на /builder,
+     * и мы восстанавливаем его предыдущий выбор.
+     *
+     * При обычном открытии /builder без ошибки старый черновик
+     * не восстанавливаем.
+     */
+    const DRAFT_KEY = 'colizant_builder_draft_v1';
+    const PENDING_KEY = 'colizant_builder_pending_v1';
+
+    const currency = new Intl.NumberFormat('ru-RU', {
+      style: 'currency',
+      currency: 'RUB',
+      maximumFractionDigits: 2
+    });
+
+    function getRows() {
+      return Array.from(
+              list.querySelectorAll('.build-item')
+      );
+    }
+
+    function getDraft() {
+      return {
+        name: nameInput.value,
+        items: getRows().map(row => ({
+          componentId: row.querySelector('.component-select').value,
+          quantity: row.querySelector('.quantity-input').value
+        }))
+      };
+    }
+
+    function saveDraft() {
+      try {
+        sessionStorage.setItem(
+                DRAFT_KEY,
+                JSON.stringify(getDraft())
+        );
+      } catch (error) {
+        console.warn('Не удалось сохранить черновик сборки', error);
+      }
+    }
+
+    function clearDraft() {
+      try {
+        sessionStorage.removeItem(DRAFT_KEY);
+        sessionStorage.removeItem(PENDING_KEY);
+      } catch (error) {
+        console.warn('Не удалось очистить черновик', error);
+      }
+    }
+
+    function recalculate() {
+      let total = 0;
+      let count = 0;
+
+      summary.replaceChildren();
+
+      const rows = getRows();
+
+      rows.forEach(row => {
+        const select = row.querySelector('.component-select');
+        const quantityInput = row.querySelector('.quantity-input');
+        const option = select.selectedOptions[0];
+
+        const quantity = Math.min(
+                99,
+                Math.max(1, Number(quantityInput.value) || 1)
+        );
+
+        const price = Number(option?.dataset.price) || 0;
+
+        if (option && select.value) {
+          total += price * quantity;
+          count++;
+
+          const summaryRow = document.createElement('div');
+          summaryRow.className = 'build-summary-item';
+
+          const name = document.createElement('span');
+          name.textContent = option.textContent.split(' — ')[0];
+
+          const amount = document.createElement('strong');
+          amount.textContent = quantity + ' шт.';
+
+          summaryRow.append(name, amount);
+          summary.append(summaryRow);
+        }
+      });
+
+      if (count === 0) {
+        const empty = document.createElement('p');
+        empty.className = 'build-summary-empty';
+        empty.textContent = 'Вы пока не добавили комплектующие.';
+        summary.append(empty);
+      }
+
+      totalElement.textContent = currency.format(total);
+
+      rows.forEach(row => {
+        row.querySelector('.remove-build-item').disabled =
+                rows.length === 1;
+      });
+    }
+
+    function updateDraftAndSummary() {
+      recalculate();
+      saveDraft();
+    }
+
+    function bindRow(row) {
+      row.querySelectorAll('select, input').forEach(element => {
+        element.addEventListener(
+                'change',
+                updateDraftAndSummary
+        );
+
+        element.addEventListener(
+                'input',
+                updateDraftAndSummary
+        );
+      });
+
+      row.querySelector('.remove-build-item')
+              .addEventListener('click', () => {
+                if (getRows().length <= 1) {
+                  return;
+                }
+
+                row.remove();
+                updateDraftAndSummary();
+              });
+    }
+
+    function createRow() {
+      const fragment = rowTemplate.content.cloneNode(true);
+      const row = fragment.querySelector('.build-item');
+
+      row.querySelector('.component-select')
+              .append(optionsTemplate.content.cloneNode(true));
+
+      list.append(fragment);
+
+      const createdRow = list.lastElementChild;
+      bindRow(createdRow);
+
+      return createdRow;
+    }
+
+    function restoreDraft() {
+      let rawDraft;
+
+      try {
+        rawDraft = sessionStorage.getItem(DRAFT_KEY);
+      } catch (error) {
+        return false;
+      }
+
+      if (!rawDraft) {
+        return false;
+      }
+
+      try {
+        const draft = JSON.parse(rawDraft);
+
+        if (!draft || !Array.isArray(draft.items)) {
+          return false;
+        }
+
+        nameInput.value =
+                typeof draft.name === 'string'
+                        ? draft.name
+                        : '';
+
+        const savedItems = draft.items.length
+                ? draft.items
+                : [{ componentId: '', quantity: 1 }];
+
+        // Убираем стартовую строку, чтобы восстановить
+        // ровно столько комплектующих, сколько было выбрано.
+        list.replaceChildren();
+
+        savedItems.forEach(item => {
+          const row = createRow();
+
+          const select = row.querySelector('.component-select');
+          const quantity = row.querySelector('.quantity-input');
+
+          const componentId =
+                  item && item.componentId != null
+                          ? String(item.componentId)
+                          : '';
+
+          // Восстанавливаем только существующие в каталоге ID.
+          const optionExists = Array.from(select.options)
+                  .some(option => option.value === componentId);
+
+          if (optionExists) {
+            select.value = componentId;
+          }
+
+          const savedQuantity = Number(item?.quantity);
+
+          quantity.value =
+                  Number.isInteger(savedQuantity)
+                  && savedQuantity >= 1
+                  && savedQuantity <= 99
+                          ? savedQuantity
+                          : 1;
+        });
+
+        recalculate();
+        return true;
+
+      } catch (error) {
+        console.warn('Не удалось восстановить черновик', error);
+        return false;
+      }
+    }
+
+    // Привязываем события к исходной строке.
+    bindRow(list.querySelector('.build-item'));
+
+    nameInput.addEventListener('input', saveDraft);
+    nameInput.addEventListener('change', saveDraft);
+
+    addButton.addEventListener('click', () => {
+      createRow();
+      updateDraftAndSummary();
+    });
+
+    form.addEventListener('submit', event => {
+      const rows = getRows();
+
+      if (rows.length === 0) {
+        event.preventDefault();
+        return;
+      }
+
+      const seen = new Set();
+
+      for (const row of rows) {
+        const select = row.querySelector('.component-select');
+        const quantity = row.querySelector('.quantity-input');
+
+        if (!select.value
+                || !quantity.value
+                || Number(quantity.value) < 1
+                || Number(quantity.value) > 99) {
+
+          event.preventDefault();
+          return;
+        }
+
+        if (seen.has(select.value)) {
+          event.preventDefault();
+
+          alert(
+                  'Один и тот же компонент не нужно добавлять несколько раз. ' +
+                  'Измените его количество.'
+          );
+
+          select.focus();
+          return;
+        }
+
+        seen.add(select.value);
+      }
+
+      // Сохраняем черновик непосредственно перед запросом.
+      saveDraft();
+
+      try {
+        sessionStorage.setItem(PENDING_KEY, '1');
+      } catch (error) {
+        console.warn('Не удалось отметить отправку сборки', error);
+      }
+    });
+
+    /*
+     * Восстанавливаем черновик только после попытки сохранения,
+     * если backend вернул пользователя на страницу конструктора.
+     *
+     * Если пользователь просто открыл /builder, начинаем
+     * новую сборку.
+     */
+    const url = new URL(window.location.href);
+    const hasLegacyError = url.searchParams.has('error');
+
+    const hasServerError =
+            document.querySelector('.alert-danger, .alert-error, [role="alert"]')
+            !== null;
+
+    let pendingSubmission = false;
+
+    try {
+      pendingSubmission =
+              sessionStorage.getItem(PENDING_KEY) === '1';
+    } catch (error) {
+      pendingSubmission = false;
+    }
+
+    if (pendingSubmission && (hasLegacyError || hasServerError)) {
+      const restored = restoreDraft();
+
+      if (!restored) {
+        recalculate();
+      }
+
+      try {
+        sessionStorage.removeItem(PENDING_KEY);
+      } catch (error) {
+        // sessionStorage может быть недоступен.
+      }
+
+    } else {
+      clearDraft();
+      recalculate();
+    }
+
+  })();
+</script>
+
+<footer class="site-footer">© 2026 Colizant</footer>
+
 </body>
 </html>

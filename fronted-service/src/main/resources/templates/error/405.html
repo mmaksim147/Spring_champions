@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Действие не поддерживается: Colizant</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geologica:wght@500;600;700&family=Onest:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- Страница ошибки открывается по любому адресу, поэтому в Spring пути берутся через th:href / th:src.
+         Обычные href / src нужны только для просмотра файла с диска. -->
+    <link rel="stylesheet" href="css/style.css" th:href="@{/css/style.css}">
+</head>
+<body>
+
+    <header class="site-header">
+        <a href="/" class="logo">
+            <img src="logo.png" th:src="@{/images/logo.jpg}" alt="" class="logo-img" width="56" height="56">
+            Colizant
+        </a>
+        <nav class="main-nav">
+            <a href="/">Главная</a>
+            <a href="/catalog">Каталог</a>
+        </nav>
+    </header>
+
+    <main class="error-page">
+        <img class="error-dog" src="error.png" th:src="@{/images/error.png}" alt="">
+        <div class="error-code">405</div>
+        <h1>Действие не поддерживается</h1>
+        <p>Страница не принимает такой запрос. Вернитесь назад и повторите действие кнопкой на сайте.</p>
+        <div class="error-actions">
+            <button type="button" class="btn btn-primary" onclick="history.back()">Назад</button>
+            <a href="/" class="btn btn-outline">На главную</a>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        © 2026 Colizant
+    </footer>
+
+</body>
+</html>

@@ -1,0 +1,675 @@
+
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Комплектующие — Colizant</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geologica:wght@500;600;700&family=Onest:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/dashboard-polish.css}">
+
+    <style>
+        .components-filter-panel {
+            padding: 26px;
+        }
+
+        .components-filter-heading {
+            margin-bottom: 26px;
+        }
+
+        .components-filter-heading h2 {
+            margin: 0 0 6px;
+            font-size: 20px;
+        }
+
+        .components-filter-heading p {
+            margin: 0;
+            color: #667180;
+            font-size: 13px;
+        }
+
+        .components-filter-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 17px;
+        }
+
+        .components-filter-field {
+            min-width: 0;
+        }
+
+        .components-filter-search {
+            grid-column: span 2;
+        }
+
+        .components-filter-field label {
+            display: block;
+            margin-bottom: 9px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .components-filter-field .input,
+        .components-filter-field .select {
+            width: 100%;
+            min-width: 0;
+            min-height: 45px;
+            border-radius: 11px;
+        }
+
+        .components-filter-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 24px;
+            padding-top: 19px;
+            border-top: 1px solid #d4d9df;
+        }
+
+        .components-filter-footer span {
+            color: #667180;
+            font-size: 12px;
+        }
+
+        #createDialog,
+        #editDialog {
+            width: min(560px, calc(100vw - 32px));
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+            padding: 30px;
+            border: 1px solid #d4d9df;
+            border-radius: 20px;
+            background: #f8f9fa;
+            color: #15181c;
+            box-shadow: 0 24px 80px #0003;
+        }
+
+        #createDialog::backdrop,
+        #editDialog::backdrop {
+            background: rgb(12 17 24 / 55%);
+            backdrop-filter: blur(3px);
+        }
+
+        .component-dialog-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 18px;
+            margin-bottom: 27px;
+        }
+
+        .component-dialog-header h2 {
+            margin: 0 0 8px;
+            font-size: 25px;
+        }
+
+        .component-dialog-header p {
+            margin: 0;
+            color: #667180;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .component-dialog-close {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            flex: 0 0 36px;
+            width: 36px;
+            height: 36px;
+            min-width: 36px;
+            min-height: 36px;
+
+            padding: 0;
+            margin: 0;
+
+            border: 1px solid #d4d9df;
+            border-radius: 10px;
+            background: white;
+            color: #667180;
+
+            font-size: 23px;
+            line-height: 1;
+            cursor: pointer;
+        }
+
+        #createDialog .form-group,
+        #editDialog .form-group {
+            margin-bottom: 19px;
+        }
+
+        #createDialog label,
+        #editDialog label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        #createDialog .input,
+        #editDialog .input {
+            width: 100%;
+            min-height: 45px;
+        }
+
+        .component-dialog-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+        }
+
+        #createDialog .dialog-actions,
+        #editDialog .dialog-actions {
+            display: flex;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+            gap: 12px;
+            padding-top: 21px;
+            margin-top: 10px;
+            border-top: 1px solid #d4d9df;
+        }
+
+        .admin-table-wrap tr[hidden],
+        #componentNoResults[hidden] {
+            display: none !important;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 28px;
+        }
+
+        .pagination a,
+        .pagination .current {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 40px;
+            min-height: 40px;
+            padding: 8px 14px;
+            border: 1px solid #d4d9df;
+            border-radius: 10px;
+            background: #f8f9fa;
+            color: #15181c;
+            text-decoration: none;
+        }
+
+        .pagination .current {
+            background: #304cff;
+            border-color: #304cff;
+            color: white;
+        }
+
+        @media (max-width: 900px) {
+            .components-filter-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 600px) {
+            .components-filter-grid,
+            .component-dialog-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .components-filter-search {
+                grid-column: auto;
+            }
+
+            #createDialog,
+            #editDialog {
+                padding: 21px;
+            }
+            #createDialog .component-dialog-close,
+            #editDialog .component-dialog-close {
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+
+                width: 36px !important;
+                height: 36px !important;
+                min-width: 36px !important;
+                min-height: 36px !important;
+                max-width: 36px;
+
+                flex: 0 0 36px !important;
+                padding: 0 !important;
+                margin: 0 !important;
+
+                font-size: 24px;
+                line-height: 1;
+                box-sizing: border-box;
+            }
+        }
+        #createDialog button.component-dialog-close,
+        #editDialog button.component-dialog-close {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            min-width: 36px;
+            min-height: 36px;
+            padding: 0;
+            border-radius: 10px;
+            line-height: 1;
+        }
+    </style>
+</head>
+
+<body>
+
+<div th:replace="~{fragments/layout :: header('admin')}"></div>
+<div th:replace="~{fragments/layout :: alerts}"></div>
+
+<main>
+    <div class="container page">
+
+        <div class="page-head">
+            <div>
+                <h1>Комплектующие</h1>
+                <p>Управление ассортиментом, ценами и остатками товаров.</p>
+            </div>
+
+            <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
+                <a th:href="@{/admin}" class="btn btn-outline">
+                    ← Админ-панель
+                </a>
+
+                <button type="button"
+                        class="btn btn-primary"
+                        id="addBtn">
+                    + Добавить комплектующее
+                </button>
+            </div>
+        </div>
+
+        <div class="admin-toolbar components-filter-panel">
+
+            <div class="components-filter-heading">
+                <h2>Поиск и фильтры</h2>
+                <p>Находите товары по нескольким параметрам одновременно.</p>
+            </div>
+
+            <div class="components-filter-grid">
+
+                <div class="components-filter-field components-filter-search">
+                    <label for="componentLiveSearch">Поиск по всем полям</label>
+                    <input class="input"
+                           id="componentLiveSearch"
+                           type="search"
+                           placeholder="Название, бренд, цена, остаток..."
+                           autocomplete="off">
+                </div>
+
+                <div class="components-filter-field">
+                    <label for="componentBrandFilter">Производитель</label>
+                    <select class="select" id="componentBrandFilter">
+                        <option value="">Все производители</option>
+                    </select>
+                </div>
+
+                <div class="components-filter-field">
+                    <label for="componentStockFilter">Наличие</label>
+                    <select class="select" id="componentStockFilter">
+                        <option value="">Любое</option>
+                        <option value="available">В наличии</option>
+                        <option value="empty">Нет в наличии</option>
+                    </select>
+                </div>
+
+                <div class="components-filter-field">
+                    <label for="componentMinPrice">Цена от, ₽</label>
+                    <input class="input"
+                           id="componentMinPrice"
+                           type="number"
+                           min="0"
+                           step="0.01"
+                           placeholder="0">
+                </div>
+
+                <div class="components-filter-field">
+                    <label for="componentMaxPrice">Цена до, ₽</label>
+                    <input class="input"
+                           id="componentMaxPrice"
+                           type="number"
+                           min="0"
+                           step="0.01"
+                           placeholder="Без ограничения">
+                </div>
+
+            </div>
+
+            <div class="components-filter-footer">
+                <span id="componentFilterStatus">
+                    Фильтры применяются автоматически
+                </span>
+
+                <button type="button"
+                        class="btn btn-outline"
+                        id="componentResetFilters">
+                    Сбросить фильтры
+                </button>
+            </div>
+
+        </div>
+
+        <div th:if="${error}"
+             class="builder-alert"
+             role="alert"
+             th:text="${error}">
+        </div>
+
+        <p class="admin-results-count"
+           id="componentCounter"
+           aria-live="polite">
+        </p>
+
+        <div class="empty"
+             th:if="${components == null or #lists.isEmpty(components)}">
+            <p>Комплектующие не найдены.</p>
+        </div>
+
+        <div class="admin-table-wrap"
+             th:if="${components != null and !#lists.isEmpty(components)}">
+
+            <table id="componentsTable">
+                <thead>
+                <tr>
+                    <th>Название</th>
+                    <th>Производитель</th>
+                    <th class="num">Цена</th>
+                    <th class="num">Остаток</th>
+                    <th class="end">Действия</th>
+                </tr>
+                </thead>
+
+                <tbody>
+                <tr th:each="c : ${components}">
+                    <td>
+                        <strong th:text="${c['name']}">Название</strong>
+                    </td>
+
+                    <td th:text="${c['manufacturer']}">
+                        Бренд
+                    </td>
+
+                    <td class="num"
+                        th:text="${c['price']} + ' ₽'">
+                        0 ₽
+                    </td>
+
+                    <td class="num"
+                        th:text="${c['stockQuantity']}">
+                        0
+                    </td>
+
+                    <td class="end">
+                        <div class="actions">
+
+                            <button type="button"
+                                    class="btn btn-sm btn-outline js-edit"
+                                    th:attr="data-id=${c['id']},
+                                             data-name=${c['name']},
+                                             data-brand=${c['manufacturer']},
+                                             data-price=${c['price']},
+                                             data-stock=${c['stockQuantity']}">
+                                Изменить
+                            </button>
+
+                            <form th:action="@{'/admin/components/delete/' + ${c['id']}}"
+                                  method="post"
+                                  class="js-delete-form">
+
+                                <button type="submit"
+                                        class="btn btn-sm btn-danger">
+                                    Удалить
+                                </button>
+                            </form>
+
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+
+        </div>
+
+        <p id="componentNoResults"
+           class="admin-no-results"
+           hidden>
+            По вашему запросу ничего не найдено на этой странице.
+        </p>
+
+        <nav class="pagination"
+             aria-label="Страницы комплектующих"
+             th:if="${totalPages != null and totalPages > 1}">
+
+            <a th:if="${currentPage > 0}"
+               th:href="@{/admin/components(
+                   page=${currentPage - 1},
+                   size=${param.size != null ? param.size : 10},
+                   search=${search}
+               )}">
+                ← Назад
+            </a>
+
+            <span th:each="i : ${#numbers.sequence(0, totalPages - 1)}">
+
+                <span th:if="${i == currentPage}"
+                      class="current"
+                      th:text="${i + 1}">
+                </span>
+
+                <a th:unless="${i == currentPage}"
+                   th:href="@{/admin/components(
+                       page=${i},
+                       size=${param.size != null ? param.size : 10},
+                       search=${search}
+                   )}"
+                   th:text="${i + 1}">
+                </a>
+
+            </span>
+
+            <a th:if="${currentPage < totalPages - 1}"
+               th:href="@{/admin/components(
+                   page=${currentPage + 1},
+                   size=${param.size != null ? param.size : 10},
+                   search=${search}
+               )}">
+                Далее →
+            </a>
+
+        </nav>
+
+        <p style="margin-top:18px; color:#667180; font-size:12px;">
+            Быстрый поиск и фильтры работают с товарами текущей страницы.
+        </p>
+
+    </div>
+</main>
+
+<!-- Создание комплектующего -->
+
+<dialog id="createDialog">
+
+    <div class="component-dialog-header">
+        <div>
+            <h2>Новый товар</h2>
+            <p>Заполните основные сведения о комплектующем.</p>
+        </div>
+
+        <button type="button"
+                class="component-dialog-close js-close"
+                aria-label="Закрыть">
+            ×
+        </button>
+    </div>
+
+    <form method="post"
+          th:action="@{/admin/components/create}">
+
+        <div class="form-group">
+            <label for="create-name">Название</label>
+            <input class="input"
+                   id="create-name"
+                   name="name"
+                   type="text"
+                   maxlength="200"
+                   required>
+        </div>
+
+        <div class="form-group">
+            <label for="create-brand">Производитель</label>
+            <input class="input"
+                   id="create-brand"
+                   name="manufacturer"
+                   type="text"
+                   maxlength="120"
+                   required>
+        </div>
+
+        <div class="component-dialog-grid">
+
+            <div class="form-group">
+                <label for="create-price">Цена, ₽</label>
+                <input class="input"
+                       id="create-price"
+                       name="price"
+                       type="number"
+                       min="0"
+                       step="0.01"
+                       required>
+            </div>
+
+            <div class="form-group">
+                <label for="create-stock">Остаток, шт.</label>
+                <input class="input"
+                       id="create-stock"
+                       name="stockQuantity"
+                       type="number"
+                       min="0"
+                       step="1"
+                       required>
+            </div>
+
+        </div>
+
+        <div class="dialog-actions">
+            <button type="button"
+                    class="btn btn-outline js-close">
+                Отмена
+            </button>
+
+            <button type="submit"
+                    class="btn btn-primary">
+                Добавить товар
+            </button>
+        </div>
+
+    </form>
+</dialog>
+
+<!-- Редактирование комплектующего -->
+
+<dialog id="editDialog">
+
+    <div class="component-dialog-header">
+        <div>
+            <h2>Редактирование</h2>
+            <p>Измените основные сведения о товаре.</p>
+        </div>
+
+        <button type="button"
+                class="component-dialog-close js-close"
+                aria-label="Закрыть">
+            ×
+        </button>
+    </div>
+
+    <form id="editForm"
+          method="post"
+          th:action="@{/admin/components/update}">
+
+        <input type="hidden" name="id" id="edit-id">
+
+        <div class="form-group">
+            <label for="edit-name">Название</label>
+            <input class="input"
+                   id="edit-name"
+                   name="name"
+                   type="text"
+                   maxlength="200"
+                   required>
+        </div>
+
+        <div class="form-group">
+            <label for="edit-brand">Производитель</label>
+            <input class="input"
+                   id="edit-brand"
+                   name="manufacturer"
+                   type="text"
+                   maxlength="120"
+                   required>
+        </div>
+
+        <div class="component-dialog-grid">
+
+            <div class="form-group">
+                <label for="edit-price">Цена, ₽</label>
+                <input class="input"
+                       id="edit-price"
+                       name="price"
+                       type="number"
+                       min="0"
+                       step="0.01"
+                       required>
+            </div>
+
+            <div class="form-group">
+                <label for="edit-stock">Остаток, шт.</label>
+                <input class="input"
+                       id="edit-stock"
+                       name="stockQuantity"
+                       type="number"
+                       min="0"
+                       step="1"
+                       required>
+            </div>
+
+        </div>
+
+        <div class="dialog-actions">
+            <button type="button"
+                    class="btn btn-outline js-close">
+                Отмена
+            </button>
+
+            <button type="submit"
+                    class="btn btn-primary">
+                Сохранить изменения
+            </button>
+        </div>
+
+    </form>
+</dialog>
+
+<footer class="site-footer">© 2026 Colizant</footer>
+
+<script defer th:src="@{/js/admin-components.js}"></script>
+<script defer th:src="@{/js/admin-live-search.js}"></script>
+
+</body>
+</html>

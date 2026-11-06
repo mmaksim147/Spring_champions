@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Управление заказами — Colizant</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geologica:wght@500;600;700&family=Onest:wght@400;500;600&display=swap"
+          rel="stylesheet">
+
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/dashboard-polish.css}">
+
+    <style>
+        .orders-admin {
+            padding-bottom: 80px;
+        }
+
+        .orders-admin .page-head {
+            margin-bottom: 32px;
+        }
+
+        .orders-toolbar {
+            background: #f8f9fb;
+            border: 1px solid #d6dce4;
+            border-radius: 18px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .orders-filter-grid {
+            display: grid;
+            grid-template-columns: minmax(220px, 2fr) repeat(3, minmax(150px, 1fr));
+            gap: 16px;
+            align-items: end;
+        }
+
+        .orders-filter-field {
+            display: flex;
+            flex-direction: column;
+            gap: 9px;
+            min-width: 0;
+        }
+
+        .orders-filter-field label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #3f4a5a;
+        }
+
+        .orders-filter-field .input,
+        .orders-filter-field .select {
+            width: 100%;
+            min-height: 44px;
+            box-sizing: border-box;
+        }
+
+        .orders-toolbar-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 14px;
+            margin-top: 18px;
+        }
+
+        .orders-counter {
+            color: #657184;
+            font-size: 13px;
+        }
+
+        .orders-toolbar-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .admin-order-list {
+            display: grid;
+            gap: 20px;
+        }
+
+        .admin-order-card {
+            background: #f8f9fb;
+            border: 1px solid #d6dce4;
+            border-radius: 18px;
+            padding: 26px;
+            min-width: 0;
+        }
+
+        .admin-order-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 16px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #dce1e8;
+        }
+
+        .admin-order-title {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .admin-order-title h2 {
+            font-size: 22px;
+            margin: 0;
+        }
+
+        .admin-order-date {
+            margin: 9px 0 0;
+            color: #657184;
+            font-size: 13px;
+        }
+
+        .admin-order-status {
+            display: inline-flex;
+            align-items: center;
+            padding: 7px 12px;
+            border-radius: 999px;
+            background: #e8ecf2;
+            color: #465164;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .admin-order-status[data-status="NEW"] {
+            background: #e8edff;
+            color: #304dce;
+        }
+
+        .admin-order-status[data-status="PAID"] {
+            background: #e0f5e8;
+            color: #187446;
+        }
+
+        .admin-order-status[data-status="CANCELLED"],
+        .admin-order-status[data-status="CANCELED"] {
+            background: #ffe7e7;
+            color: #b52e35;
+        }
+
+        .admin-order-price {
+            text-align: right;
+        }
+
+        .admin-order-price small {
+            display: block;
+            margin-bottom: 5px;
+            color: #657184;
+        }
+
+        .admin-order-price strong {
+            font-size: 23px;
+        }
+
+        .admin-order-meta {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 18px;
+            padding: 22px 0;
+        }
+
+        .admin-order-meta span {
+            display: block;
+            margin-bottom: 7px;
+            color: #657184;
+            font-size: 12px;
+        }
+
+        .admin-order-meta strong {
+            font-size: 15px;
+            overflow-wrap: anywhere;
+        }
+
+        .admin-order-details {
+            border-top: 1px solid #dce1e8;
+            padding-top: 18px;
+        }
+
+        .admin-order-details summary {
+            cursor: pointer;
+            font-weight: 600;
+            color: #304cff;
+            user-select: none;
+        }
+
+        .admin-order-items {
+            display: grid;
+            gap: 10px;
+            margin-top: 18px;
+        }
+
+        .admin-order-item {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 14px 16px;
+            border: 1px solid #dce1e8;
+            border-radius: 12px;
+            background: #fff;
+        }
+
+        .admin-order-item span {
+            color: #657184;
+            font-size: 13px;
+        }
+
+        .admin-order-item strong {
+            text-align: right;
+        }
+
+        .admin-order-empty {
+            padding: 40px 24px;
+            border: 1px dashed #cbd3df;
+            border-radius: 18px;
+            text-align: center;
+            color: #657184;
+        }
+
+        .admin-order-pagination {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 28px;
+        }
+
+        .admin-order-pagination button {
+            min-width: 40px;
+            min-height: 40px;
+            padding: 8px 14px;
+            border: 1px solid #cbd3df;
+            border-radius: 11px;
+            background: #f8f9fb;
+            color: #15191f;
+            cursor: pointer;
+            font: inherit;
+        }
+
+        .admin-order-pagination button.active {
+            background: #304cff;
+            color: white;
+            border-color: #304cff;
+        }
+
+        .admin-order-pagination button:disabled {
+            opacity: .45;
+            cursor: not-allowed;
+        }
+
+        @media (max-width: 950px) {
+            .orders-filter-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 600px) {
+            .orders-filter-grid,
+            .admin-order-meta {
+                grid-template-columns: 1fr;
+            }
+
+            .orders-toolbar,
+            .admin-order-card {
+                padding: 18px;
+            }
+
+            .admin-order-price {
+                text-align: left;
+            }
+
+            .admin-order-item {
+                flex-direction: column;
+            }
+
+            .admin-order-item strong {
+                text-align: left;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div th:replace="~{fragments/layout :: header('admin')}"></div>
+<div th:replace="~{fragments/layout :: alerts}"></div>
+
+<main>
+    <div class="container page orders-admin">
+
+        <div class="page-head">
+            <div>
+                <h1>Управление заказами</h1>
+                <p>Просмотр заказов, их состава, стоимости и текущих статусов.</p>
+            </div>
+
+            <a th:href="@{/admin}" class="btn btn-outline">
+                ← Админ-панель
+            </a>
+        </div>
+
+        <section class="orders-toolbar" aria-label="Фильтры заказов">
+
+            <div class="orders-filter-grid">
+
+                <div class="orders-filter-field">
+                    <label for="orderSearch">Быстрый поиск</label>
+                    <input
+                            class="input"
+                            type="search"
+                            id="orderSearch"
+                            placeholder="ID заказа, ID пользователя, товар..."
+                            autocomplete="off">
+                </div>
+
+                <div class="orders-filter-field">
+                    <label for="orderStatus">Статус</label>
+                    <select class="select" id="orderStatus">
+                        <option value="">Все статусы</option>
+                    </select>
+                </div>
+
+                <div class="orders-filter-field">
+                    <label for="orderDateFrom">Дата от</label>
+                    <input class="input" type="date" id="orderDateFrom">
+                </div>
+
+                <div class="orders-filter-field">
+                    <label for="orderDateTo">Дата до</label>
+                    <input class="input" type="date" id="orderDateTo">
+                </div>
+
+            </div>
+
+            <div class="orders-toolbar-bottom">
+
+                <span class="orders-counter" id="orderCounter">
+                    Загрузка фильтров...
+                </span>
+
+                <div class="orders-toolbar-actions">
+                    <select class="select" id="orderSort"
+                            aria-label="Сортировка заказов">
+                        <option value="date-desc">Сначала новые</option>
+                        <option value="date-asc">Сначала старые</option>
+                        <option value="price-desc">Сначала дорогие</option>
+                        <option value="price-asc">Сначала дешёвые</option>
+                        <option value="id-desc">ID по убыванию</option>
+                        <option value="id-asc">ID по возрастанию</option>
+                    </select>
+
+                    <button type="button"
+                            class="btn btn-outline"
+                            id="resetOrderFilters">
+                        Сбросить
+                    </button>
+                </div>
+
+            </div>
+        </section>
+
+        <div class="empty"
+             th:if="${orders == null or #lists.isEmpty(orders)}">
+            <p>Заказы не найдены.</p>
+        </div>
+
+        <section class="admin-order-list"
+                 id="adminOrderList"
+                 th:if="${orders != null and !#lists.isEmpty(orders)}">
+
+            <article class="admin-order-card"
+                     th:each="o : ${orders}"
+                     th:attr="
+                         data-id=${o.id},
+                         data-user=${o.userId},
+                         data-status=${o.status},
+                         data-date=${o.createdAt},
+                         data-price=${o.totalPrice}">
+
+                <div class="admin-order-top">
+
+                    <div>
+                        <div class="admin-order-title">
+
+                            <h2 th:text="${'Заказ №' + o.id}">
+                                Заказ №1
+                            </h2>
+
+                            <span class="admin-order-status"
+                                  th:attr="data-status=${o.status}"
+                                  th:text="${o.status}">
+                                NEW
+                            </span>
+
+                        </div>
+
+                        <p class="admin-order-date"
+                           th:text="${o.createdAt != null
+                               ? #strings.replace(o.createdAt.toString(), 'T', ' ')
+                               : 'Дата не указана'}">
+                            Дата
+                        </p>
+                    </div>
+
+                    <div class="admin-order-price">
+                        <small>Сумма заказа</small>
+                        <strong th:text="${o.totalPrice != null
+                            ? o.totalPrice + ' ₽'
+                            : '—'}">
+                            0 ₽
+                        </strong>
+                    </div>
+
+                </div>
+
+                <div class="admin-order-meta">
+
+                    <div>
+                        <span>ID заказа</span>
+                        <strong th:text="${o.id}">1</strong>
+                    </div>
+
+                    <div>
+                        <span>ID пользователя</span>
+                        <strong th:text="${o.userId != null
+                            ? o.userId
+                            : 'Не указан'}">
+                            1
+                        </strong>
+                    </div>
+
+                    <div>
+                        <span>Позиций в заказе</span>
+                        <strong th:text="${o.items != null
+                            ? #lists.size(o.items)
+                            : 0}">
+                            0
+                        </strong>
+                    </div>
+
+                </div>
+
+                <details class="admin-order-details">
+                    <summary>Посмотреть состав заказа</summary>
+
+                    <div class="admin-order-items"
+                         th:if="${o.items != null and !#lists.isEmpty(o.items)}">
+
+                        <div class="admin-order-item"
+                             th:each="item : ${o.items}">
+
+                            <div>
+                                <strong th:text="${'Комплектующее ID ' + item.componentId}">
+                                    Комплектующее
+                                </strong>
+                                <span style="display:block; margin-top:6px;"
+                                      th:text="${'Количество: ' + item.quantity}">
+                                    Количество
+                                </span>
+                            </div>
+
+                            <strong th:text="${item.priceAtPurchase + ' ₽ / шт.'}">
+                                Цена
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+                    <p th:if="${o.items == null or #lists.isEmpty(o.items)}">
+                        Состав заказа отсутствует.
+                    </p>
+                </details>
+
+            </article>
+
+        </section>
+
+        <div id="filteredOrdersEmpty"
+             class="admin-order-empty"
+             hidden>
+            По выбранным фильтрам заказы не найдены.
+        </div>
+
+        <nav id="adminOrderPagination"
+             class="admin-order-pagination"
+             aria-label="Страницы заказов">
+        </nav>
+
+    </div>
+</main>
+
+<footer class="site-footer">© 2026 Colizant</footer>
+
+<script th:src="@{/js/admin-orders.js}" defer></script>
+
+</body>
+</html>

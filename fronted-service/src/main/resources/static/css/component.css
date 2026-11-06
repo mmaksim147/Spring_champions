@@ -1,0 +1,273 @@
+css
+    /* Страница комплектующего Colizant */
+
+.component-page {
+    width: min(1180px, calc(100% - 48px));
+    margin: 0 auto;
+    padding: 32px 0 80px;
+}
+
+.component-breadcrumbs {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 28px;
+    font-size: 13px;
+    color: #888;
+}
+
+.component-breadcrumbs a {
+    color: #777;
+    text-decoration: none;
+    transition: color .2s;
+}
+
+.component-breadcrumbs a:hover {
+    color: #111;
+}
+
+.component-breadcrumbs span:last-child {
+    color: #222;
+    font-weight: 500;
+}
+
+.component-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 30px;
+    padding: 11px 18px;
+    border: 1px solid #d2d2d2;
+    border-radius: 12px;
+    color: #222;
+    background: transparent;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background .2s, border-color .2s;
+}
+
+.component-back:hover {
+    background: #fff;
+    border-color: #999;
+}
+
+.component-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+    overflow: hidden;
+    background: #fff;
+    border: 1px solid #e3e3e3;
+    border-radius: 24px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, .035);
+}
+
+.component-visual {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 44px;
+    background: #f1f2f4;
+    min-height: 500px;
+}
+
+.component-visual-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    width: 100%;
+    min-height: 340px;
+    border: 1px solid #dedfe3;
+    border-radius: 20px;
+    background: #f7f7f8;
+}
+
+.component-visual-icon {
+    display: grid;
+    place-items: center;
+    width: 140px;
+    height: 140px;
+    border-radius: 32px;
+    background: #e9eaed;
+    color: #333;
+    font-size: 88px;
+}
+
+.component-visual-inner > span {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    color: #a0a0a5;
+}
+
+.component-info {
+    padding: 52px 50px;
+}
+
+.component-label {
+    display: inline-block;
+    padding: 7px 11px;
+    border-radius: 7px;
+    background: #f2f2f2;
+    color: #777;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+}
+
+.component-info h1 {
+    margin: 22px 0 10px;
+    color: #171717;
+    font-size: clamp(28px, 3vw, 38px);
+    line-height: 1.2;
+    letter-spacing: -1px;
+}
+
+.component-manufacturer {
+    margin: 0;
+    color: #777;
+    font-size: 15px;
+}
+
+.component-manufacturer strong {
+    color: #292929;
+}
+
+.component-divider {
+    height: 1px;
+    margin: 28px 0;
+    background: #ededed;
+}
+
+.component-price-label {
+    margin-bottom: 8px;
+    color: #858585;
+    font-size: 13px;
+}
+
+.component-price {
+    display: flex;
+    align-items: baseline;
+    gap: 7px;
+    color: #171717;
+    font-size: clamp(30px, 3.2vw, 42px);
+    font-weight: 800;
+    letter-spacing: -1px;
+}
+
+.component-price span:last-child {
+    font-size: 28px;
+}
+
+.component-description {
+    margin: 16px 0 0;
+    color: #666;
+    font-size: 14px;
+    line-height: 1.7;
+}
+
+.component-info h2 {
+    margin: 0 0 18px;
+    color: #222;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.component-specs {
+    margin: 0;
+}
+
+.component-specs > div {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 14px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.component-specs dt {
+    color: #858585;
+    font-size: 14px;
+}
+
+.component-specs dd {
+    margin: 0;
+    color: #242424;
+    font-size: 14px;
+    font-weight: 600;
+    text-align: right;
+}
+
+.component-action {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-top: 32px;
+    padding: 16px 20px;
+    border: 1px solid #191919;
+    border-radius: 12px;
+    background: #191919;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background .2s, transform .2s;
+}
+
+.component-action:hover {
+    background: #383838;
+    transform: translateY(-2px);
+}
+
+.component-action span {
+    font-size: 20px;
+}
+
+@media (max-width: 800px) {
+    .component-card {
+        grid-template-columns: 1fr;
+    }
+
+    .component-visual {
+        min-height: 280px;
+        padding: 24px;
+    }
+
+    .component-visual-inner {
+        min-height: 220px;
+    }
+
+    .component-visual-icon {
+        width: 100px;
+        height: 100px;
+        font-size: 62px;
+    }
+
+    .component-info {
+        padding: 32px 26px;
+    }
+}
+
+@media (max-width: 480px) {
+    .component-page {
+        width: calc(100% - 28px);
+        padding-top: 20px;
+    }
+
+    .component-info {
+        padding: 28px 20px;
+    }
+
+    .component-info h1 {
+        font-size: 28px;
+    }
+
+    .component-price {
+        font-size: 32px;
+    }
+}

@@ -1,0 +1,217 @@
+
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title th:text="${product.name} + ' — Colizant'">
+        Комплектующее — Colizant
+    </title>
+
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/component.css}">
+
+    <style>
+        .component-cart-form {
+            margin-top: 24px;
+        }
+
+        .component-cart-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            padding: 15px 22px;
+            border: none;
+            border-radius: 12px;
+            background: #304cff;
+            color: #fff;
+            font: inherit;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.2s;
+        }
+
+        .component-cart-button:hover {
+            background: #2139d0;
+            transform: translateY(-1px);
+        }
+
+        .component-cart-button:disabled {
+            background: #9ba3b3;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .component-action {
+            margin-top: 14px;
+        }
+    </style>
+</head>
+
+<body>
+
+<header class="site-header">
+    <a th:href="@{/}" class="logo">
+        <img th:src="@{/images/logo.jpg}"
+             alt=""
+             class="logo-img"
+             width="56"
+             height="56">
+        Colizant
+    </a>
+
+    <nav class="main-nav">
+        <a th:href="@{/}">Главная</a>
+        <a th:href="@{/catalog}">Каталог</a>
+        <a th:href="@{/cart}">Корзина</a>
+    </nav>
+</header>
+
+<main class="component-page">
+
+    <nav class="component-breadcrumbs" aria-label="Навигация">
+        <a th:href="@{/}">Главная</a>
+        <span>/</span>
+        <a th:href="@{/catalog}">Каталог</a>
+        <span>/</span>
+        <span th:text="${product.name}">Комплектующее</span>
+    </nav>
+
+    <a th:href="@{/catalog}" class="component-back">
+        <span>←</span>
+        Назад в каталог
+    </a>
+
+    <div th:replace="~{fragments/layout :: alerts}"></div>
+
+    <div class="component-card">
+
+        <section class="component-visual">
+            <div class="component-visual-inner">
+                <div class="component-visual-icon">⚙</div>
+                <span>COLIZANT COMPONENT</span>
+            </div>
+        </section>
+
+        <section class="component-info">
+
+            <div class="component-label">
+                КОМПЛЕКТУЮЩЕЕ ПК
+            </div>
+
+            <h1 th:text="${product.name}">
+                Название комплектующего
+            </h1>
+
+            <p class="component-manufacturer"
+               th:if="${product.manufacturer != null}">
+                Производитель:
+                <strong th:text="${product.manufacturer}">
+                    ASUS
+                </strong>
+            </p>
+
+            <div class="component-divider"></div>
+
+            <div class="component-price-label">
+                Цена
+            </div>
+
+            <div class="component-price">
+                <span th:text="${product.price != null
+                    ? #numbers.formatDecimal(product.price, 1, 2)
+                    : 'Не указана'}">
+                    12000.00
+                </span>
+                <span th:if="${product.price != null}">₽</span>
+            </div>
+
+            <p class="component-description"
+               th:if="${product.description != null}"
+               th:text="${product.description}">
+            </p>
+
+            <div class="component-divider"></div>
+
+            <h2>Характеристики</h2>
+
+            <dl class="component-specs">
+
+                <div th:if="${product.manufacturer != null}">
+                    <dt>Производитель</dt>
+                    <dd th:text="${product.manufacturer}">ASUS</dd>
+                </div>
+
+                <div th:if="${product.socket != null}">
+                    <dt>Сокет</dt>
+                    <dd th:text="${product.socket}">LGA1700</dd>
+                </div>
+
+                <div th:if="${product.ramType != null}">
+                    <dt>Тип памяти</dt>
+                    <dd th:text="${product.ramType}">DDR4</dd>
+                </div>
+
+                <div th:if="${product.formFactor != null}">
+                    <dt>Форм-фактор</dt>
+                    <dd th:text="${product.formFactor}">mATX</dd>
+                </div>
+
+            </dl>
+
+            <!-- Добавление товара в корзину -->
+            <form class="component-cart-form"
+                  th:action="@{/cart/add}"
+                  method="post">
+
+                <input type="hidden"
+                       name="componentId"
+                       th:value="${product.id}">
+
+                <input type="hidden"
+                       name="quantity"
+                       value="1">
+
+                <input type="hidden"
+                       name="source"
+                       value="component">
+
+                <button type="submit"
+                        class="component-cart-button"
+                        th:disabled="${product.stockQuantity != null
+                            and product.stockQuantity <= 0}">
+
+                    <span th:if="${product.stockQuantity == null
+                        or product.stockQuantity > 0}">
+                        🛒 Добавить в корзину
+                    </span>
+
+                    <span th:if="${product.stockQuantity != null
+                        and product.stockQuantity <= 0}">
+                        Нет в наличии
+                    </span>
+
+                </button>
+
+            </form>
+
+            <a th:href="@{/catalog}" class="component-action">
+                Посмотреть другие комплектующие
+                <span>→</span>
+            </a>
+
+        </section>
+    </div>
+
+</main>
+
+<footer class="site-footer">
+    © 2026 Colizant
+</footer>
+
+</body>
+</html>

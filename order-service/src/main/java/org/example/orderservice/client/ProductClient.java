@@ -7,11 +7,24 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
-@FeignClient(name = "product-service", fallback = ProductClientFallback.class)
+@FeignClient(
+        name = "product-service",
+        fallback = ProductClientFallback.class
+)
 public interface ProductClient {
+
     @GetMapping("/components/{id}")
     ComponentDto getComponentById(@PathVariable("id") Long id);
 
     @PatchMapping("/components/{id}/decrease-stock")
-    void decreaseStock(@PathVariable("id") Long id, @RequestParam("quantity") Integer quantity);
+    void decreaseStock(
+            @PathVariable("id") Long id,
+            @RequestParam("quantity") Integer quantity
+    );
+
+    @PatchMapping("/components/{id}/increase-stock")
+    void increaseStock(
+            @PathVariable("id") Long id,
+            @RequestParam("quantity") Integer quantity
+    );
 }

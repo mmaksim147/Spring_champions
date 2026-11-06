@@ -1,35 +1,302 @@
+
 <!DOCTYPE html>
 <html lang="ru" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Каталог</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Каталог комплектующих — Colizant</title>
+
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+
     <style>
-        body { font-family: Arial, sans-serif; background: #f4f4f7; margin: 0; }
-        .header { background: #1e293b; color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; }
-        .container { max-width: 1200px; margin: 20px auto; padding: 0 20px; }
-        .products { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; }
-        .product { background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
-        .product h3 { margin: 0 0 10px; font-size: 16px; }
-        .price { color: #2563eb; font-weight: 700; }
-        .error { color: red; }
-        a { color: #2563eb; }
+        .catalog-add-form {
+            margin-top: 14px;
+        }
+
+        .catalog-add-button {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .catalog-add-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
     </style>
 </head>
+
 <body>
-<div class="header">
-    <span>Вы вошли как <b th:text="${username}"></b></span>
-    <a href="/logout" style="color: white;">Выйти</a>
-</div>
 
-<div class="container">
-    <h1>Каталог компонентов</h1>
-    <div th:if="${error}" class="error" th:text="${error}"></div>
+<div th:replace="~{fragments/layout :: header('catalog')}"></div>
+<div th:replace="~{fragments/layout :: alerts}"></div>
 
-    <div class="products">
-        <div class="product" th:each="product : ${products}">
-            <h3 th:text="${product.name}"></h3>
-            <p class="price" th:text="${product.price} + ' ₽'"></p>
+<main>
+    <div class="container page">
+
+        <div class="page-head">
+            <div>
+                <h1>Каталог комплектующих</h1>
+                <p>Подберите комплектующие для своего ПК.</p>
+            </div>
         </div>
+
+        <!-- Поиск и сортировка -->
+        <form class="catalog-toolbar"
+              th:action="@{/catalog}"
+              method="get"
+              role="search">
+
+            <input class="input"
+                   type="search"
+                   name="search"
+                   placeholder="Поиск по названию или модели"
+                   aria-label="Поиск комплектующих"
+                   maxlength="100"
+                   th:value="${search}">
+
+            <select class="select"
+                    name="sort"
+                    aria-label="Сортировка">
+
+                <option value="name"
+                        th:selected="${sort == 'name'}">
+                    По названию
+                </option>
+
+                <option value="price"
+                        th:selected="${sort == 'price'}">
+                    По цене
+                </option>
+            </select>
+
+            <select class="select"
+                    name="direction"
+                    aria-label="Направление сортировки">
+
+                <option value="asc"
+                        th:selected="${direction == 'asc'}">
+                    По возрастанию
+                </option>
+
+                <option value="desc"
+                        th:selected="${direction == 'desc'}">
+                    По убыванию
+                </option>
+            </select>
+
+            <button class="btn btn-ink" type="submit">
+                Применить
+            </button>
+        </form>
+
+        <!-- Ошибка загрузки -->
+        <div class="notice"
+             th:if="${error != null}"
+             role="alert">
+            <p th:text="${error}">
+                Не удалось загрузить каталог.
+            </p>
+        </div>
+
+        <!-- Результаты поиска -->
+        <p th:if="${error == null and search != null and !#strings.isEmpty(search)}"
+           class="notice">
+            Результаты поиска:
+            <strong th:text="${search}">RTX</strong>
+        </p>
+
+        <!-- Карточки товаров -->
+        <div class="grid"
+             th:if="${products != null and !#lists.isEmpty(products)}">
+
+            <article class="product-card"
+                     th:each="p : ${products}">
+
+                <div class="product-media">
+
+                    <img th:if="${p.imageUrl != null and !#strings.isEmpty(p.imageUrl)}"
+                         th:src="${p.imageUrl}"
+                         th:alt="${p.name}"
+                         loading="lazy">
+
+                    <div class="brand"
+                         th:if="${p.imageUrl == null or #strings.isEmpty(p.imageUrl)}"
+                         th:text="${p.manufacturer != null ? p.manufacturer : 'Colizant'}">
+                        Бренд
+                    </div>
+                </div>
+
+                <div class="product-body">
+
+                    <h2>
+                        <a class="product-title-link"
+                           th:href="@{'/components/' + ${p.id}}"
+                           th:text="${p.name}">
+                            Название товара
+                        </a>
+                    </h2>
+
+                    <dl class="specs">
+
+                        <div th:if="${p.category != null and p.category.name != null}">
+                            <dt>Категория</dt>
+                            <dd th:text="${p.category.name}"></dd>
+                        </div>
+
+                        <div th:if="${p.manufacturer != null}">
+                            <dt>Производитель</dt>
+                            <dd th:text="${p.manufacturer}"></dd>
+                        </div>
+
+                        <div th:if="${p.socket != null}">
+                            <dt>Сокет</dt>
+                            <dd th:text="${p.socket}"></dd>
+                        </div>
+
+                        <div th:if="${p.ramType != null}">
+                            <dt>Память</dt>
+                            <dd th:text="${p.ramType}"></dd>
+                        </div>
+
+                        <div th:if="${p.formFactor != null}">
+                            <dt>Форм-фактор</dt>
+                            <dd th:text="${p.formFactor}"></dd>
+                        </div>
+
+                    </dl>
+
+                    <div class="product-buy">
+
+                        <div>
+                            <div class="price"
+                                 th:text="${p.price != null
+                                     ? #numbers.formatDecimal(p.price, 1, 'WHITESPACE', 2, 'POINT') + ' ₽'
+                                     : 'Цена не указана'}">
+                                0 ₽
+                            </div>
+
+                            <small class="stock"
+                                   th:text="${p.stockQuantity != null
+                                       ? 'В наличии: ' + p.stockQuantity
+                                       : 'Наличие уточняется'}">
+                                Наличие уточняется
+                            </small>
+                        </div>
+
+                    </div>
+
+                    <!-- Добавление в корзину -->
+                    <form class="catalog-add-form"
+                          th:action="@{/cart/add}"
+                          method="post">
+
+                        <input type="hidden"
+                               name="componentId"
+                               th:value="${p.id}">
+
+                        <input type="hidden"
+                               name="quantity"
+                               value="1">
+
+                        <input type="hidden"
+                               name="source"
+                               value="catalog">
+
+                        <button type="submit"
+                                class="btn btn-primary catalog-add-button"
+                                th:disabled="${p.stockQuantity != null and p.stockQuantity <= 0}">
+
+                            <span th:if="${p.stockQuantity == null or p.stockQuantity > 0}">
+                                В корзину
+                            </span>
+
+                            <span th:if="${p.stockQuantity != null and p.stockQuantity <= 0}">
+                                Нет в наличии
+                            </span>
+
+                        </button>
+                    </form>
+
+                </div>
+            </article>
+        </div>
+
+        <!-- Пустой результат -->
+        <div class="empty"
+             th:if="${error == null and (products == null or #lists.isEmpty(products))}">
+
+            <p>По вашему запросу ничего не найдено.</p>
+
+            <a th:href="@{/catalog}" class="btn btn-outline">
+                Сбросить фильтры
+            </a>
+        </div>
+
+        <!-- Пагинация -->
+        <nav class="pagination"
+             th:if="${totalPages != null and totalPages > 1}"
+             aria-label="Страницы каталога">
+
+            <a th:if="${currentPage > 0}"
+               th:href="@{/catalog(
+                    page=${currentPage - 1},
+                    search=${search},
+                    sort=${sort},
+                    direction=${direction}
+               )}">
+                ← Назад
+            </a>
+
+            <th:block th:each="i : ${#numbers.sequence(0, totalPages - 1)}">
+
+                <span th:if="${i == currentPage}"
+                      class="current"
+                      aria-current="page"
+                      th:text="${i + 1}">
+                    1
+                </span>
+
+                <a th:if="${i != currentPage}"
+                   th:href="@{/catalog(
+                        page=${i},
+                        search=${search},
+                        sort=${sort},
+                        direction=${direction}
+                   )}"
+                   th:text="${i + 1}">
+                    2
+                </a>
+
+            </th:block>
+
+            <a th:if="${currentPage < totalPages - 1}"
+               th:href="@{/catalog(
+                    page=${currentPage + 1},
+                    search=${search},
+                    sort=${sort},
+                    direction=${direction}
+               )}">
+                Далее →
+            </a>
+
+        </nav>
+
+        <p class="notice"
+           th:if="${totalPages != null and totalPages > 1}">
+
+            Страница
+            <strong th:text="${currentPage + 1}">1</strong>
+            из
+            <strong th:text="${totalPages}">1</strong>
+
+        </p>
+
     </div>
+</main>
+
+<footer class="site-footer">
+    © 2026 Colizant
+</footer>
+
 </body>
 </html>

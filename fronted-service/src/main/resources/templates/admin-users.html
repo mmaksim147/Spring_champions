@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Управление пользователями | Colizant</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geologica:wght@500;600;700&family=Onest:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+
+<div th:replace="~{fragments/layout :: header('admin')}"></div>
+<div th:replace="~{fragments/layout :: alerts}"></div>
+
+<main class="admin-page">
+    <div class="container page">
+        <div class="page-head">
+            <div>
+                <a th:href="@{/admin}" class="back-link">← В админ-панель</a>
+                <h1>Пользователи</h1>
+                <p>Просмотр списка аккаунтов, изменение ролей и удаление пользователей.</p>
+            </div>
+        </div>
+
+        <div th:if="${error}" class="builder-alert" role="alert" th:text="${error}"></div>
+
+        <section class="card">
+            <div class="stack" th:if="${users != null and !#lists.isEmpty(users)}">
+                <article class="cart-row" th:each="u : ${users}" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                    <div>
+                        <strong th:text="${u['username']}">Username</strong>
+                        <div class="muted">
+                            ID: <span th:text="${u['id']}"></span> | Email: <span th:text="${u['email']}"></span>
+                        </div>
+                        <div class="muted">
+                            Роли: <span th:text="${u['roles']}"></span>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        <form th:action="@{'/admin/users/role/' + ${u['id']}}" method="post" style="display: flex; gap: 0.5rem;">
+                            <select name="role" class="select">
+                                <option value="USER">USER</option>
+                                <option value="ADMIN">ADMIN</option>
+                            </select>
+                            <button type="submit" class="btn btn-ink">Сменить роль</button>
+                        </form>
+
+                        <form th:action="@{'/admin/users/delete/' + ${u['id']}}" method="post" onsubmit="return confirm('Удалить пользователя?');">
+                            <button type="submit" class="btn btn-danger">Удалить</button>
+                        </form>
+                    </div>
+                </article>
+            </div>
+
+            <div class="empty" th:if="${users == null or #lists.isEmpty(users)}">
+                <p>Пользователи не найдены.</p>
+            </div>
+        </section>
+    </div>
+</main>
+
+<footer class="site-footer">© 2026 Colizant</footer>
+</body>
+</html>

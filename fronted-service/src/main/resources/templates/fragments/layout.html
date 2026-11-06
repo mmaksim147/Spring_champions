@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Fragments</title>
+</head>
+<body>
+
+<header class="site-header"
+        th:fragment="header(active)"
+        th:with="authed=${session != null and session.token != null},
+                 admin=${session != null and session.roles != null and #strings.contains(session.roles.toString(), 'ROLE_ADMIN')}">
+
+    <a th:href="@{/}" class="logo">
+        <img th:src="@{/logo.png}"
+             alt=""
+             class="logo-img"
+             width="56"
+             height="56">
+        Colizant
+    </a>
+
+    <nav class="main-nav">
+
+        <a th:href="@{/}"
+           th:classappend="${active == 'home'} ? 'active'">
+            Главная
+        </a>
+
+        <a th:href="@{/catalog}"
+           th:classappend="${active == 'catalog'} ? 'active'">
+            Каталог
+        </a>
+
+        <th:block th:if="${authed}">
+
+            <a th:href="@{/builder}"
+               th:classappend="${active == 'builder'} ? 'active'">
+                Конструктор
+            </a>
+
+            <a th:href="@{/builds}"
+               th:classappend="${active == 'builds'} ? 'active'">
+                Мои сборки
+            </a>
+
+            <a th:href="@{/orders}"
+               th:classappend="${active == 'orders'} ? 'active'">
+                Мои заказы
+            </a>
+
+            <a th:if="${admin}"
+               th:href="@{/admin}"
+               th:classappend="${active == 'admin'} ? 'active'">
+                Админ-панель
+            </a>
+
+        </th:block>
+
+    </nav>
+
+    <div class="auth-buttons">
+
+        <th:block th:if="${authed}">
+
+            <a th:href="@{/cart}" class="btn btn-outline">
+                Корзина
+            </a>
+
+            <a th:href="@{/logout/confirm}" class="btn btn-outline">Выйти</a>
+
+        </th:block>
+
+        <th:block th:unless="${authed}">
+
+            <a th:href="@{/login}" class="btn btn-outline">
+                Вход
+            </a>
+
+            <a th:href="@{/register}" class="btn btn-primary">
+                Регистрация
+            </a>
+
+        </th:block>
+
+    </div>
+</header>
+
+<th:block th:fragment="alerts">
+
+    <div class="container" style="margin-top: 20px;">
+
+        <div class="alert alert-error"
+             th:if="${error}"
+             th:text="${error}">
+        </div>
+
+        <div class="alert alert-success"
+             th:if="${success}"
+             th:text="${success}">
+        </div>
+
+        <div class="alert alert-success"
+             th:if="${param.success}"
+             th:text="${param.success}">
+        </div>
+
+        <div class="alert alert-error"
+             th:if="${param.error}"
+             th:text="${param.error}">
+        </div>
+
+    </div>
+
+</th:block>
+
+</body>
+</html>

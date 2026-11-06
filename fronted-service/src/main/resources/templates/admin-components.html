@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Управление комплектующими | Colizant</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geologica:wght@500;600;700&family=Onest:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+
+<div th:replace="~{fragments/layout :: header('admin')}"></div>
+<div th:replace="~{fragments/layout :: alerts}"></div>
+
+<main class="admin-page">
+    <div class="container page">
+        <div class="page-head">
+            <div>
+                <a th:href="@{/admin}" class="back-link">← В админ-панель</a>
+                <h1>Комплектующие</h1>
+                <p>Управление товарами магазина с возможностью редактирования каждого поля.</p>
+            </div>
+        </div>
+
+        <div th:if="${error}" class="builder-alert" role="alert" th:text="${error}"></div>
+
+        <!-- Форма создания нового товара -->
+        <section class="card" style="margin-bottom: 2rem;">
+            <h2>Добавить новый товар</h2>
+            <form th:action="@{/admin/components/create}" method="post" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem;">
+                <input class="input" type="text" name="name" placeholder="Название товара" required>
+                <input class="input" type="text" name="manufacturer" placeholder="Производитель" required>
+                <input class="input" type="number" step="0.01" name="price" placeholder="Цена (₽)" required>
+                <input class="input" type="number" name="stockQuantity" placeholder="Количество" required>
+                <button class="btn btn-primary" type="submit" style="grid-column: 1 / -1;">Добавить товар</button>
+            </form>
+        </section>
+
+        <!-- Поиск по названию и производителю -->
+        <form class="catalog-toolbar" th:action="@{/admin/components}" method="get" style="margin-bottom: 1.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <input class="input" type="search" name="search" placeholder="Поиск по названию..." th:value="${search}" style="flex: 1; min-width: 200px;">
+            <input class="input" type="search" name="manufacturer" placeholder="По производителю..." th:value="${param.manufacturer}" style="width: 200px;">
+            <button class="btn btn-ink" type="submit">Найти</button>
+            <a th:href="@{/admin/components}" class="btn btn-outline" style="align-self: center;">Сбросить</a>
+        </form>
+
+        <!-- Список товаров с редактированием каждого поля -->
+        <section class="card">
+            <div class="stack" th:if="${components != null and !#lists.isEmpty(components)}">
+                <article class="card" th:each="c : ${components}" style="margin-bottom: 1rem; padding: 1rem; border: 1px solid #e5e7eb;">
+                    <form th:action="@{/admin/components/update}" method="post" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)) auto; gap: 0.75rem; align-items: center;">
+                        <input type="hidden" name="id" th:value="${c['id']}">
+
+                        <div>
+                            <label style="font-size: 0.75rem; color: #666; display: block; margin-bottom: 2px;">Название</label>
+                            <input class="input" type="text" name="name" th:value="${c['name']}" required>
+                        </div>
+
+                        <div>
+                            <label style="font-size: 0.75rem; color: #666; display: block; margin-bottom: 2px;">Производитель</label>
+                            <input class="input" type="text" name="manufacturer" th:value="${c['manufacturer']}" required>
+                        </div>
+
+                        <div>
+                            <label style="font-size: 0.75rem; color: #666; display: block; margin-bottom: 2px;">Цена (₽)</label>
+                            <input class="input" type="number" step="0.01" name="price" th:value="${c['price']}" required>
+                        </div>
+
+                        <div>
+                            <label style="font-size: 0.75rem; color: #666; display: block; margin-bottom: 2px;">Количество</label>
+                            <input class="input" type="number" name="stockQuantity" th:value="${c['stockQuantity']}" required>
+                        </div>
+
+                        <div style="display: flex; gap: 0.5rem; align-self: flex-end;">
+                            <button type="submit" class="btn btn-ink">Сохранить</button>
+                    </form>
+                    <form th:action="@{'/admin/components/delete/' + ${c['id']}}" method="post" onsubmit="return confirm('Удалить этот компонент?');" style="margin: 0;">
+                        <button type="submit" class="btn btn-danger">Удалить</button>
+                    </form>
+            </div>
+            </article>
+    </div>
+
+    <div class="empty" th:if="${components == null or #lists.isEmpty(components)}">
+        <p>Товары не найдены.</p>
+    </div>
+    </section>
+
+    <!-- Пагинация -->
+    <nav class="pagination" th:if="${totalPages != null and totalPages > 1}" style="margin-top: 1.5rem;">
+        <a th:if="${currentPage > 0}" th:href="@{/admin/components(page=${currentPage - 1},search=${search},manufacturer=${param.manufacturer})}">Назад</a>
+        <span th:each="i : ${#numbers.sequence(0, totalPages - 1)}">
+        <span th:if="${i == currentPage}" class="current" th:text="${i + 1}">1</span>
+        <a th:if="${i != currentPage}" th:href="@{/admin/components(page=${i},search=${search},manufacturer=${param.manufacturer})}" th:text="${i + 1}">2</a>
+      </span>
+        <a th:if="${currentPage < totalPages - 1}" th:href="@{/admin/components(page=${currentPage + 1},search=${search},manufacturer=${param.manufacturer})}">Далее</a>
+    </nav>
+    </div>
+</main>
+
+<footer class="site-footer">© 2026 Colizant</footer>
+</body>
+</html>

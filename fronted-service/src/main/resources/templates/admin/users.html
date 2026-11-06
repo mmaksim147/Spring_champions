@@ -1,0 +1,366 @@
+
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Пользователи — Colizant</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geologica:wght@500;600;700&family=Onest:wght@400;500;600&display=swap"
+          rel="stylesheet">
+
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/dashboard-polish.css}">
+
+    <style>
+        .users-filter-panel {
+            display: grid;
+            grid-template-columns: minmax(0, 2fr) minmax(190px, 1fr) auto;
+            gap: 18px;
+            align-items: end;
+            padding: 26px;
+            margin-bottom: 24px;
+            background: #f8f9fa;
+            border: 1px solid #d4d9df;
+            border-radius: 17px;
+        }
+
+        .users-filter-field {
+            min-width: 0;
+        }
+
+        .users-filter-field label {
+            display: block;
+            margin-bottom: 9px;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .users-filter-field .input,
+        .users-filter-field .select {
+            width: 100%;
+            min-height: 46px;
+        }
+
+        .users-filter-reset {
+            min-height: 46px;
+        }
+
+        .users-list-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .users-list-head h2 {
+            margin: 0;
+            font-size: 19px;
+        }
+
+        .users-counter {
+            color: #667180;
+            font-size: 13px;
+        }
+
+        #usersTable td {
+            vertical-align: middle;
+        }
+
+        .user-username {
+            font-weight: 700;
+        }
+
+        .user-email {
+            color: #667180;
+        }
+
+        .user-role-form {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+        }
+
+        .user-role-form .select {
+            min-width: 105px;
+            min-height: 35px;
+        }
+
+        .user-role-badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 999px;
+            background: #e9edf2;
+            color: #354052;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .user-role-badge.is-admin {
+            background: #e8ecff;
+            color: #3047e8;
+        }
+
+        #usersTable tr[hidden],
+        #usersNoResults[hidden] {
+            display: none !important;
+        }
+
+        @media (max-width: 850px) {
+            .users-filter-panel {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .users-filter-field:first-child {
+                grid-column: 1 / -1;
+            }
+        }
+
+        @media (max-width: 560px) {
+            .users-filter-panel {
+                grid-template-columns: 1fr;
+                padding: 20px;
+            }
+
+            .users-filter-field:first-child {
+                grid-column: auto;
+            }
+
+            .users-filter-reset {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div th:replace="~{fragments/layout :: header('admin')}"></div>
+<div th:replace="~{fragments/layout :: alerts}"></div>
+
+<main>
+    <div class="container page">
+
+        <div class="page-head">
+            <div>
+                <h1>Пользователи</h1>
+                <p>Управление учётными записями и правами доступа.</p>
+            </div>
+
+            <a th:href="@{/admin}" class="btn btn-outline">
+                ← Админ-панель
+            </a>
+        </div>
+
+        <section class="users-filter-panel">
+
+            <div class="users-filter-field">
+                <label for="userSearch">Быстрый поиск</label>
+
+                <input class="input"
+                       id="userSearch"
+                       type="search"
+                       placeholder="ID, логин, email или роль..."
+                       autocomplete="off">
+            </div>
+
+            <div class="users-filter-field">
+                <label for="userRoleFilter">Роль пользователя</label>
+
+                <select class="select" id="userRoleFilter">
+                    <option value="">Все роли</option>
+                    <option value="ADMIN">Администраторы</option>
+                    <option value="USER">Обычные пользователи</option>
+                </select>
+            </div>
+
+            <button type="button"
+                    class="btn btn-outline users-filter-reset"
+                    id="resetUserFilters">
+                Сбросить
+            </button>
+
+        </section>
+
+        <div class="users-list-head">
+            <h2>Учётные записи</h2>
+
+            <span class="users-counter"
+                  id="usersCounter"
+                  aria-live="polite"></span>
+        </div>
+
+        <div class="empty"
+             th:if="${users == null or #lists.isEmpty(users)}">
+            <p>Пользователи не найдены.</p>
+        </div>
+
+        <div class="table-wrap admin-table-wrap"
+             th:if="${users != null and !#lists.isEmpty(users)}">
+
+            <table id="usersTable">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Логин</th>
+                    <th>Email</th>
+                    <th>Текущая роль</th>
+                    <th>Изменить роль</th>
+                    <th class="end">Действия</th>
+                </tr>
+                </thead>
+
+                <tbody>
+                <tr th:each="u : ${users}"
+                    th:with="isAdmin=${u['roles'] != null and #strings.contains(#strings.listJoin(u['roles'], ','), 'ADMIN')}"
+                    th:attr="data-user-role=${isAdmin ? 'ADMIN' : 'USER'}">
+
+                    <td th:text="${u['id']}">1</td>
+
+                    <td>
+                        <span class="user-username"
+                              th:text="${u['username']}">
+                            username
+                        </span>
+                    </td>
+
+                    <td>
+                        <span class="user-email"
+                              th:text="${u['email']}">
+                            email@example.com
+                        </span>
+                    </td>
+
+                    <td>
+                        <span class="user-role-badge"
+                              th:classappend="${isAdmin} ? ' is-admin' : ''"
+                              th:text="${isAdmin} ? 'ADMIN' : 'USER'">
+                            USER
+                        </span>
+                    </td>
+
+                    <td>
+                        <form class="user-role-form"
+                              th:action="@{'/admin/users/role/' + ${u['id']}}"
+                              method="post">
+
+                            <select class="select" name="role">
+                                <option value="USER"
+                                        th:selected="${!isAdmin}">
+                                    USER
+                                </option>
+
+                                <option value="ADMIN"
+                                        th:selected="${isAdmin}">
+                                    ADMIN
+                                </option>
+                            </select>
+
+                            <button type="submit"
+                                    class="btn btn-sm btn-ink">
+                                Сохранить
+                            </button>
+                        </form>
+                    </td>
+
+                    <td class="end">
+                        <form th:action="@{'/admin/users/delete/' + ${u['id']}}"
+                              method="post"
+                              onsubmit="return confirm('Удалить пользователя?');">
+
+                            <button type="submit"
+                                    class="btn btn-sm btn-danger">
+                                Удалить
+                            </button>
+                        </form>
+                    </td>
+
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="empty" id="usersNoResults" hidden>
+            <p>Пользователи по заданным фильтрам не найдены.</p>
+        </div>
+
+    </div>
+</main>
+
+<footer class="site-footer">© 2026 Colizant</footer>
+
+<script>
+    (() => {
+        "use strict";
+
+        const search = document.getElementById("userSearch");
+        const roleFilter = document.getElementById("userRoleFilter");
+        const reset = document.getElementById("resetUserFilters");
+        const table = document.getElementById("usersTable");
+        const counter = document.getElementById("usersCounter");
+        const empty = document.getElementById("usersNoResults");
+
+        if (!search || !table) return;
+
+        const rows = Array.from(table.querySelectorAll("tbody tr"));
+
+        const normalize = value =>
+            String(value ?? "")
+                .toLocaleLowerCase("ru-RU")
+                .replace(/\s+/g, " ")
+                .trim();
+
+        function applyFilters() {
+            const terms = normalize(search.value)
+                .split(" ")
+                .filter(Boolean);
+
+            const role = roleFilter.value;
+            let visible = 0;
+
+            rows.forEach(row => {
+                const text = normalize(
+                    Array.from(row.cells)
+                        .slice(0, 4)
+                        .map(cell => cell.textContent)
+                        .join(" ")
+                );
+
+                const matchesText = terms.every(term =>
+                    text.includes(term)
+                );
+
+                const matchesRole =
+                    !role || row.dataset.userRole === role;
+
+                const matches = matchesText && matchesRole;
+
+                row.hidden = !matches;
+
+                if (matches) visible++;
+            });
+
+            counter.textContent =
+                `Показано ${visible} из ${rows.length}`;
+
+            if (empty) empty.hidden = visible !== 0;
+        }
+
+        search.addEventListener("input", applyFilters);
+        roleFilter.addEventListener("change", applyFilters);
+
+        reset.addEventListener("click", () => {
+            search.value = "";
+            roleFilter.value = "";
+            applyFilters();
+        });
+
+        applyFilters();
+    })();
+</script>
+
+</body>
+</html>
