@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Категории: Colizant</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geologica:wght@500;600;700&family=Onest:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div th:replace="~{fragments/layout :: header('admin')}"></div>
+<div th:replace="~{fragments/layout :: alerts}"></div>
+
+<main>
+    <div class="container page">
+        <div class="page-head">
+            <div>
+                <h1>Категории</h1>
+                <p>Разделы каталога комплектующих.</p>
+            </div>
+        </div>
+
+        <div class="toolbar">
+            <form th:action="@{/admin/categories/create}" method="post">
+                <input class="input" type="text" name="name" placeholder="Название новой категории" required>
+                <button type="submit" class="btn btn-primary">Добавить</button>
+            </form>
+        </div>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                <tr><th>ID</th><th>Название</th><th class="end">Действия</th></tr>
+                </thead>
+                <tbody>
+                <tr th:each="c : ${categories}">
+                    <td th:text="${c.id}"></td>
+                    <td>
+                        <form th:action="@{/admin/categories/update}" method="post" class="inline-form">
+                            <input type="hidden" name="id" th:value="${c.id}">
+                            <input class="input" type="text" name="name" th:value="${c.name}" required style="padding: 6px 10px; width: 250px;">
+                            <button type="submit" class="btn btn-sm btn-ink">💾</button>
+                        </form>
+                    </td>
+                    <td class="end">
+                        <form th:action="@{'/admin/categories/delete/' + ${c.id}}" method="post" class="actions" onsubmit="return confirm('Удалить категорию?');">
+                            <button type="submit" class="btn btn-sm btn-danger">Удалить</button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+<footer class="site-footer">© 2026 Colizant</footer>
+</body>
+</html>
+
+
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Комплектующие: Colizant</title>
+    <link href="https://fonts.googleapis.com/css2?family=Geologica:wght@500;600;700&family=Onest:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+
+<div th:replace="~{fragments/layout :: header('admin')}"></div>
+<div th:replace="~{fragments/layout :: alerts}"></div>
+
+<main>
+    <div class="container page">
+        <div class="page-head">
+            <div>
+                <h1>Комплектующие</h1>
+                <p>Каталог товаров: найдите, добавьте, измените или удалите позицию.</p>
+            </div>
+        </div>
+
+        <div class="toolbar">
+            <form action="/admin/components" method="get">
+                <input class="input" type="search" name="search" placeholder="Поиск по названию" th:value="${search}">
+                <button type="submit" class="btn btn-ink">Найти</button>
+            </form>
+            <button type="button" class="btn btn-primary" id="addBtn">Добавить комплектующее</button>
+        </div>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                <tr><th>Название</th><th>Бренд</th><th class="num">Цена</th><th class="num">Остаток</th><th class="end">Действия</th></tr>
+                </thead>
+                <tbody>
+                <tr th:each="c : ${components}">
+                    <td th:text="${c['name']}"></td>
+                    <td th:text="${c['manufacturer']}"></td>
+                    <td class="num" th:text="${c['price']} + ' ₽'"></td>
+                    <td class="num" th:text="${c['stockQuantity']}"></td>
+                    <td class="end">
+                        <div class="actions">
+                            <button type="button" class="btn btn-sm btn-outline js-edit"
+                                    th:attr="data-id=${c['id']},data-name=${c['name']},data-brand=${c['manufacturer']},data-price=${c['price']},data-stock=${c['stockQuantity']}">
+                                Изменить
+                            </button>
+                            <form th:action="@{'/admin/components/delete/' + ${c['id']}}" method="post" onsubmit="return confirm('Удалить?');">
+                                <button type="submit" class="btn btn-sm btn-danger">Удалить</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Пагинация -->
+        <nav class="pagination" th:if="${totalPages > 1}">
+            <a th:if="${currentPage > 0}" th:href="@{/admin/components(page=${currentPage - 1}, search=${search})}">Назад</a>
+            <span th:each="i : ${#numbers.sequence(0, totalPages - 1)}">
+                <span th:if="${i == currentPage}" class="current" th:text="${i + 1}"></span>
+                <a th:if="${i != currentPage}" th:href="@{/admin/components(page=${i}, search=${search})}" th:text="${i + 1}"></a>
+            </span>
+            <a th:if="${currentPage < totalPages - 1}" th:href="@{/admin/components(page=${currentPage + 1}, search=${search})}">Далее</a>
+        </nav>
+
+        <!-- Диалог редактирования -->
+        <dialog id="editDialog">
+            <h2>Редактирование</h2>
+            <form id="editForm" method="post" th:action="@{/admin/components/update}">
+                <input type="hidden" name="id" id="edit-id">
+                <div class="form-group">
+                    <label>Название</label>
+                    <input class="input" type="text" id="edit-name" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label>Бренд</label>
+                    <input class="input" type="text" id="edit-brand" name="manufacturer" required>
+                </div>
+                <div class="form-group">
+                    <label>Цена, ₽</label>
+                    <input class="input" type="number" id="edit-price" name="price" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label>Остаток</label>
+                    <input class="input" type="number" id="edit-stock" name="stockQuantity" required>
+                </div>
+                <div class="dialog-actions">
+                    <button type="button" class="btn btn-outline js-close">Отмена</button>
+                    <button type="submit" class="btn btn-primary">Сохранить</button>
+                </div>
+            </form>
+        </dialog>
+    </div>
+</main>
+
+<script>
+    var editDialog = document.getElementById('editDialog');
+    document.querySelectorAll('.js-edit').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var d = btn.dataset;
+            document.getElementById('edit-id').value = d.id;
+            document.getElementById('edit-name').value = d.name;
+            document.getElementById('edit-brand').value = d.brand;
+            document.getElementById('edit-price').value = d.price;
+            document.getElementById('edit-stock').value = d.stock;
+            editDialog.showModal();
+        });
+    });
+    document.querySelectorAll('.js-close').forEach(function (btn) {
+        btn.addEventListener('click', function () { btn.closest('dialog').close(); });
+    });
+</script>
+<footer class="site-footer">© 2026 Colizant</footer>
+</body>
+</html>
+
+
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Админ-панель: Colizant</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geologica:wght@500;600;700&family=Onest:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+
+<div th:replace="~{fragments/layout :: header('admin')}"></div>
+<div th:replace="~{fragments/layout :: alerts}"></div>
+
+<main>
+    <div class="container page">
+        <div class="page-head">
+            <div>
+                <h1>Админ-панель</h1>
+                <p>Разделы управления магазином.</p>
+            </div>
+        </div>
+
+        <div class="tile-grid">
+            <a th:href="@{/admin/components}" class="tile">
+                <h3>Комплектующие</h3>
+                <p>Поиск, добавление, редактирование и удаление товаров.</p>
+                <span class="route">/admin/components</span>
+            </a>
+
+            <a th:href="@{/admin/categories}" class="tile">
+                <h3>Категории</h3>
+                <p>Добавление и удаление категорий комплектующих.</p>
+                <span class="route">/admin/categories</span>
+            </a>
+
+            <a th:href="@{/admin/users}" class="tile">
+                <h3>Пользователи</h3>
+                <p>Смена ролей и удаление учётных записей.</p>
+                <span class="route">/admin/users</span>
+            </a>
+        </div>
+    </div>
+</main>
+
+<footer class="site-footer">
+    © 2026 Colizant
+</footer>
+
+</body>
+</html>
+
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Пользователи: Colizant</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geologica:wght@500;600;700&family=Onest:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div th:replace="~{fragments/layout :: header('admin')}"></div>
+<div th:replace="~{fragments/layout :: alerts}"></div>
+
+<main>
+    <div class="container page">
+        <div class="page-head">
+            <div>
+                <h1>Пользователи</h1>
+                <p>Меняйте роли и удаляйте учётные записи.</p>
+            </div>
+        </div>
+
+        <div class="toolbar">
+            <form action="/admin/users" method="get">
+                <input class="input" type="search" name="search" placeholder="Поиск по логину" th:value="${search}">
+                <button type="submit" class="btn btn-ink">Найти</button>
+            </form>
+        </div>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                <tr><th>ID</th><th>Логин</th><th>Email</th><th>Роль</th><th class="end">Действия</th></tr>
+                </thead>
+                <tbody>
+                <tr th:each="u : ${users}">
+                    <td th:text="${u['id']}"></td>
+                    <td th:text="${u['username']}"></td>
+                    <td th:text="${u['email']}"></td>
+                    <td>
+                        <form th:action="@{'/admin/users/role/' + ${u['id']}}" method="post" class="inline-form">
+                            <select class="select" name="role">
+                                <option value="USER" th:selected="${!#strings.contains(#strings.listJoin(u['roles'], ','), 'ADMIN')}">USER</option>
+                                <option value="ADMIN" th:selected="${#strings.contains(#strings.listJoin(u['roles'], ','), 'ADMIN')}">ADMIN</option>
+                            </select>
+                            <button type="submit" class="btn btn-sm btn-ink">Сохранить</button>
+                        </form>
+                    </td>
+                    <td class="end">
+                        <form th:action="@{'/admin/users/delete/' + ${u['id']}}" method="post" class="actions" onsubmit="return confirm('Удалить пользователя?');">
+                            <button type="submit" class="btn btn-sm btn-danger">Удалить</button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+<footer class="site-footer">© 2026 Colizant</footer>
+</body>
+</html>
+
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head><title>Fragments</title></head>
+<body>
+
+<header class="site-header" th:fragment="header(active)"
+        th:with="authed=${session != null and session.token != null}, admin=${session != null and session.roles != null and #strings.contains(session.roles.toString(), 'ROLE_ADMIN')}">
+    <a th:href="@{/}" class="logo">
+        <img th:src="@{/logo.png}" alt="" class="logo-img" width="56" height="56">
+        Colizant
+    </a>
+    <nav class="main-nav">
+        <a th:href="@{/}" th:classappend="${active == 'home'} ? 'active'">Главная</a>
+        <a th:href="@{/catalog}" th:classappend="${active == 'catalog'} ? 'active'">Каталог</a>
+        <th:block th:if="${authed}">
+            <a th:href="@{/builder}" th:classappend="${active == 'builder'} ? 'active'">Конструктор</a>
+            <a th:href="@{/builds}" th:classappend="${active == 'builds'} ? 'active'">Мои сборки</a>
+            <a th:href="@{/orders}" th:classappend="${active == 'orders'} ? 'active'">Мои заказы</a>
+            <a th:if="${admin}" th:href="@{/admin}" th:classappend="${active == 'admin'} ? 'active'">Админ-панель</a>
+        </th:block>
+    </nav>
+
+    <div class="auth-buttons">
+        <th:block th:if="${authed}">
+            <a th:href="@{/cart}" class="btn btn-outline">Корзина</a>
+            <form th:action="@{/logout}" method="post" style="display:inline;">
+                <button class="btn btn-outline" type="submit">Выйти</button>
+            </form>
+        </th:block>
+        <th:block th:unless="${authed}">
+            <a th:href="@{/login}" class="btn btn-outline">Вход</a>
+            <a th:href="@{/register}" class="btn btn-primary">Регистрация</a>
+        </th:block>
+    </div>
+</header>
+
+<th:block th:fragment="alerts">
+    <div class="container" style="margin-top: 20px;">
+        <div class="alert alert-error" th:if="${error}" th:text="${error}"></div>
+        <div class="alert alert-success" th:if="${success}" th:text="${success}"></div>
+        <div class="alert alert-success" th:if="${param.success}" th:text="${param.success}"></div>
+        <div class="alert alert-error" th:if="${param.error}" th:text="${param.error}"></div>
+    </div>
+</th:block>
+
+</body>
+</html>
+
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Админ-панель</title>
+  <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div th:replace="~{fragments/layout :: header('admin')}"></div>
+<div th:replace="~{fragments/layout :: alerts}"></div>
+
+<main class="container">
+  <h1>Админ-панель</h1>
+  <div>
+    <a href="/admin/components" class="btn">Комплектующие</a>
+    <a href="/admin/categories" class="btn">Категории</a>
+    <a href="/admin/users" class="btn">Пользователи</a>
+  </div>
+</main>
+</body>
+</html>
+
+
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Конструктор: Colizant</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geologica:wght@500;600;700&family=Onest:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div th:replace="~{fragments/layout :: header('builder')}"></div>
+<div th:replace="~{fragments/layout :: alerts}"></div>
+
+<main>
+  <div class="container page">
+    <div class="page-head">
+      <div>
+        <h1>Конструктор сборок</h1>
+        <p>Выберите компонент, дайте сборке название и сохраните её.</p>
+      </div>
+    </div>
+
+    <form th:action="@{/builder/save}" method="post" class="builder-layout">
+      <div class="slots">
+        <div class="slot-card">
+          <label for="buildName">Название сборки</label>
+          <input class="input" type="text" id="buildName" name="name" placeholder="Например, Игровой Intel" required>
+        </div>
+
+        <div class="slot-card">
+          <label for="componentId">Комплектующее</label>
+          <select class="select" id="componentId" name="componentId" required>
+            <option value="" disabled selected>— Выберите компонент —</option>
+            <option th:each="c : ${components}" th:value="${c.id}" th:text="${c.name} + ' (' + ${c.price} + ' ₽)'"></option>
+          </select>
+        </div>
+      </div>
+
+      <aside class="build-sheet is-sticky" aria-label="Состав сборки">
+        <h2>Сохранение</h2>
+        <p style="color: var(--on-dark-muted); font-size: 14px; margin-bottom: 20px;">
+          Сборка будет сохранена в вашем профиле. Вы сможете оформить её как заказ на странице «Мои сборки».
+        </p>
+        <button type="submit" class="btn btn-primary btn-block">Сохранить сборку</button>
+      </aside>
+    </form>
+  </div>
+</main>
+
+<footer class="site-footer">© 2026 Colizant</footer>
+</body>
+</html>
+
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Мои сборки: Colizant</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geologica:wght@500;600;700&family=Onest:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div th:replace="~{fragments/layout :: header('builds')}"></div>
+<div th:replace="~{fragments/layout :: alerts}"></div>
+
+<main>
+    <div class="container page">
+        <div class="page-head">
+            <div>
+                <h1>Мои сборки</h1>
+                <p>Сохранённые сборки. Любую можно сразу оформить как заказ.</p>
+            </div>
+            <a th:href="@{/builder}" class="btn btn-primary">Новая сборка</a>
+        </div>
+
+        <div class="stack" th:if="${builds != null and !#lists.isEmpty(builds)}">
+            <article class="card" th:each="b : ${builds}">
+                <div class="card-head">
+                    <h2 th:text="${b['name']}">Название сборки</h2>
+                    <span class="meta">ID: <span th:text="${b['id']}"></span></span>
+                </div>
+                <div class="card-foot">
+                    <div class="total"><small>Итого</small><span th:text="${b['totalPrice']} + ' ₽'"></span></div>
+                    <div class="actions">
+                        <form th:action="@{'/builds/checkout/' + ${b['id']}}" method="post">
+                            <button type="submit" class="btn btn-primary">Оформить заказ</button>
+                        </form>
+                    </div>
+                </div>
+            </article>
+        </div>
+
+        <div class="empty" th:if="${builds == null or #lists.isEmpty(builds)}">
+            <p>Вы ещё не создали ни одной сборки.</p>
+            <a th:href="@{/builder}" class="btn btn-primary">Собрать первую</a>
+        </div>
+    </div>
+</main>
+
+<footer class="site-footer">© 2026 Colizant</footer>
+</body>
+</html>
+
+
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Корзина: Colizant</title>
+    <link href="https://fonts.googleapis.com/css2?family=Geologica:wght@500;600;700&family=Onest:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+
+<div th:replace="~{fragments/layout :: header('cart')}"></div>
+
+<main>
+    <div class="container page">
+        <div class="page-head">
+            <div>
+                <h1>Корзина</h1>
+                <p>Товары, добавленные кнопкой «В корзину».</p>
+            </div>
+        </div>
+
+        <div class="cart-layout" th:if="${cart != null and !#lists.isEmpty(cart.items)}">
+            <div class="cart-list">
+                <div class="cart-row" th:each="item : ${cart.items}">
+                    <div class="thumb">Товар</div>
+                    <div>
+                        <div class="name" th:text="'Компонент ID: ' + ${item.componentId}">Название</div>
+                        <div class="sub" th:text="'Количество: ' + ${item.quantity}"></div>
+                    </div>
+                    <form th:action="@{/cart/remove}" method="post">
+                        <input type="hidden" name="itemId" th:value="${item.id}">
+                        <button type="submit" class="btn btn-sm btn-outline">Убрать</button>
+                    </form>
+                </div>
+            </div>
+
+            <aside class="build-sheet is-sticky">
+                <h2>Ваш заказ</h2>
+                <form th:action="@{/orders/create}" method="post">
+                    <button type="submit" class="btn btn-primary btn-block">Оформить заказ</button>
+                </form>
+            </aside>
+        </div>
+
+        <div class="empty" th:if="${cart == null or #lists.isEmpty(cart.items)}">
+            <p>В корзине пока ничего нет.</p>
+            <a th:href="@{/catalog}" class="btn btn-primary">В каталог</a>
+        </div>
+    </div>
+</main>
+<footer class="site-footer">© 2026 Colizant</footer>
+</body>
+</html>
+
+
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Каталог: Colizant</title>
+    <link href="https://fonts.googleapis.com/css2?family=Geologica:wght@500;600;700&family=Onest:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+
+<div th:replace="~{fragments/layout :: header('catalog')}"></div>
+<div th:replace="~{fragments/layout :: alerts}"></div>
+
+<main>
+    <div class="container page">
+        <div class="page-head">
+            <div>
+                <h1>Каталог комплектующих</h1>
+                <p>Выберите детали и добавьте их в корзину или в свою сборку.</p>
+            </div>
+        </div>
+
+        <!-- Блок с товарами -->
+        <div class="grid" style="margin-top:24px;" th:if="${products != null and !#lists.isEmpty(products)}">
+            <div class="product-card" th:each="p : ${products}">
+                <div class="product-media">
+                    <!-- Если есть картинка, выводим, иначе - бренд -->
+                    <img th:if="${p.imageUrl != null}" th:src="${p.imageUrl}" alt="">
+                    <div class="brand" th:if="${p.imageUrl == null}" th:text="${p.manufacturer}">Бренд</div>
+                </div>
+                <div class="product-body">
+                    <h4 th:text="${p.name}">Название</h4>
+                    <dl class="specs">
+                        <div th:if="${p.category}"><dt>Категория</dt><dd th:text="${p.category.name}"></dd></div>
+                        <div th:if="${p.socket}"><dt>Сокет</dt><dd th:text="${p.socket}"></dd></div>
+                        <div th:if="${p.ramType}"><dt>Память</dt><dd th:text="${p.ramType}"></dd></div>
+                    </dl>
+                    <div class="product-buy">
+                        <div class="price" th:text="${p.price} + ' ₽'">0 ₽</div>
+                        <form th:action="@{/cart/add}" method="post">
+                            <input type="hidden" name="componentId" th:value="${p.id}">
+                            <button type="submit" class="buy-btn">В корзину</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="empty" th:if="${products == null or #lists.isEmpty(products)}">
+            <p>Товары пока не добавлены.</p>
+        </div>
+    </div>
+</main>
+
+<footer class="site-footer">© 2026 Colizant</footer>
+</body>
+</html>
+
+
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Colizant: комплектующие для сборки ПК</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geologica:wght@500;600;700&family=Onest:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+
+<div th:replace="~{fragments/layout :: header('home')}"></div>
+<div th:replace="~{fragments/layout :: alerts}"></div>
+
+<main>
+    <section class="hero">
+        <div class="container hero-grid">
+            <div>
+                <h1>Соберите ПК по деталям</h1>
+                <p class="hero-lead">Процессоры, видеокарты и материнские платы с понятными характеристиками и ценами.</p>
+                <a th:href="@{/catalog}" class="btn btn-primary btn-lg">Перейти в каталог</a>
+            </div>
+
+            <aside class="build-sheet" aria-label="Пример сборки">
+                <h2>Пример сборки</h2>
+                <ul class="build-list">
+                    <li class="build-row">
+                        <span class="slot">Процессор</span>
+                        <span class="part">Intel Core i5-13400F</span>
+                        <span class="cost">20 000 ₽</span>
+                    </li>
+                    <li class="build-row">
+                        <span class="slot">Видеокарта</span>
+                        <span class="part">NVIDIA GeForce RTX 4060</span>
+                        <span class="cost">35 000 ₽</span>
+                    </li>
+                    <li class="build-row is-empty">
+                        <span class="slot">Материнская плата</span>
+                        <span class="part"><a th:href="@{/catalog}">Выбрать плату</a></span>
+                        <span class="cost">—</span>
+                    </li>
+                </ul>
+                <div class="build-total">
+                    <span>Итого</span>
+                    <strong>55 000 ₽</strong>
+                </div>
+            </aside>
+        </div>
+    </section>
+</main>
+
+<footer class="site-footer">
+    © 2026 Colizant
+</footer>
+</body>
+</html>
+
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Вход: Colizant</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geologica:wght@500;600;700&family=Onest:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div th:replace="~{fragments/layout :: header('login')}"></div>
+<div th:replace="~{fragments/layout :: alerts}"></div>
+
+<main class="auth-wrapper">
+    <div class="auth-aside">
+        <img th:src="@{/logo.png}" alt="Colizant">
+    </div>
+
+    <div class="auth-card">
+        <h1>Вход в аккаунт</h1>
+        <form th:action="@{/login}" method="post">
+            <div class="form-group">
+                <label for="username">Логин</label>
+                <input class="input" type="text" id="username" name="username" autocomplete="username" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Пароль</label>
+                <input class="input" type="password" id="password" name="password" autocomplete="current-password" required>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Войти</button>
+        </form>
+        <p class="auth-switch">Нет аккаунта? <a th:href="@{/register}">Зарегистрироваться</a></p>
+    </div>
+</main>
+
+<footer class="site-footer">© 2026 Colizant</footer>
+</body>
+</html>
+
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Мои заказы: Colizant</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geologica:wght@500;600;700&family=Onest:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div th:replace="~{fragments/layout :: header('orders')}"></div>
+<div th:replace="~{fragments/layout :: alerts}"></div>
+
+<main>
+    <div class="container page">
+        <div class="page-head">
+            <div>
+                <h1>Мои заказы</h1>
+                <p>История покупок и текущие статусы заказов.</p>
+            </div>
+        </div>
+
+        <div class="stack" th:if="${orders != null and !#lists.isEmpty(orders)}">
+            <article class="card" th:each="o : ${orders}">
+                <div class="card-head">
+                    <h2 th:text="'Заказ №' + ${o.id}">Заказ</h2>
+                    <span class="badge badge-new" th:text="${o.status}">NEW</span>
+                </div>
+                <dl class="specs">
+                    <div><dt>Дата</dt><dd th:text="${o.createdAt}"></dd></div>
+                    <div th:each="item : ${o.items}">
+                        <dt th:text="'Товар ID ' + ${item.componentId}"></dt>
+                        <dd th:text="'x' + ${item.quantity} + ' (' + ${item.priceAtPurchase} + ' ₽)'"></dd>
+                    </div>
+                </dl>
+                <div class="card-foot">
+                    <span></span>
+                    <div class="total"><small>Итого</small><span th:text="${o.totalPrice} + ' ₽'"></span></div>
+                </div>
+            </article>
+        </div>
+
+        <div class="empty" th:if="${orders == null or #lists.isEmpty(orders)}">
+            <p>У вас пока нет заказов.</p>
+            <a th:href="@{/catalog}" class="btn btn-primary">В каталог</a>
+        </div>
+    </div>
+</main>
+
+<footer class="site-footer">© 2026 Colizant</footer>
+</body>
+</html>
+
+
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Регистрация: Colizant</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geologica:wght@500;600;700&family=Onest:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div th:replace="~{fragments/layout :: header('register')}"></div>
+<div th:replace="~{fragments/layout :: alerts}"></div>
+
+<main class="auth-wrapper">
+    <div class="auth-aside">
+        <img th:src="@{/logo.png}" alt="Colizant">
+        <p>Создайте аккаунт, чтобы собирать ПК и оформлять заказы в пару кликов.</p>
+    </div>
+
+    <div class="auth-card">
+        <h1>Создать аккаунт</h1>
+        <form th:action="@{/register}" method="post">
+            <div class="form-group">
+                <label for="username">Логин</label>
+                <input class="input" type="text" id="username" name="username" autocomplete="username" required>
+            </div>
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input class="input" type="email" id="email" name="email" autocomplete="email" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Пароль</label>
+                <input class="input" type="password" id="password" name="password" autocomplete="new-password" required>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Зарегистрироваться</button>
+        </form>
+        <p class="auth-switch">Уже есть аккаунт? <a th:href="@{/login}">Войти</a></p>
+    </div>
+</main>
+
+<footer class="site-footer">© 2026 Colizant</footer>
+</body>
+</html>
+
+/* PC Builder — стили. */
+
+:root {
+    --bg: #ecedee;          /* холодный светло-серый фон */
+    --surface: #f7f8f8;     /* карточки, шапка */
+    --ink: #111417;         /* основной текст, тёмная панель */
+    --muted: #5b6470;       /* второстепенный текст */
+    --line: #d2d5d9;        /* границы */
+    --accent: #2b44ff;      /* кобальтовый */
+    --accent-hover: #1a2fd6;
+    --on-dark: #edeeef;
+    --on-dark-muted: #8e97a3;
+    --on-dark-line: #2a3037;
+    --on-dark-accent: #9aa9ff;
+    --danger: #d23a3a;
+    --ok: #1f7a45;
+    --warn: #9a5b00;
+
+    --font-display: 'Geologica', 'Segoe UI', system-ui, sans-serif;
+    --font-text: 'Onest', 'Segoe UI', system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-text);
+    font-size: 16px;
+    line-height: 1.55;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+main { flex: 1; }
+a { color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+/* ---------- Шапка ---------- */
+.site-header {
+    position: sticky; top: 0; z-index: 100;
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 20px; flex-wrap: wrap; padding: 8px 48px;
+    background: var(--bg); border-bottom: 1px solid var(--line);
+}
+
+.logo {
+    display: inline-flex; align-items: center; gap: 10px;
+    font-family: var(--font-display); font-size: 20px; font-weight: 700;
+    letter-spacing: -0.02em; color: var(--ink); text-decoration: none;
+}
+.logo-img { display: block; width: 56px; height: 56px; object-fit: contain; mix-blend-mode: multiply; }
+
+.main-nav { display: flex; gap: 6px; margin-right: auto; margin-left: 28px; flex-wrap: wrap; }
+.main-nav a {
+    text-decoration: none; color: var(--muted); font-weight: 500;
+    padding: 6px 12px; border-radius: 999px; transition: color 0.15s, background 0.15s;
+}
+.main-nav a:hover { color: var(--ink); }
+.main-nav a.active { color: var(--ink); background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); }
+
+.auth-buttons { display: flex; gap: 8px; align-items: center; }
+.auth-buttons form { margin: 0; display: inline; }
+
+/* ---------- Кнопки ---------- */
+button, .btn {
+    font-family: var(--font-text); font-size: 15px; font-weight: 600;
+    cursor: pointer; border: none; border-radius: 999px;
+    padding: 10px 20px; text-align: center; text-decoration: none;
+    display: inline-block; line-height: 1.2;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { background: var(--accent-hover); }
+.btn-outline { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--ink); }
+.btn-outline:hover { background: var(--ink); color: var(--bg); }
+.btn-ink { background: var(--ink); color: var(--bg); }
+.btn-ink:hover { background: var(--accent); color: #fff; }
+.btn-danger { background: transparent; color: var(--danger); box-shadow: inset 0 0 0 1.5px var(--danger); }
+.btn-danger:hover { background: var(--danger); color: #fff; }
+.btn-lg { padding: 15px 28px; font-size: 16px; }
+.btn-sm { padding: 7px 14px; font-size: 13px; }
+.btn-block { width: 100%; padding: 14px; font-size: 16px; margin-top: 6px; }
+
+/* ---------- Контейнер и заголовки ---------- */
+.container { max-width: 1200px; margin: 0 auto; padding: 0 24px; width: 100%; }
+.page { padding: 40px 0 96px; }
+.page-head { display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 16px; margin-bottom: 28px; }
+.page-head h1 { font-family: var(--font-display); font-size: clamp(1.75rem, 3.4vw, 2.25rem); font-weight: 700; letter-spacing: -0.03em; line-height: 1.1; }
+.page-head p { color: var(--muted); margin-top: 8px; max-width: 54ch; }
+
+/* ---------- Поля ввода ---------- */
+.form-group { margin-bottom: 18px; }
+.form-group label { display: block; margin-bottom: 6px; font-size: 14px; font-weight: 500; }
+.input, .select {
+    font-family: var(--font-text); font-size: 15px; color: var(--ink);
+    background-color: var(--surface); border: 1px solid var(--line);
+    border-radius: 10px; padding: 10px 14px; transition: border-color 0.15s, box-shadow 0.15s;
+    width: 100%;
+}
+.input:hover, .select:hover { border-color: #aeb3ba; }
+.input:focus, .select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(43, 68, 255, 0.18); }
+.select { appearance: none; -webkit-appearance: none; cursor: pointer; padding-right: 38px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%23111417' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 14px center;
+}
+
+/* ---------- Главная (Hero) ---------- */
+.hero { padding: 72px 0 88px; }
+.hero-grid { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr); gap: 64px; align-items: center; }
+.hero h1 { font-family: var(--font-display); font-size: clamp(2.5rem, 5.4vw, 4.25rem); font-weight: 700; line-height: 1.04; letter-spacing: -0.035em; margin-bottom: 22px; max-width: 14ch; }
+.hero-lead { font-size: 18px; color: var(--muted); max-width: 44ch; margin-bottom: 34px; }
+
+.build-sheet { background: var(--ink); color: var(--on-dark); border-radius: 20px; padding: 26px 26px 22px; }
+.build-sheet h2 { font-family: var(--font-display); font-size: 17px; font-weight: 600; margin-bottom: 18px; }
+.build-list { list-style: none; display: grid; gap: 10px; }
+.build-row { display: grid; grid-template-columns: 1fr auto; gap: 2px 16px; align-items: baseline; padding: 14px 16px; border: 1px solid var(--on-dark-line); border-radius: 12px; }
+.build-row .slot { grid-column: 1 / -1; font-size: 13px; color: var(--on-dark-muted); }
+.build-row .part { font-weight: 600; }
+.build-row .cost { font-variant-numeric: tabular-nums; font-weight: 500; }
+.build-row.is-empty { border-style: dashed; }
+.build-row.is-empty .part a { color: var(--on-dark-accent); text-decoration: none; }
+.build-row.is-empty .cost { color: var(--on-dark-muted); }
+.build-total { display: flex; justify-content: space-between; align-items: baseline; margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--on-dark-line); }
+.build-total span { color: var(--on-dark-muted); }
+.build-total strong { font-family: var(--font-display); font-size: 26px; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+/* ---------- Сетка товаров ---------- */
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+.product-card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; display: flex; flex-direction: column; transition: border-color 0.15s; }
+.product-card:hover { border-color: var(--ink); }
+.product-media { position: relative; height: 150px; display: flex; align-items: flex-end; padding: 16px 20px; background-color: #e3e5e8; background-image: radial-gradient(circle, #c4c8ce 1px, transparent 1.4px); background-size: 14px 14px; border-bottom: 1px solid var(--line); }
+.product-media img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; padding: 12px; }
+.product-card .brand { position: relative; font-family: var(--font-display); font-size: 15px; font-weight: 600; color: var(--ink); background: var(--surface); padding: 4px 12px; border-radius: 999px; }
+.product-body { display: flex; flex-direction: column; flex-grow: 1; padding: 20px; }
+.product-card h4 { font-family: var(--font-display); font-size: 19px; font-weight: 600; line-height: 1.25; margin-bottom: 14px; }
+.specs { margin-bottom: 20px; flex-grow: 1; }
+.specs div { display: flex; justify-content: space-between; gap: 12px; padding: 7px 0; border-top: 1px solid var(--line); font-size: 14px; }
+.specs dt { color: var(--muted); }
+.specs dd { font-weight: 500; text-align: right; font-variant-numeric: tabular-nums; }
+.product-buy { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.product-card .price { font-family: var(--font-display); font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.buy-btn { background: var(--ink); color: var(--bg); padding: 10px 18px; border-radius: 999px; cursor: pointer; font-weight: 600; border: none; transition: 0.15s; }
+.buy-btn:hover { background: var(--accent); color: #fff; }
+
+/* ---------- Таблицы (Админка) ---------- */
+.table-wrap { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 15px; }
+th { text-align: left; font-weight: 500; font-size: 13px; color: var(--muted); padding: 12px 16px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+td { padding: 14px 16px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover td { background: rgba(17, 20, 23, 0.03); }
+th.num, td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+th.end, td.end { text-align: right; }
+.actions { display: flex; gap: 8px; justify-content: flex-end; align-items: center; flex-wrap: wrap; }
+.actions form, .inline-form { display: flex; gap: 8px; align-items: center; margin: 0; }
+
+/* ---------- Пагинация ---------- */
+.pagination { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; margin-top: 24px; }
+.pagination a, .pagination span { min-width: 38px; text-align: center; padding: 7px 14px; border-radius: 999px; border: 1px solid var(--line); font-size: 14px; font-weight: 500; text-decoration: none; }
+.pagination a:hover { border-color: var(--ink); }
+.pagination .current { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+
+/* ---------- Алерты (ошибки/успех) ---------- */
+.alert { padding: 14px 18px; border-radius: 12px; margin-bottom: 20px; font-size: 15px; border: 1px solid; }
+.alert-error { background: rgba(210, 58, 58, 0.1); color: var(--danger); border-color: rgba(210, 58, 58, 0.3); }
+.alert-success { background: rgba(31, 122, 69, 0.1); color: var(--ok); border-color: rgba(31, 122, 69, 0.3); }
+
+/* ---------- Пустые состояния ---------- */
+.empty { border: 1px dashed #aeb3ba; border-radius: 14px; padding: 48px 24px; text-align: center; color: var(--muted); }
+.empty .btn { margin-top: 16px; }
+
+/* ---------- Диалоговое окно (Админка) ---------- */
+dialog { border: 1px solid var(--line); border-radius: 16px; padding: 28px; width: min(440px, calc(100% - 32px)); background: var(--surface); color: var(--ink); margin: auto; }
+dialog::backdrop { background: rgba(17, 20, 23, 0.55); }
+dialog h2 { font-family: var(--font-display); font-size: 22px; font-weight: 700; margin-bottom: 20px; }
+.dialog-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 8px; }
+
+/* ---------- Футер ---------- */
+.site-footer { border-top: 1px solid var(--line); padding: 24px 48px; color: var(--muted); font-size: 14px; text-align: center; }
+
+/* ---------- Адаптивность ---------- */
+@media (max-width: 880px) {
+    .site-header { padding: 14px 20px; }
+    .main-nav { order: 3; width: 100%; margin: 0; }
+    .hero { padding: 40px 0 56px; }
+    .hero-grid { grid-template-columns: 1fr; gap: 40px; }
+    .hero h1 { max-width: none; }
+    .site-footer { padding: 20px; }
+    .cart-layout, .builder-layout { grid-template-columns: 1fr; }
+}
+@media (max-width: 480px) {
+    .container { padding: 0 16px; }
+    .auth-buttons .btn { padding: 9px 16px; }
+}
+/* ---------- Страницы входа и регистрации ---------- */
+.auth-wrapper {
+    flex: 1;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 420px;
+    gap: 72px;
+    align-content: center;
+    align-items: center;
+    width: 100%;
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 48px 24px;
+}
+
+.auth-aside img {
+    display: block;
+    width: min(100%, 340px);
+    height: auto;
+    margin-bottom: 20px;
+    mix-blend-mode: multiply;
+}
+.auth-aside p { font-size: 18px; color: var(--muted); max-width: 30ch; }
+
+.auth-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 36px;
+}
+.auth-card h1 {
+    font-family: var(--font-display);
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    line-height: 1.15;
+    margin-bottom: 24px;
+}
+
+.form-group { margin-bottom: 18px; }
+.form-group label { display: block; margin-bottom: 6px; font-size: 14px; font-weight: 500; }
+.form-group input {
+    width: 100%;
+    padding: 12px 14px;
+    font-family: var(--font-text);
+    font-size: 16px;
+    color: var(--ink);
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+.form-group input:hover { border-color: #aeb3ba; }
+.form-group input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(43, 68, 255, 0.18);
+}
+
+.btn-block { width: 100%; padding: 14px; font-size: 16px; margin-top: 6px; }
+
+.auth-switch { margin-top: 20px; font-size: 14px; color: var(--muted); text-align: center; }
+.auth-switch a { color: var(--accent); font-weight: 600; text-decoration: none; }
+.auth-switch a:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+@media (max-width: 880px) {
+    .auth-wrapper { grid-template-columns: 1fr; max-width: 460px; padding: 32px 16px 48px; }
+    .auth-aside { display: none; }
+    .auth-card { padding: 28px 22px; }
+}

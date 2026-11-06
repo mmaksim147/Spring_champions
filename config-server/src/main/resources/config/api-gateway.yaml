@@ -1,4 +1,3 @@
-
 server:
   port: 8080
 
@@ -6,6 +5,7 @@ spring:
   cloud:
     gateway:
       routes:
+        # --- Swagger документация ---
         - id: auth-swagger
           uri: lb://auth-service
           predicates:
@@ -34,16 +34,7 @@ spring:
           filters:
             - SetPath=/v3/api-docs
 
-        - id: auth-api-short
-          uri: lb://auth-service
-          predicates:
-            - Path=/auth/login,/auth/register,/admin/**,/users/**
-          filters:
-            - name: CircuitBreaker
-              args:
-                name: authServiceCB
-                fallbackUri: forward:/fallback/auth
-
+        # --- Реальные API (с /api) ---
         - id: auth-api
           uri: lb://auth-service
           predicates:
@@ -55,15 +46,27 @@ spring:
                 name: authServiceCB
                 fallbackUri: forward:/fallback/auth
 
-        - id: product-api-short
-          uri: lb://product-service
+        - id: admin-api
+          uri: lb://auth-service
           predicates:
-            - Path=/components,/components/**,/categories,/categories/**,/builds,/builds/**
+            - Path=/api/admin/**
           filters:
+            - StripPrefix=1
             - name: CircuitBreaker
               args:
-                name: productServiceCB
-                fallbackUri: forward:/fallback/product
+                name: authServiceCB
+                fallbackUri: forward:/fallback/auth
+
+        - id: users-api
+          uri: lb://auth-service
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - StripPrefix=1
+            - name: CircuitBreaker
+              args:
+                name: authServiceCB
+                fallbackUri: forward:/fallback/auth
 
         - id: product-api
           uri: lb://product-service
@@ -76,22 +79,54 @@ spring:
                 name: productServiceCB
                 fallbackUri: forward:/fallback/product
 
-        - id: compatibility-api-short
-          uri: lb://compatibility-service
-          predicates:
-            - Path=/compatibility,/compatibility/**,/check,/check/**,/rules,/rules/**,/logs,/logs/**
-          filters:
-            - name: CircuitBreaker
-              args:
-                name: compatibilityServiceCB
-                fallbackUri: forward:/fallback/compatibility
-
         - id: compatibility-api
           uri: lb://compatibility-service
           predicates:
             - Path=/api/compatibility/**
           filters:
+            - StripPrefix=2
+            - name: CircuitBreaker
+              args:
+                name: compatibilityServiceCB
+                fallbackUri: forward:/fallback/compatibility
+
+        - id: order-api
+          uri: lb://order-service
+          predicates:
+            - Path=/api/orders/**,/api/order-items/**,/api/status/**,/api/cart/**
+          filters:
             - StripPrefix=1
+            - name: CircuitBreaker
+              args:
+                name: orderServiceCB
+                fallbackUri: forward:/fallback/order
+
+        # --- Короткие маршруты для Swagger (без /api) ---
+        - id: auth-api-short
+          uri: lb://auth-service
+          predicates:
+            - Path=/auth/login,/auth/register,/admin/**,/users/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: authServiceCB
+                fallbackUri: forward:/fallback/auth
+
+        - id: product-api-short
+          uri: lb://product-service
+          predicates:
+            - Path=/components/**,/categories/**,/builds/**,/products/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: productServiceCB
+                fallbackUri: forward:/fallback/product
+
+        - id: compatibility-api-short
+          uri: lb://compatibility-service
+          predicates:
+            - Path=/rules,/rules/**,/check,/check/**,/logs,/logs/**
+          filters:
             - name: CircuitBreaker
               args:
                 name: compatibilityServiceCB
@@ -100,19 +135,8 @@ spring:
         - id: order-api-short
           uri: lb://order-service
           predicates:
-            - Path=/orders,/orders/**
+            - Path=/orders,/orders/**,/order-items/**,/status/**,/api/cart/**
           filters:
-            - name: CircuitBreaker
-              args:
-                name: orderServiceCB
-                fallbackUri: forward:/fallback/order
-
-        - id: order-api
-          uri: lb://order-service
-          predicates:
-            - Path=/api/orders/**
-          filters:
-            - StripPrefix=1
             - name: CircuitBreaker
               args:
                 name: orderServiceCB
@@ -147,6 +171,11 @@ eureka:
     register-with-eureka: true
     fetch-registry: true
 
+  instance:
+    lease-renewal-interval-in-seconds: 5    # Слать心跳 каждые 5 сек
+    lease-expiration-duration-in-seconds: 10 # Удалять, если нет心跳 10 сек
+    prefer-ip-address: true
+
 management:
   endpoint:
     gateway:
@@ -167,7 +196,7 @@ logging:
     org.springframework.cloud.loadbalancer: DEBUG
 
 jwt:
-  secret: 1h0FhMtnHGyjVa6yMJh4Si5TgOJNuzl7IGLcY9LXIc=
+  secret: 1h0FhMtnHGyjVa6yMJh4Si5TgOJNuzl7IGLcYQ9LXIc=
 
 springdoc:
   swagger-ui:

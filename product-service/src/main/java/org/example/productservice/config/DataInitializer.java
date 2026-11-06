@@ -44,6 +44,12 @@ public class DataInitializer {
                 c1.setStockQuantity(10);
                 c1.setCategory(cpu);
                 c1.setSocket("AM5");
+                c1.setImageUrls(List.of(
+                        "https://example.com/cpu1.jpg",
+                        "https://example.com/cpu2.jpg",
+                        "https://example.com/cpu3.jpg"
+                ));
+// То же самое для остальных
                 componentRepo.save(c1);
 
                 Component c2 = new Component();
@@ -53,6 +59,12 @@ public class DataInitializer {
                 c2.setStockQuantity(15);
                 c2.setCategory(cpu);
                 c2.setSocket("LGA1700");
+                c2.setImageUrls(List.of(
+                        "https://example.com/cpu1.jpg",
+                        "https://example.com/cpu2.jpg",
+                        "https://example.com/cpu3.jpg"
+                ));
+// То же самое для остальных
                 componentRepo.save(c2);
 
                 Component m1 = new Component();
@@ -64,6 +76,12 @@ public class DataInitializer {
                 m1.setSocket("AM5");
                 m1.setRamType("DDR5");
                 m1.setFormFactor("ATX");
+                m1.setImageUrls(List.of(
+                        "https://example.com/cpu1.jpg",
+                        "https://example.com/cpu2.jpg",
+                        "https://example.com/cpu3.jpg"
+                ));
+// То же самое для остальных
                 componentRepo.save(m1);
 
                 Component m2 = new Component();
@@ -75,6 +93,12 @@ public class DataInitializer {
                 m2.setSocket("LGA1700");
                 m2.setRamType("DDR4");
                 m2.setFormFactor("mATX");
+                m2.setImageUrls(List.of(
+                        "https://example.com/cpu1.jpg",
+                        "https://example.com/cpu2.jpg",
+                        "https://example.com/cpu3.jpg"
+                ));
+// То же самое для остальных
                 componentRepo.save(m2);
 
                 Component r1 = new Component();
@@ -85,6 +109,12 @@ public class DataInitializer {
                 r1.setCategory(ram);
                 r1.setRamType("DDR5");
                 r1.setCapacity("16GB");
+                r1.setImageUrls(List.of(
+                        "https://example.com/cpu1.jpg",
+                        "https://example.com/cpu2.jpg",
+                        "https://example.com/cpu3.jpg"
+                ));
+// То же самое для остальных
                 componentRepo.save(r1);
 
                 Component r2 = new Component();
@@ -95,6 +125,12 @@ public class DataInitializer {
                 r2.setCategory(ram);
                 r2.setRamType("DDR4");
                 r2.setCapacity("16GB");
+                r2.setImageUrls(List.of(
+                        "https://example.com/cpu1.jpg",
+                        "https://example.com/cpu2.jpg",
+                        "https://example.com/cpu3.jpg"
+                ));
+// То же самое для остальных
                 componentRepo.save(r2);
 
                 System.out.println(">>> Product-service: 6 test components created");

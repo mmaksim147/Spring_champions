@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Colizant: комплектующие для сборки ПК</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Geologica:wght@500;600;700&family=Onest:wght@400;500;600&display=swap"
+          rel="stylesheet">
+
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+
+<div th:replace="~{fragments/layout :: header('home')}"></div>
+<div th:replace="~{fragments/layout :: alerts}"></div>
+
+<main>
+    <section class="hero">
+        <div class="container hero-grid">
+
+            <div>
+                <h1>Соберите ПК по деталям</h1>
+
+                <p class="hero-lead">
+                    Процессоры, видеокарты и материнские платы
+                    с понятными характеристиками и ценами.
+                </p>
+
+                <form th:action="@{/catalog}"
+                      method="get"
+                      role="search"
+                      aria-label="Поиск комплектующих"
+                      style="display:flex;gap:10px;flex-wrap:wrap;margin:24px 0;">
+
+                    <input
+                            class="input"
+                            type="search"
+                            name="search"
+                            placeholder="Например, RTX 4060 или Ryzen 5"
+                            aria-label="Название комплектующего"
+                            maxlength="100"
+                            style="flex:1;min-width:200px;"
+                    >
+
+                    <button class="btn btn-primary"
+                            type="submit">
+                        Найти
+                    </button>
+                </form>
+
+                <a th:href="@{/catalog}"
+                   class="btn btn-primary btn-lg">
+                    Перейти в каталог
+                </a>
+            </div>
+
+            <aside class="build-sheet"
+                   aria-label="Пример сборки">
+
+                <h2>Пример сборки</h2>
+
+                <ul class="build-list">
+
+                    <li class="build-row">
+                        <span class="slot">Процессор</span>
+                        <span class="part">Intel Core i5-13400F</span>
+                        <span class="cost">20 000 ₽</span>
+                    </li>
+
+                    <li class="build-row">
+                        <span class="slot">Видеокарта</span>
+                        <span class="part">NVIDIA GeForce RTX 4060</span>
+                        <span class="cost">35 000 ₽</span>
+                    </li>
+
+                    <li class="build-row is-empty">
+                        <span class="slot">Материнская плата</span>
+
+                        <span class="part">
+                            <a th:href="@{/catalog}">
+                                Выбрать плату
+                            </a>
+                        </span>
+
+                        <span class="cost">—</span>
+                    </li>
+
+                </ul>
+
+                <div class="build-total">
+                    <span>Итого</span>
+                    <strong>55 000 ₽</strong>
+                </div>
+
+            </aside>
+
+        </div>
+    </section>
+</main>
+
+<footer class="site-footer">
+    © 2026 Colizant
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,4674 @@
+
+
+================================================
+FILE: ./api-gateway/pom.xml
+================================================
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.3.5</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>com.pcbuilder</groupId>
+    <artifactId>api-gateway</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <name>api-gateway</name>
+    <description>Spring Cloud Gateway</description>
+
+    <properties>
+        <java.version>17</java.version>
+        <spring-cloud.version>2023.0.3</spring-cloud.version>
+    </properties>
+
+    <dependencies>
+        <!-- Gateway (WebFlux based) -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-gateway</artifactId>
+        </dependency>
+        <!-- Eureka Client for lb:// routing -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+        </dependency>
+        <!-- Config Client -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-config</artifactId>
+        </dependency>
+        <!-- Circuit Breaker (reactive) -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-circuitbreaker-reactor-resilience4j</artifactId>
+        </dependency>
+        <!-- Actuator -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-loadbalancer</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-api</artifactId>
+            <version>0.12.6</version>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-impl</artifactId>
+            <version>0.12.6</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-jackson</artifactId>
+            <version>0.12.6</version>
+            <scope>runtime</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webflux-ui</artifactId>
+            <version>2.6.0</version>
+        </dependency>
+    </dependencies>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring-cloud.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+</project>
+
+================================================
+FILE: ./api-gateway/src/main/java/org/example/apigateway/ApiGatewayApplication.java
+================================================
+package org.example.apigateway;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class ApiGatewayApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(ApiGatewayApplication.class, args);
+    }
+}
+
+================================================
+FILE: ./api-gateway/src/main/java/org/example/apigateway/config/CorsConfig.java
+================================================
+package org.example.apigateway.config;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.reactive.CorsWebFilter;
+import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
+
+import java.util.List;
+
+@Configuration
+public class CorsConfig {
+
+    @Bean
+    public CorsWebFilter corsWebFilter() {
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOrigins(List.of(
+                "http://localhost:8080",
+                "http://localhost:8085"
+        ));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+        config.setAllowedHeaders(List.of("*"));
+        config.setAllowCredentials(true);
+        config.setMaxAge(3600L);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return new CorsWebFilter(source);
+    }
+}
+
+================================================
+FILE: ./api-gateway/src/main/java/org/example/apigateway/controller/FallbackController.java
+================================================
+package org.example.apigateway.controller;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import reactor.core.publisher.Mono;
+
+import java.util.Map;
+
+@RestController
+@RequestMapping("/fallback")
+public class FallbackController {
+
+    @GetMapping("/auth")
+    public Mono<ResponseEntity<Map<String, String>>> authFallback() {
+        return fallback("Auth service");
+    }
+
+    @GetMapping("/product")
+    public Mono<ResponseEntity<Map<String, String>>> productFallback() {
+        return fallback("Product service");
+    }
+
+    @GetMapping("/compatibility")
+    public Mono<ResponseEntity<Map<String, String>>> compatibilityFallback() {
+        return fallback("Compatibility service");
+    }
+
+    @GetMapping("/order")
+    public Mono<ResponseEntity<Map<String, String>>> orderFallback() {
+        return fallback("Order service");
+    }
+
+    private Mono<ResponseEntity<Map<String, String>>> fallback(String serviceName) {
+        return Mono.just(ResponseEntity
+                .status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body(Map.of(
+                        "error", serviceName + " временно недоступен",
+                        "status", "503",
+                        "timestamp", String.valueOf(System.currentTimeMillis())
+                )));
+    }
+}
+
+================================================
+FILE: ./api-gateway/src/main/java/org/example/apigateway/filter/JwtAuthFilter.java
+================================================
+
+package org.example.apigateway.filter;
+
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.gateway.filter.GatewayFilterChain;
+import org.springframework.cloud.gateway.filter.GlobalFilter;
+import org.springframework.core.Ordered;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.server.reactive.ServerHttpRequest;
+import org.springframework.stereotype.Component;
+import org.springframework.util.AntPathMatcher;
+import org.springframework.web.server.ServerWebExchange;
+import reactor.core.publisher.Mono;
+
+import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Component
+public class JwtAuthFilter implements GlobalFilter, Ordered {
+
+    @Value("${jwt.secret}")
+    private String secret;
+
+    private static final AntPathMatcher MATCHER = new AntPathMatcher();
+
+    private static final List<String> PUBLIC_PATHS = List.of(
+            "/api/auth/login",
+            "/api/auth/register",
+            "/auth/login",
+            "/auth/register",
+            "/swagger-ui.html",
+            "/swagger-ui/**",
+            "/webjars/**",
+            "/v3/api-docs",
+            "/v3/api-docs/**",
+            "/v3/api-docs/auth",
+            "/v3/api-docs/product",
+            "/v3/api-docs/compatibility",
+            "/v3/api-docs/order",
+            "/actuator/**",
+            "/fallback/**"
+    );
+
+    private SecretKey getSigningKey() {
+        return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+    }
+
+    @Override
+    public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
+        ServerHttpRequest request = exchange.getRequest();
+        String path = request.getURI().getPath();
+
+        if (PUBLIC_PATHS.stream().anyMatch(pattern -> MATCHER.match(pattern, path))) {
+            return chain.filter(exchange);
+        }
+
+        String authHeader = request.getHeaders().getFirst("Authorization");
+
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return onError(exchange, "Missing or invalid Authorization header", HttpStatus.UNAUTHORIZED);
+        }
+
+        String token = authHeader.substring(7);
+
+        try {
+            Claims claims = Jwts.parser()
+                    .verifyWith(getSigningKey())
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload();
+
+            String username = claims.getSubject();
+            Long userId = claims.get("userId", Long.class);
+            List<?> roles = claims.get("roles", List.class);
+
+            String rolesString = roles != null
+                    ? roles.stream().map(Object::toString).collect(Collectors.joining(","))
+                    : "";
+
+            ServerHttpRequest mutatedRequest = request.mutate()
+                    .headers(headers -> {
+                        headers.remove("X-User-Id");
+                        headers.remove("X-User-Name");
+                        headers.remove("X-User-Roles");
+                        headers.set("X-User-Id", userId != null ? userId.toString() : "");
+                        headers.set("X-User-Name", username != null ? username : "");
+                        headers.set("X-User-Roles", rolesString);
+                    })
+                    .build();
+
+            return chain.filter(exchange.mutate().request(mutatedRequest).build());
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return onError(exchange, "Invalid or expired JWT token", HttpStatus.UNAUTHORIZED);
+        }
+    }
+
+    private Mono<Void> onError(ServerWebExchange exchange, String message, HttpStatus status) {
+        exchange.getResponse().setStatusCode(status);
+        exchange.getResponse().getHeaders().add("Content-Type", "application/json");
+
+        String body = "{\"error\":\"" + message + "\"}";
+
+        return exchange.getResponse().writeWith(
+                Mono.just(exchange.getResponse()
+                        .bufferFactory()
+                        .wrap(body.getBytes(StandardCharsets.UTF_8)))
+        );
+    }
+
+    private String getSecretFingerprint() {
+        try {
+            byte[] hash = java.security.MessageDigest
+                    .getInstance("SHA-256")
+                    .digest(secret.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+
+            return java.util.HexFormat.of().formatHex(hash);
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    @PostConstruct
+    public void printSecretFingerprint() {
+        System.out.println("JWT SECRET FINGERPRINT: " + getSecretFingerprint());
+
+    }
+
+    @Override
+    public int getOrder() {
+        return -1;
+    }
+}
+
+
+================================================
+FILE: ./api-gateway/src/main/resources/application.yaml
+================================================
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  config:
+    import: "optional:configserver:http://localhost:8888"
+
+
+
+================================================
+FILE: ./api-gateway/src/test/java/org/example/apigateway/ApiGatewayApplicationTests.java
+================================================
+package org.example.apigateway;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+
+@SpringBootTest
+class ApiGatewayApplicationTests {
+
+    @Test
+    void contextLoads() {
+    }
+
+}
+
+
+================================================
+FILE: ./auth-service/pom.xml
+================================================
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.3.5</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>com.pcbuilder</groupId>
+    <artifactId>auth-service</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <name>auth-service</name>
+    <description>Authentication and Authorization Service</description>
+
+    <properties>
+        <java.version>17</java.version>
+        <spring-cloud.version>2023.0.3</spring-cloud.version>
+        <jjwt.version>0.12.6</jjwt.version>
+        <springdoc.version>2.6.0</springdoc.version>
+    </properties>
+
+    <dependencies>
+        <!-- Web -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <!-- Eureka Client -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+        </dependency>
+        <!-- Config Client -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-config</artifactId>
+        </dependency>
+        <!-- JPA -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+        <!-- PostgreSQL -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <!-- Security -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+        <!-- Validation -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+        <!-- JWT -->
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-api</artifactId>
+            <version>${jjwt.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-impl</artifactId>
+            <version>${jjwt.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-jackson</artifactId>
+            <version>${jjwt.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+        <!-- Swagger -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <version>${springdoc.version}</version>
+        </dependency>
+        <!-- Actuator -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring-cloud.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+</project>
+
+================================================
+FILE: ./auth-service/src/main/java/org/example/authservice/AuthServiceApplication.java
+================================================
+package org.example.authservice;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class AuthServiceApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(AuthServiceApplication.class, args);
+    }
+
+}
+
+
+================================================
+FILE: ./auth-service/src/main/java/org/example/authservice/config/CorsConfig.java
+================================================
+package org.example.authservice.config;
+
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+@Configuration
+public class CorsConfig implements WebMvcConfigurer {
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/**")
+                .allowedOrigins("http://localhost:8080")
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                .allowedHeaders("*");
+    }
+}
+
+================================================
+FILE: ./auth-service/src/main/java/org/example/authservice/config/DataInitializer.java
+================================================
+package org.example.authservice.config;
+
+import org.example.authservice.model.Role;
+import org.example.authservice.model.User;
+import org.example.authservice.repository.RoleRepository;
+import org.example.authservice.repository.UserRepository;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
+import java.util.Set;
+
+@Configuration
+public class DataInitializer {
+
+    @Bean
+    CommandLineRunner initData(RoleRepository roleRepository,
+                               UserRepository userRepository,
+                               PasswordEncoder passwordEncoder) {
+        return args -> {
+            if (roleRepository.count() == 0) {
+                Role userRole = roleRepository.save(new Role("ROLE_USER"));
+                Role adminRole = roleRepository.save(new Role("ROLE_ADMIN"));
+
+                User admin = new User("admin", "admin@example.com",
+                        passwordEncoder.encode("admin123"));
+                admin.setRoles(Set.of(adminRole));
+                userRepository.save(admin);
+
+                System.out.println(">>> Created default admin: username=admin, password=admin123");
+            }
+        };
+    }
+}
+
+================================================
+FILE: ./auth-service/src/main/java/org/example/authservice/config/OpenApiConfig.java
+================================================
+package org.example.authservice.config;
+
+import io.swagger.v3.oas.models.Components;
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.security.SecurityRequirement;
+import io.swagger.v3.oas.models.security.SecurityScheme;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class OpenApiConfig {
+
+    @Bean
+    public OpenAPI customOpenAPI() {
+        final String securitySchemeName = "bearerAuth";
+        return new OpenAPI()
+                .info(new Info()
+                        .title("Auth Service API")
+                        .version("1.0")
+                        .description("Микросервис аутентификации и авторизации"))
+                .addSecurityItem(new SecurityRequirement().addList(securitySchemeName))
+                .components(new Components()
+                        .addSecuritySchemes(securitySchemeName,
+                                new SecurityScheme()
+                                        .name(securitySchemeName)
+                                        .type(SecurityScheme.Type.HTTP)
+                                        .scheme("bearer")
+                                        .bearerFormat("JWT")));
+    }
+}
+
+================================================
+FILE: ./auth-service/src/main/java/org/example/authservice/controller/AdminController.java
+================================================
+package org.example.authservice.controller;
+
+import org.example.authservice.dto.UpdateRolesRequest;
+import org.example.authservice.dto.UserProfileResponse;
+import org.example.authservice.model.Role;
+import org.example.authservice.model.User;
+import org.example.authservice.repository.RoleRepository;
+import org.example.authservice.repository.UserRepository;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+@RestController
+@RequestMapping("/admin")
+@PreAuthorize("hasRole('ADMIN')")
+public class AdminController {
+
+    private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
+
+    public AdminController(UserRepository userRepository, RoleRepository roleRepository) {
+        this.userRepository = userRepository;
+        this.roleRepository = roleRepository;
+    }
+
+    @GetMapping("/users")
+    public ResponseEntity<List<UserProfileResponse>> getAllUsers() {
+        List<UserProfileResponse> users = userRepository.findAll().stream()
+                .map(u -> new UserProfileResponse(
+                        u.getId(),
+                        u.getUsername(),
+                        u.getEmail(),
+                        u.getRoles().stream().map(Role::getName).collect(Collectors.toSet())
+                ))
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(users);
+    }
+
+    @PutMapping("/users/{id}/roles")
+    public ResponseEntity<UserProfileResponse> updateRoles(@PathVariable Long id,
+                                                           @RequestBody UpdateRolesRequest request) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Set<Role> roles = request.getRoles().stream()
+                .map(name -> roleRepository.findByName(name)
+                        .orElseThrow(() -> new RuntimeException("Role not found: " + name)))
+                .collect(Collectors.toSet());
+
+        user.setRoles(roles);
+        userRepository.save(user);
+
+        return ResponseEntity.ok(new UserProfileResponse(
+                user.getId(),
+                user.getUsername(),
+                user.getEmail(),
+                user.getRoles().stream().map(Role::getName).collect(Collectors.toSet())
+        ));
+    }
+
+    @DeleteMapping("/users/{id}")
+    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+        userRepository.deleteById(id);
+        return ResponseEntity.noContent().build();
+    }
+}
+
+================================================
+FILE: ./auth-service/src/main/java/org/example/authservice/controller/AuthController.java
+================================================
+package org.example.authservice.controller;
+
+import jakarta.validation.Valid;
+import org.example.authservice.dto.AuthResponse;
+import org.example.authservice.dto.LoginRequest;
+import org.example.authservice.dto.RegisterRequest;
+import org.example.authservice.service.AuthService;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/auth")
+public class AuthController {
+
+    private final AuthService authService;
+
+    public AuthController(AuthService authService) {
+        this.authService = authService;
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
+        return ResponseEntity.ok(authService.register(request));
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
+        return ResponseEntity.ok(authService.login(request));
+    }
+}
+
+================================================
+FILE: ./auth-service/src/main/java/org/example/authservice/controller/UserController.java
+================================================
+package org.example.authservice.controller;
+
+import org.example.authservice.dto.UserProfileResponse;
+import org.example.authservice.model.User;
+import org.example.authservice.repository.UserRepository;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/users")
+public class UserController {
+
+    private final UserRepository userRepository;
+
+    public UserController(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<UserProfileResponse> getCurrentUser() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        return ResponseEntity.ok(new UserProfileResponse(
+                user.getId(),
+                user.getUsername(),
+                user.getEmail(),
+                user.getRoles().stream().map(r -> r.getName()).collect(java.util.stream.Collectors.toSet())
+        ));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<UserProfileResponse> getUserById(@PathVariable Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        return ResponseEntity.ok(new UserProfileResponse(
+                user.getId(),
+                user.getUsername(),
+                user.getEmail(),
+                user.getRoles().stream().map(r -> r.getName()).collect(java.util.stream.Collectors.toSet())
+        ));
+    }
+}
+
+================================================
+FILE: ./auth-service/src/main/java/org/example/authservice/dto/AuthResponse.java
+================================================
+package org.example.authservice.dto;
+
+import java.util.Set;
+
+public class AuthResponse {
+
+    private String token;
+    private String username;
+    private Set<String> roles;
+
+    public AuthResponse() {}
+
+    public AuthResponse(String token, String username, Set<String> roles) {
+        this.token = token;
+        this.username = username;
+        this.roles = roles;
+    }
+
+    public String getToken() { return token; }
+    public void setToken(String token) { this.token = token; }
+
+    public String getUsername() { return username; }
+    public void setUsername(String username) { this.username = username; }
+
+    public Set<String> getRoles() { return roles; }
+    public void setRoles(Set<String> roles) { this.roles = roles; }
+}
+
+================================================
+FILE: ./auth-service/src/main/java/org/example/authservice/dto/LoginRequest.java
+================================================
+package org.example.authservice.dto;
+
+import jakarta.validation.constraints.NotBlank;
+
+public class LoginRequest {
+
+    @NotBlank
+    private String username;
+
+    @NotBlank
+    private String password;
+
+    public LoginRequest() {}
+
+    public String getUsername() { return username; }
+    public void setUsername(String username) { this.username = username; }
+
+    public String getPassword() { return password; }
+    public void setPassword(String password) { this.password = password; }
+}
+
+================================================
+FILE: ./auth-service/src/main/java/org/example/authservice/dto/RegisterRequest.java
+================================================
+package org.example.authservice.dto;
+
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+
+public class RegisterRequest {
+
+    @NotBlank(message = "Username is required")
+    @Size(min = 3, max = 50)
+    private String username;
+
+    @NotBlank(message = "Email is required")
+    @Email(message = "Invalid email format")
+    private String email;
+
+    @NotBlank(message = "Password is required")
+    @Size(min = 6, message = "Password must be at least 6 characters")
+    private String password;
+
+    public RegisterRequest() {}
+
+    public String getUsername() { return username; }
+    public void setUsername(String username) { this.username = username; }
+
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
+
+    public String getPassword() { return password; }
+    public void setPassword(String password) { this.password = password; }
+}
+
+================================================
+FILE: ./auth-service/src/main/java/org/example/authservice/dto/UpdateRolesRequest.java
+================================================
+package org.example.authservice.dto;
+
+import java.util.Set;
+
+public class UpdateRolesRequest {
+    private Set<String> roles;
+
+    public UpdateRolesRequest() {}
+
+    public Set<String> getRoles() { return roles; }
+    public void setRoles(Set<String> roles) { this.roles = roles; }
+}
+
+================================================
+FILE: ./auth-service/src/main/java/org/example/authservice/dto/UserProfileResponse.java
+================================================
+package org.example.authservice.dto;
+
+import java.util.Set;
+
+public class UserProfileResponse {
+    private Long id;
+    private String username;
+    private String email;
+    private Set<String> roles;
+
+    public UserProfileResponse() {}
+
+    public UserProfileResponse(Long id, String username, String email, Set<String> roles) {
+        this.id = id;
+        this.username = username;
+        this.email = email;
+        this.roles = roles;
+    }
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public String getUsername() { return username; }
+    public void setUsername(String username) { this.username = username; }
+
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
+
+    public Set<String> getRoles() { return roles; }
+    public void setRoles(Set<String> roles) { this.roles = roles; }
+}
+
+================================================
+FILE: ./auth-service/src/main/java/org/example/authservice/model/Role.java
+================================================
+package org.example.authservice.model;
+
+import jakarta.persistence.*;
+
+@Entity
+@Table(name = "roles")
+public class Role {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false, unique = true, length = 50)
+    private String name;
+
+    public Role() {}
+
+    public Role(String name) {
+        this.name = name;
+    }
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+}
+
+================================================
+FILE: ./auth-service/src/main/java/org/example/authservice/model/User.java
+================================================
+package org.example.authservice.model;
+
+import jakarta.persistence.*;
+import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
+
+@Entity
+@Table(name = "users")
+public class User {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false, unique = true, length = 50)
+    private String username;
+
+    @Column(nullable = false, unique = true, length = 100)
+    private String email;
+
+    @Column(nullable = false)
+    private String password;
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "user_roles",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id")
+    )
+    private Set<Role> roles = new HashSet<>();
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+    }
+
+    public User() {}
+
+    public User(String username, String email, String password) {
+        this.username = username;
+        this.email = email;
+        this.password = password;
+    }
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public String getUsername() { return username; }
+    public void setUsername(String username) { this.username = username; }
+
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
+
+    public String getPassword() { return password; }
+    public void setPassword(String password) { this.password = password; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public Set<Role> getRoles() { return roles; }
+    public void setRoles(Set<Role> roles) { this.roles = roles; }
+}
+
+================================================
+FILE: ./auth-service/src/main/java/org/example/authservice/repository/RoleRepository.java
+================================================
+package org.example.authservice.repository;
+
+import org.example.authservice.model.Role;
+import org.springframework.data.jpa.repository.JpaRepository;
+import java.util.Optional;
+
+public interface RoleRepository extends JpaRepository<Role, Long> {
+    Optional<Role> findByName(String name);
+}
+
+================================================
+FILE: ./auth-service/src/main/java/org/example/authservice/repository/UserRepository.java
+================================================
+package org.example.authservice.repository;
+
+import org.example.authservice.model.User;
+import org.springframework.data.jpa.repository.JpaRepository;
+import java.util.Optional;
+
+public interface UserRepository extends JpaRepository<User, Long> {
+    Optional<User> findByUsername(String username);
+    Boolean existsByUsername(String username);
+    Boolean existsByEmail(String email);
+}
+
+================================================
+FILE: ./auth-service/src/main/java/org/example/authservice/security/CustomUserDetailsService.java
+================================================
+package org.example.authservice.security;
+
+import org.example.authservice.model.User;
+import org.example.authservice.repository.UserRepository;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Service;
+
+import java.util.stream.Collectors;
+
+@Service
+public class CustomUserDetailsService implements UserDetailsService {
+
+    private final UserRepository userRepository;
+
+    public CustomUserDetailsService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
+
+        return org.springframework.security.core.userdetails.User.builder()
+                .username(user.getUsername())
+                .password(user.getPassword())
+                .authorities(user.getRoles().stream()
+                        .map(role -> new SimpleGrantedAuthority(role.getName()))
+                        .collect(Collectors.toList()))
+                .build();
+    }
+}
+
+================================================
+FILE: ./auth-service/src/main/java/org/example/authservice/security/JwtAuthFilter.java
+================================================
+
+package org.example.authservice.security;
+
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+import java.io.IOException;
+
+@Component
+public class JwtAuthFilter extends OncePerRequestFilter {
+
+    private final JwtService jwtService;
+    private final CustomUserDetailsService userDetailsService;
+
+    public JwtAuthFilter(JwtService jwtService, CustomUserDetailsService userDetailsService) {
+        this.jwtService = jwtService;
+        this.userDetailsService = userDetailsService;
+    }
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getServletPath();
+
+        return path.startsWith("/auth/")
+                || path.startsWith("/v3/api-docs")
+                || path.startsWith("/swagger-ui")
+                || path.equals("/swagger-ui.html")
+                || path.startsWith("/webjars/")
+                || path.startsWith("/actuator/");
+    }
+
+    @Override
+    protected void doFilterInternal(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain filterChain
+    ) throws ServletException, IOException {
+
+        String authHeader = request.getHeader("Authorization");
+
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        String jwt = authHeader.substring(7);
+
+        try {
+            String username = jwtService.extractUsername(jwt);
+
+            if (username != null &&
+                    SecurityContextHolder.getContext().getAuthentication() == null) {
+
+                UserDetails userDetails =
+                        userDetailsService.loadUserByUsername(username);
+
+                if (jwtService.isTokenValid(jwt, userDetails)) {
+                    UsernamePasswordAuthenticationToken authToken =
+                            new UsernamePasswordAuthenticationToken(
+                                    userDetails,
+                                    null,
+                                    userDetails.getAuthorities()
+                            );
+
+                    authToken.setDetails(
+                            new WebAuthenticationDetailsSource().buildDetails(request)
+                    );
+
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                }
+            }
+
+        } catch (Exception e) {
+            SecurityContextHolder.clearContext();
+        }
+
+        filterChain.doFilter(request, response);
+    }
+}
+
+
+================================================
+FILE: ./auth-service/src/main/java/org/example/authservice/security/JwtService.java
+================================================
+package org.example.authservice.security;
+
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
+import org.example.authservice.model.Role;
+import org.example.authservice.model.User;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Service;
+
+import javax.crypto.SecretKey;
+import java.util.Date;
+import java.util.function.Function;
+
+@Service
+public class JwtService {
+
+    @Value("${jwt.secret}")
+    private String secret;
+
+    @Value("${jwt.expiration}")
+    private long expiration;
+
+    private SecretKey getSigningKey() {
+        return Keys.hmacShaKeyFor(secret.getBytes());
+    }
+
+    public String generateToken(User user) {
+        Date now = new Date();
+        Date expiry = new Date(now.getTime() + expiration);
+
+        return Jwts.builder()
+                .subject(user.getUsername())
+                .claim("userId", user.getId())
+                .claim("roles", user.getRoles().stream()
+                        .map(Role::getName)
+                        .toList())
+                .issuedAt(now)
+                .expiration(expiry)
+                .signWith(getSigningKey())
+                .compact();
+    }
+
+    public String extractUsername(String token) {
+        return extractClaim(token, Claims::getSubject);
+    }
+
+    public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
+        final Claims claims = extractAllClaims(token);
+        return claimsResolver.apply(claims);
+    }
+
+    private Claims extractAllClaims(String token) {
+        return Jwts.parser()
+                .verifyWith(getSigningKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+    }
+
+    public boolean isTokenValid(String token, UserDetails userDetails) {
+        final String username = extractUsername(token);
+        return username.equals(userDetails.getUsername()) && !isTokenExpired(token);
+    }
+
+    private boolean isTokenExpired(String token) {
+        return extractClaim(token, Claims::getExpiration).before(new Date());
+    }
+
+    private String getSecretFingerprint() {
+        try {
+            byte[] hash = java.security.MessageDigest
+                    .getInstance("SHA-256")
+                    .digest(secret.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+
+            return java.util.HexFormat.of().formatHex(hash);
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    @PostConstruct
+    public void printSecretFingerprint() {
+
+        System.out.println("JWT SECRET FINGERPRINT: " + getSecretFingerprint());
+
+    }
+}
+
+================================================
+FILE: ./auth-service/src/main/java/org/example/authservice/security/SecurityConfig.java
+================================================
+
+package org.example.authservice.security;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+@Configuration
+@EnableWebSecurity
+@EnableMethodSecurity
+public class SecurityConfig {
+
+    private final JwtAuthFilter jwtAuthFilter;
+    private final CustomUserDetailsService userDetailsService;
+
+    public SecurityConfig(JwtAuthFilter jwtAuthFilter, CustomUserDetailsService userDetailsService) {
+        this.jwtAuthFilter = jwtAuthFilter;
+        this.userDetailsService = userDetailsService;
+    }
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+                .csrf(csrf -> csrf.disable())
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(
+                                "/auth/**",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/v3/api-docs/**",
+                                "/actuator/**",
+                                "/error"
+                        ).permitAll()
+                        .anyRequest().authenticated()
+                )
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authenticationProvider(authenticationProvider())
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+
+        return http.build();
+    }
+
+    @Bean
+    public AuthenticationProvider authenticationProvider() {
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        provider.setUserDetailsService(userDetailsService);
+        provider.setPasswordEncoder(passwordEncoder());
+        return provider;
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+        return config.getAuthenticationManager();
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+}
+
+
+================================================
+FILE: ./auth-service/src/main/java/org/example/authservice/service/AuthService.java
+================================================
+package org.example.authservice.service;
+
+import org.example.authservice.dto.AuthResponse;
+import org.example.authservice.dto.LoginRequest;
+import org.example.authservice.dto.RegisterRequest;
+import org.example.authservice.model.Role;
+import org.example.authservice.model.User;
+import org.example.authservice.repository.RoleRepository;
+import org.example.authservice.repository.UserRepository;
+import org.example.authservice.security.CustomUserDetailsService;
+import org.example.authservice.security.JwtService;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
+import java.util.Set;
+import java.util.stream.Collectors;
+
+@Service
+public class AuthService {
+
+    private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
+    private final AuthenticationManager authenticationManager;
+
+    public AuthService(UserRepository userRepository,
+                       RoleRepository roleRepository,
+                       PasswordEncoder passwordEncoder,
+                       JwtService jwtService,
+                       AuthenticationManager authenticationManager,
+                       CustomUserDetailsService userDetailsService) {
+        this.userRepository = userRepository;
+        this.roleRepository = roleRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.jwtService = jwtService;
+        this.authenticationManager = authenticationManager;
+    }
+
+    public AuthResponse register(RegisterRequest request) {
+        if (userRepository.existsByUsername(request.getUsername())) {
+            throw new RuntimeException("Username already exists");
+        }
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new RuntimeException("Email already exists");
+        }
+
+        Role userRole = roleRepository.findByName("ROLE_USER")
+                .orElseThrow(() -> new RuntimeException("ROLE_USER not found"));
+
+        User user = new User(
+                request.getUsername(),
+                request.getEmail(),
+                passwordEncoder.encode(request.getPassword())
+        );
+        user.setRoles(Set.of(userRole));
+        userRepository.save(user);
+
+        String token = jwtService.generateToken(user);
+
+        return new AuthResponse(
+                token,
+                user.getUsername(),
+                user.getRoles().stream().map(Role::getName).collect(Collectors.toSet())
+        );
+    }
+
+    public AuthResponse login(LoginRequest request) {
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
+        );
+
+        User user = userRepository.findByUsername(request.getUsername())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        String token = jwtService.generateToken(user);
+
+        return new AuthResponse(
+                token,
+                user.getUsername(),
+                user.getRoles().stream().map(Role::getName).collect(Collectors.toSet())
+        );
+    }
+}
+
+================================================
+FILE: ./auth-service/src/main/resources/application.yaml
+================================================
+server:
+  port: 8081
+
+spring:
+  application:
+    name: auth-service
+  config:
+    import: "optional:configserver:http://localhost:8888"
+
+logging:
+  level:
+    org.springframework.security: TRACE
+    org.springdoc: DEBUG
+
+================================================
+FILE: ./auth-service/src/test/java/org/example/authservice/AuthServiceApplicationTests.java
+================================================
+package org.example.authservice;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+
+@SpringBootTest
+class AuthServiceApplicationTests {
+
+    @Test
+    void contextLoads() {
+    }
+
+}
+
+
+================================================
+FILE: ./compatibility-service/pom.xml
+================================================
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.3.5</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>com.pcbuilder</groupId>
+    <artifactId>compatibility-service</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <name>compatibility-service</name>
+    <description>Component Compatibility Service</description>
+
+    <properties>
+        <java.version>17</java.version>
+        <spring-cloud.version>2023.0.3</spring-cloud.version>
+        <springdoc.version>2.6.0</springdoc.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-config</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+        <!-- OpenFeign -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-openfeign</artifactId>
+        </dependency>
+        <!-- Circuit Breaker (blocking, for Feign) -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-circuitbreaker-resilience4j</artifactId>
+        </dependency>
+        <!-- Swagger -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <version>${springdoc.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring-cloud.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+</project>
+
+================================================
+FILE: ./compatibility-service/src/main/java/org/example/compatibilityservice/client/ProductClientFallback.java
+================================================
+package org.example.compatibilityservice.client;
+
+import org.example.compatibilityservice.dto.ComponentDto;
+import org.springframework.stereotype.Component;
+
+@Component
+public class ProductClientFallback implements ProductClient {
+    @Override
+    public ComponentDto getComponentById(Long id) {
+        ComponentDto fallback = new ComponentDto();
+        fallback.setId(id);
+        fallback.setName("Компонент временно недоступен");
+        return fallback;
+    }
+}
+
+================================================
+FILE: ./compatibility-service/src/main/java/org/example/compatibilityservice/client/ProductClient.java
+================================================
+package org.example.compatibilityservice.client;
+
+import org.example.compatibilityservice.dto.ComponentDto;
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+
+@FeignClient(name = "product-service", fallback = ProductClientFallback.class)
+public interface ProductClient {
+    @GetMapping("/components/{id}")
+    ComponentDto getComponentById(@PathVariable("id") Long id);
+}
+
+================================================
+FILE: ./compatibility-service/src/main/java/org/example/compatibilityservice/CompatibilityServiceApplication.java
+================================================
+package org.example.compatibilityservice;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+import org.springframework.cloud.openfeign.EnableFeignClients;
+
+@SpringBootApplication
+@EnableDiscoveryClient
+@EnableFeignClients
+public class CompatibilityServiceApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(CompatibilityServiceApplication.class, args);
+    }
+}
+
+================================================
+FILE: ./compatibility-service/src/main/java/org/example/compatibilityservice/config/DataInitializer.java
+================================================
+package org.example.compatibilityservice.config;
+
+import org.example.compatibilityservice.model.CompatibilityRule;
+import org.example.compatibilityservice.repository.CompatibilityRuleRepository;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class DataInitializer {
+    @Bean
+    CommandLineRunner initData(CompatibilityRuleRepository repo) {
+        return args -> {
+            if (repo.count() == 0) {
+                repo.save(new CompatibilityRule("CPU", "MOTHERBOARD", "socket", "Процессор и материнская плата должны иметь одинаковый сокет"));
+                repo.save(new CompatibilityRule("MOTHERBOARD", "RAM", "ramType", "Материнская плата и ОЗУ должны поддерживать один тип памяти"));
+                repo.save(new CompatibilityRule("MOTHERBOARD", "CASE", "formFactor", "Материнская плата должна подходить по форм-фактору к корпусу"));
+            }
+        };
+    }
+}
+
+================================================
+FILE: ./compatibility-service/src/main/java/org/example/compatibilityservice/config/OpenApiConfig.java
+================================================
+package org.example.compatibilityservice.config;
+
+import io.swagger.v3.oas.models.Components;
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.security.SecurityRequirement;
+import io.swagger.v3.oas.models.security.SecurityScheme;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class OpenApiConfig {
+
+    @Bean
+    public OpenAPI customOpenAPI() {
+        return new OpenAPI()
+                .info(new Info()
+                        .title("Compatibility Service API")
+                        .description("Микросервис проверки совместимости компонентов")
+                        .version("1.0"))
+                .addSecurityItem(new SecurityRequirement().addList("bearerAuth"))
+                .components(new Components()
+                        .addSecuritySchemes("bearerAuth",
+                                new SecurityScheme()
+                                        .name("bearerAuth")
+                                        .type(SecurityScheme.Type.HTTP)
+                                        .scheme("bearer")
+                                        .bearerFormat("JWT")));
+    }
+}
+
+================================================
+FILE: ./compatibility-service/src/main/java/org/example/compatibilityservice/controller/CompatibilityCheckController.java
+================================================
+package org.example.compatibilityservice.controller;
+
+import org.example.compatibilityservice.client.ProductClient;
+import org.example.compatibilityservice.dto.ComponentDto;
+import org.example.compatibilityservice.model.CompatibilityCheckLog;
+import org.example.compatibilityservice.repository.CompatibilityCheckLogRepository;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
+
+@RestController
+@RequestMapping("/check")
+public class CompatibilityCheckController {
+
+    private final ProductClient productClient;
+    private final CompatibilityCheckLogRepository logRepository;
+
+    public CompatibilityCheckController(ProductClient productClient, CompatibilityCheckLogRepository logRepository) {
+        this.productClient = productClient;
+        this.logRepository = logRepository;
+    }
+
+    @GetMapping
+    public ResponseEntity<Map<String, Object>> checkCompatibility(
+            @RequestParam Long sourceId,
+            @RequestParam Long targetId,
+            @RequestParam String fieldToMatch) {
+
+        ComponentDto source = productClient.getComponentById(sourceId);
+        ComponentDto target = productClient.getComponentById(targetId);
+
+        boolean isCompatible = false;
+        String reason = "";
+
+        if ("socket".equals(fieldToMatch)) {
+            isCompatible = source.getSocket() != null && source.getSocket().equals(target.getSocket());
+            reason = "Сокеты " + (isCompatible ? "совпадают" : "не совпадают");
+        } else if ("ramType".equals(fieldToMatch)) {
+            isCompatible = source.getRamType() != null && source.getRamType().equals(target.getRamType());
+            reason = "Типы памяти " + (isCompatible ? "совпадают" : "не совпадают");
+        } else if ("formFactor".equals(fieldToMatch)) {
+            isCompatible = source.getFormFactor() != null && source.getFormFactor().equals(target.getFormFactor());
+            reason = "Форм-факторы " + (isCompatible ? "совпадают" : "не совпадают");
+        }
+
+        CompatibilityCheckLog log = new CompatibilityCheckLog();
+        log.setSourceComponentId(sourceId);
+        log.setTargetCategory(fieldToMatch);
+        logRepository.save(log);
+
+        return ResponseEntity.ok(Map.of(
+                "source", source.getName(),
+                "target", target.getName(),
+                "checkedField", fieldToMatch,
+                "compatible", isCompatible,
+                "reason", reason
+        ));
+    }
+}
+
+================================================
+FILE: ./compatibility-service/src/main/java/org/example/compatibilityservice/controller/CompatibilityRuleController.java
+================================================
+package org.example.compatibilityservice.controller;
+
+import org.example.compatibilityservice.model.CompatibilityRule;
+import org.example.compatibilityservice.repository.CompatibilityRuleRepository;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/rules")
+public class CompatibilityRuleController {
+
+    private final CompatibilityRuleRepository repository;
+
+    public CompatibilityRuleController(CompatibilityRuleRepository repository) {
+        this.repository = repository;
+    }
+
+    @GetMapping
+    public ResponseEntity<List<CompatibilityRule>> getAll() {
+        return ResponseEntity.ok(repository.findAll());
+    }
+
+    @PostMapping
+    public ResponseEntity<CompatibilityRule> create(@RequestBody CompatibilityRule rule) {
+        return ResponseEntity.ok(repository.save(rule));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        repository.deleteById(id);
+        return ResponseEntity.noContent().build();
+    }
+}
+
+================================================
+FILE: ./compatibility-service/src/main/java/org/example/compatibilityservice/controller/LogController.java
+================================================
+package org.example.compatibilityservice.controller;
+
+import org.example.compatibilityservice.model.CompatibilityCheckLog;
+import org.example.compatibilityservice.repository.CompatibilityCheckLogRepository;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/logs")
+public class LogController {
+
+    private final CompatibilityCheckLogRepository repository;
+
+    public LogController(CompatibilityCheckLogRepository repository) {
+        this.repository = repository;
+    }
+
+    @GetMapping
+    public ResponseEntity<List<CompatibilityCheckLog>> getAllLogs() {
+        return ResponseEntity.ok(repository.findAll());
+    }
+}
+
+================================================
+FILE: ./compatibility-service/src/main/java/org/example/compatibilityservice/dto/ComponentDto.java
+================================================
+package org.example.compatibilityservice.dto;
+
+public class ComponentDto {
+    private Long id;
+    private String name;
+    private String socket;
+    private String ramType;
+    private String formFactor;
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+
+    public String getSocket() { return socket; }
+    public void setSocket(String socket) { this.socket = socket; }
+
+    public String getRamType() { return ramType; }
+    public void setRamType(String ramType) { this.ramType = ramType; }
+
+    public String getFormFactor() { return formFactor; }
+    public void setFormFactor(String formFactor) { this.formFactor = formFactor; }
+}
+
+================================================
+FILE: ./compatibility-service/src/main/java/org/example/compatibilityservice/model/CompatibilityCheckLog.java
+================================================
+package org.example.compatibilityservice.model;
+
+import jakarta.persistence.*;
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "compatibility_checks_log")
+public class CompatibilityCheckLog {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private Long sourceComponentId;
+    private String targetCategory;
+    private LocalDateTime checkedAt = LocalDateTime.now();
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public Long getSourceComponentId() { return sourceComponentId; }
+    public void setSourceComponentId(Long sourceComponentId) { this.sourceComponentId = sourceComponentId; }
+    public String getTargetCategory() { return targetCategory; }
+    public void setTargetCategory(String targetCategory) { this.targetCategory = targetCategory; }
+    public LocalDateTime getCheckedAt() { return checkedAt; }
+    public void setCheckedAt(LocalDateTime checkedAt) { this.checkedAt = checkedAt; }
+}
+
+================================================
+FILE: ./compatibility-service/src/main/java/org/example/compatibilityservice/model/CompatibilityRule.java
+================================================
+package org.example.compatibilityservice.model;
+
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+
+@Entity
+@Table(name = "compatibility_rules")
+public class CompatibilityRule {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @NotBlank
+    private String sourceCategory;
+    @NotBlank
+    private String targetCategory;
+    @NotBlank
+    private String matchingField;
+    private String description;
+
+    public CompatibilityRule() {}
+
+    public CompatibilityRule(String sourceCategory, String targetCategory, String matchingField, String description) {
+        this.sourceCategory = sourceCategory;
+        this.targetCategory = targetCategory;
+        this.matchingField = matchingField;
+        this.description = description;
+    }
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public String getSourceCategory() { return sourceCategory; }
+    public void setSourceCategory(String sourceCategory) { this.sourceCategory = sourceCategory; }
+    public String getTargetCategory() { return targetCategory; }
+    public void setTargetCategory(String targetCategory) { this.targetCategory = targetCategory; }
+    public String getMatchingField() { return matchingField; }
+    public void setMatchingField(String matchingField) { this.matchingField = matchingField; }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
+}
+
+================================================
+FILE: ./compatibility-service/src/main/java/org/example/compatibilityservice/repository/CompatibilityCheckLogRepository.java
+================================================
+package org.example.compatibilityservice.repository;
+
+import org.example.compatibilityservice.model.CompatibilityCheckLog;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface CompatibilityCheckLogRepository extends JpaRepository<CompatibilityCheckLog, Long> {
+}
+
+================================================
+FILE: ./compatibility-service/src/main/java/org/example/compatibilityservice/repository/CompatibilityRuleRepository.java
+================================================
+package org.example.compatibilityservice.repository;
+
+import org.example.compatibilityservice.model.CompatibilityRule;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface CompatibilityRuleRepository extends JpaRepository<CompatibilityRule, Long> {
+}
+
+================================================
+FILE: ./compatibility-service/src/main/resources/application.yaml
+================================================
+server:
+  port: 8084
+
+spring:
+  application:
+    name: compatibility-service
+  config:
+    import: "configserver:http://localhost:8888"
+
+================================================
+FILE: ./compatibility-service/src/test/java/org/example/compatibilityservice/CompatibilityServiceApplicationTests.java
+================================================
+package org.example.compatibilityservice;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+
+@SpringBootTest
+class CompatibilityServiceApplicationTests {
+
+    @Test
+    void contextLoads() {
+    }
+
+}
+
+
+================================================
+FILE: ./config-server/pom.xml
+================================================
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.3.5</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>com.pcbuilder</groupId>
+    <artifactId>config-server</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <name>config-server</name>
+    <description>Spring Cloud Config Server (native)</description>
+
+    <properties>
+        <java.version>17</java.version>
+        <spring-cloud.version>2023.0.3</spring-cloud.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-config-server</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring-cloud.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+</project>
+
+================================================
+FILE: ./config-server/src/main/java/org/example/configserver/ConfigServerApplication.java
+================================================
+package org.example.configserver;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.config.server.EnableConfigServer;
+
+@SpringBootApplication
+@EnableConfigServer
+public class ConfigServerApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(ConfigServerApplication.class, args);
+    }
+}
+
+================================================
+FILE: ./config-server/src/main/resources/application.yaml
+================================================
+server:
+  port: 8888
+
+spring:
+  application:
+    name: config-server
+  profiles:
+    active: native
+  cloud:
+    config:
+      server:
+        native:
+          search-locations: classpath:/config/
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,env
+  endpoint:
+    health:
+      show-details: always
+
+
+================================================
+FILE: ./config-server/src/main/resources/config/api-gateway.yaml
+================================================
+server:
+  port: 8080
+
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: auth-swagger
+          uri: lb://auth-service
+          predicates:
+            - Path=/v3/api-docs/auth
+          filters:
+            - SetPath=/auth/v3/api-docs
+
+        - id: product-swagger
+          uri: lb://product-service
+          predicates:
+            - Path=/v3/api-docs/product
+          filters:
+            - SetPath=/v3/api-docs
+
+        - id: compatibility-swagger
+          uri: lb://compatibility-service
+          predicates:
+            - Path=/v3/api-docs/compatibility
+          filters:
+            - SetPath=/v3/api-docs
+
+        - id: order-swagger
+          uri: lb://order-service
+          predicates:
+            - Path=/v3/api-docs/order
+          filters:
+            - SetPath=/v3/api-docs
+
+        - id: auth-api
+          uri: lb://auth-service
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=1
+            - name: CircuitBreaker
+              args:
+                name: authServiceCB
+                fallbackUri: forward:/fallback/auth
+
+        - id: admin-api
+          uri: lb://auth-service
+          predicates:
+            - Path=/api/admin/**
+          filters:
+            - StripPrefix=1
+            - name: CircuitBreaker
+              args:
+                name: authServiceCB
+                fallbackUri: forward:/fallback/auth
+
+        - id: users-api
+          uri: lb://auth-service
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - StripPrefix=1
+            - name: CircuitBreaker
+              args:
+                name: authServiceCB
+                fallbackUri: forward:/fallback/auth
+
+        - id: product-api
+          uri: lb://product-service
+          predicates:
+            - Path=/api/products/**,/api/categories/**,/api/builds/**,/api/components/**
+          filters:
+            - StripPrefix=1
+            - name: CircuitBreaker
+              args:
+                name: productServiceCB
+                fallbackUri: forward:/fallback/product
+
+        - id: compatibility-api
+          uri: lb://compatibility-service
+          predicates:
+            - Path=/api/compatibility/**
+          filters:
+            - StripPrefix=1
+            - name: CircuitBreaker
+              args:
+                name: compatibilityServiceCB
+                fallbackUri: forward:/fallback/compatibility
+
+        - id: order-api
+          uri: lb://order-service
+          predicates:
+            - Path=/api/orders/**
+          filters:
+            - StripPrefix=1
+            - name: CircuitBreaker
+              args:
+                name: orderServiceCB
+                fallbackUri: forward:/fallback/order
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      authServiceCB:
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
+        permittedNumberOfCallsInHalfOpenState: 3
+        registerHealthIndicator: true
+      productServiceCB:
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
+      compatibilityServiceCB:
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
+      orderServiceCB:
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+
+management:
+  endpoint:
+    gateway:
+      enabled: true
+    health:
+      show-details: always
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway,metrics,env
+  health:
+    circuitbreakers:
+      enabled: true
+
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.cloud.loadbalancer: DEBUG
+
+jwt:
+  secret: 1h0FhMtnHGyjVa6yMJh4Si5TgOJNuzl7IGLcYQ9LXIc=
+
+springdoc:
+  swagger-ui:
+    urls:
+      - name: Auth Service
+        url: /v3/api-docs/auth
+      - name: Product Service
+        url: /v3/api-docs/product
+      - name: Compatibility Service
+        url: /v3/api-docs/compatibility
+      - name: Order Service
+        url: /v3/api-docs/order
+
+================================================
+FILE: ./config-server/src/main/resources/config/auth-service.yaml
+================================================
+server:
+  port: 8081
+  forward-headers-strategy: framework
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/auth_db
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
+jwt:
+  secret: 1h0FhMtnHGyjVa6yMJh4Si5TgOJNuzl7IGLcY9LXIc=
+  expiration: 86400000
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,env
+  endpoint:
+    health:
+      show-details: always
+
+springdoc:
+  server:
+    url: http://localhost:8080/api/auth
+  swagger-ui:
+    path: /swagger-ui.html
+
+================================================
+FILE: ./config-server/src/main/resources/config/compatibility-service.yaml
+================================================
+server:
+  port: 8084
+  forward-headers-strategy: framework
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/compatibility_db
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+
+feign:
+  circuitbreaker:
+    enabled: true
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      product-service:
+        sliding-window-size: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 5
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,circuitbreakers,metrics,env
+  endpoint:
+    health:
+      show-details: always
+
+springdoc:
+  server:
+    url: http://localhost:8080/api/compatibility
+
+================================================
+FILE: ./config-server/src/main/resources/config/frontend-service.yaml
+================================================
+gateway:
+  url: http://localhost:8080
+
+================================================
+FILE: ./config-server/src/main/resources/config/order-service.yaml
+================================================
+server:
+  port: 8083
+  forward-headers-strategy: framework
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/order_db
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+  cloud:
+    openfeign:
+      okhttp:
+        enabled: true
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+
+feign:
+  circuitbreaker:
+    enabled: true
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      product-service:
+        sliding-window-size: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 5
+      auth-service:
+        sliding-window-size: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 5
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,circuitbreakers,metrics,env
+  endpoint:
+    health:
+      show-details: always
+
+springdoc:
+  server:
+    url: http://localhost:8080/api/orders
+
+================================================
+FILE: ./config-server/src/main/resources/config/product-service.yaml
+================================================
+server:
+  port: 8082
+  forward-headers-strategy: framework
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/product_db
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,env
+  endpoint:
+    health:
+      show-details: always
+
+springdoc:
+  server:
+    url: http://localhost:8080/api/products
+
+================================================
+FILE: ./config-server/src/test/java/org/example/configserver/ConfigServerApplicationTests.java
+================================================
+package org.example.configserver;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+
+@SpringBootTest
+class ConfigServerApplicationTests {
+
+    @Test
+    void contextLoads() {
+    }
+
+}
+
+
+================================================
+FILE: ./docker-compose.yml
+================================================
+version: '3.8'
+services:
+  postgres:
+    image: postgres:15
+    container_name: pc_builder_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pc_builder_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+
+================================================
+FILE: ./eureka-server/pom.xml
+================================================
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.3.5</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>com.pcbuilder</groupId>
+    <artifactId>eureka-server</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <name>eureka-server</name>
+    <description>Eureka Discovery Server</description>
+
+    <properties>
+        <java.version>17</java.version>
+        <spring-cloud.version>2023.0.3</spring-cloud.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-netflix-eureka-server</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring-cloud.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+</project>
+
+================================================
+FILE: ./eureka-server/src/main/java/org/example/eurekaserver/EurekaServerApplication.java
+================================================
+package org.example.eurekaserver;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.netflix.eureka.server.EnableEurekaServer;
+
+@SpringBootApplication
+@EnableEurekaServer
+public class EurekaServerApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(EurekaServerApplication.class, args);
+    }
+}
+
+================================================
+FILE: ./eureka-server/src/main/resources/application.yaml
+================================================
+server:
+  port: 8761
+
+spring:
+  application:
+    name: eureka-server
+
+eureka:
+  instance:
+    hostname: localhost
+  client:
+    register-with-eureka: false
+    fetch-registry: false
+    service-url:
+      defaultZone: http://${eureka.instance.hostname}:${server.port}/eureka/
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    com.netflix.eureka: OFF
+    com.netflix.discovery: OFF
+
+================================================
+FILE: ./eureka-server/src/test/java/org/example/eurekaserver/EurekaServerApplicationTests.java
+================================================
+package org.example.eurekaserver;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+
+@SpringBootTest
+class EurekaServerApplicationTests {
+
+    @Test
+    void contextLoads() {
+    }
+
+}
+
+
+================================================
+FILE: ./fronted-service/pom.xml
+================================================
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.3.5</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>com.pcbuilder</groupId>
+    <artifactId>frontend-service</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <name>frontend-service</name>
+    <description>Frontend on Thymeleaf</description>
+
+    <properties>
+        <java.version>17</java.version>
+        <spring-cloud.version>2023.0.3</spring-cloud.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-thymeleaf</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-config</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring-cloud.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+</project>
+
+================================================
+FILE: ./fronted-service/src/main/java/org/example/frontendservice/config/RestTemplateConfig.java
+================================================
+package org.example.frontendservice.config;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.client.RestTemplate;
+
+@Configuration
+public class RestTemplateConfig {
+
+    @Bean
+    public RestTemplate restTemplate() {
+        return new RestTemplate();
+    }
+}
+
+================================================
+FILE: ./fronted-service/src/main/java/org/example/frontendservice/controller/AdminController.java
+================================================
+package org.example.frontendservice.controller;
+
+public class AdminController {
+}
+
+
+================================================
+FILE: ./fronted-service/src/main/java/org/example/frontendservice/controller/AuthController.java
+================================================
+package org.example.frontendservice.controller;
+
+import jakarta.servlet.http.HttpSession;
+import org.example.frontendservice.dto.AuthRequest;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.*;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
+
+import java.util.Map;
+
+@Controller
+public class AuthController {
+
+    private final RestTemplate restTemplate;
+
+    @Value("${gateway.url}")
+    private String gatewayUrl;
+
+    public AuthController(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
+    }
+
+    @GetMapping("/")
+    public String index(HttpSession session) {
+        if (session.getAttribute("token") == null) {
+            return "redirect:/login";
+        }
+        return "redirect:/catalog";
+    }
+
+    @GetMapping("/login")
+    public String loginPage() {
+        return "login";
+    }
+
+    @PostMapping("/login")
+    public String login(@RequestParam String username,
+                        @RequestParam String password,
+                        HttpSession session,
+                        Model model) {
+        try {
+            AuthRequest request = new AuthRequest(username, password);
+            ResponseEntity<Map> response = restTemplate.postForEntity(
+                    gatewayUrl + "/api/auth/login",
+                    request,
+                    Map.class
+            );
+
+            if (response.getBody() != null) {
+                session.setAttribute("token", response.getBody().get("token"));
+                session.setAttribute("username", response.getBody().get("username"));
+                session.setAttribute("roles", response.getBody().get("roles"));
+                return "redirect:/catalog";
+            }
+            model.addAttribute("error", "Неверный ответ от сервера");
+        } catch (Exception e) {
+            model.addAttribute("error", "Неверный логин или пароль");
+        }
+        return "login";
+    }
+
+    @GetMapping("/register")
+    public String registerPage() {
+        return "register";
+    }
+
+    @PostMapping("/register")
+    public String register(@RequestParam String username,
+                           @RequestParam String email,
+                           @RequestParam String password,
+                           Model model) {
+        try {
+            Map<String, String> body = Map.of(
+                    "username", username,
+                    "email", email,
+                    "password", password
+            );
+            restTemplate.postForEntity(
+                    gatewayUrl + "/api/auth/register",
+                    body,
+                    Map.class
+            );
+            return "redirect:/login?registered";
+        } catch (Exception e) {
+            model.addAttribute("error", "Ошибка регистрации: " + e.getMessage());
+            return "register";
+        }
+    }
+
+    @GetMapping("/logout")
+    public String logout(HttpSession session) {
+        session.invalidate();
+        return "redirect:/login";
+    }
+}
+
+================================================
+FILE: ./fronted-service/src/main/java/org/example/frontendservice/controller/BuilderController.java
+================================================
+package org.example.frontendservice.controller;
+
+public class BuilderController {
+}
+
+
+================================================
+FILE: ./fronted-service/src/main/java/org/example/frontendservice/controller/CatalogController.java
+================================================
+package org.example.frontendservice.controller;
+
+import jakarta.servlet.http.HttpSession;
+import org.example.frontendservice.dto.ProductDto;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.*;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.client.RestTemplate;
+
+@Controller
+public class CatalogController {
+
+    private final RestTemplate restTemplate;
+
+    @Value("${gateway.url}")
+    private String gatewayUrl;
+
+    public CatalogController(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
+    }
+
+    @GetMapping("/catalog")
+    public String catalog(HttpSession session, Model model) {
+        String token = (String) session.getAttribute("token");
+        if (token == null) {
+            return "redirect:/login";
+        }
+
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Authorization", "Bearer " + token);
+
+            ResponseEntity<ProductDto[]> response = restTemplate.exchange(
+                    gatewayUrl + "/api/products",
+                    HttpMethod.GET,
+                    new HttpEntity<>(headers),
+                    ProductDto[].class
+            );
+
+            model.addAttribute("products", response.getBody());
+            model.addAttribute("username", session.getAttribute("username"));
+        } catch (Exception e) {
+            model.addAttribute("error", "Ошибка загрузки каталога: " + e.getMessage());
+        }
+        return "catalog";
+    }
+}
+
+================================================
+FILE: ./fronted-service/src/main/java/org/example/frontendservice/controller/OrderController.java
+================================================
+package org.example.frontendservice.controller;
+
+public class OrderController {
+}
+
+
+================================================
+FILE: ./fronted-service/src/main/java/org/example/frontendservice/dto/AuthRequest.java
+================================================
+package org.example.frontendservice.dto;
+
+public class AuthRequest {
+    private String username;
+    private String password;
+
+    public AuthRequest() {}
+    public AuthRequest(String username, String password) {
+        this.username = username;
+        this.password = password;
+    }
+    public String getUsername() { return username; }
+    public void setUsername(String username) { this.username = username; }
+    public String getPassword() { return password; }
+    public void setPassword(String password) { this.password = password; }
+}
+
+================================================
+FILE: ./fronted-service/src/main/java/org/example/frontendservice/dto/CategoryDto.java
+================================================
+package org.example.frontendservice.dto;
+
+public class CategoryDto {
+}
+
+
+================================================
+FILE: ./fronted-service/src/main/java/org/example/frontendservice/dto/OrderDto.java
+================================================
+package org.example.frontendservice.dto;
+
+public class OrderDto {
+}
+
+
+================================================
+FILE: ./fronted-service/src/main/java/org/example/frontendservice/dto/OrderItemDto.java
+================================================
+package org.example.frontendservice.dto;
+
+public class OrderItemDto {
+}
+
+
+================================================
+FILE: ./fronted-service/src/main/java/org/example/frontendservice/dto/ProductDto.java
+================================================
+package org.example.frontendservice.dto;
+
+public class ProductDto {
+    private Long id;
+    private String name;
+    private Double price;
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+    public Double getPrice() { return price; }
+    public void setPrice(Double price) { this.price = price; }
+}
+
+================================================
+FILE: ./fronted-service/src/main/java/org/example/frontendservice/FrontedServiceApplication.java
+================================================
+package org.example.frontendservice;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class FrontedServiceApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(FrontedServiceApplication.class, args);
+    }
+
+}
+
+
+================================================
+FILE: ./fronted-service/src/main/resources/application.yaml
+================================================
+server:
+  port: 8085
+
+spring:
+  application:
+    name: frontend-service
+  config:
+    import: "optional:configserver:http://localhost:8888"
+  thymeleaf:
+    cache: false
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+
+gateway:
+  url: http://localhost:8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+================================================
+FILE: ./fronted-service/src/test/java/org/example/frontendservice/FrontedServiceApplicationTests.java
+================================================
+package org.example.frontendservice;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+
+@SpringBootTest
+class FrontedServiceApplicationTests {
+
+    @Test
+    void contextLoads() {
+    }
+
+}
+
+
+================================================
+FILE: ./order-service/pom.xml
+================================================
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.3.5</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>com.pcbuilder</groupId>
+    <artifactId>order-service</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <name>order-service</name>
+    <description>Order Service</description>
+
+    <properties>
+        <java.version>17</java.version>
+        <spring-cloud.version>2023.0.3</spring-cloud.version>
+        <springdoc.version>2.6.0</springdoc.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-config</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-openfeign</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-circuitbreaker-resilience4j</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <version>${springdoc.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.github.openfeign</groupId>
+            <artifactId>feign-okhttp</artifactId>
+        </dependency>
+    </dependencies>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring-cloud.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+</project>
+
+================================================
+FILE: ./order-service/src/main/java/org/example/orderservice/client/ProductClientFallback.java
+================================================
+package org.example.orderservice.client;
+
+import org.example.orderservice.dto.ComponentDto;
+import org.springframework.stereotype.Component;
+
+@Component
+public class ProductClientFallback implements ProductClient {
+    @Override
+    public ComponentDto getComponentById(Long id) {
+        throw new RuntimeException("Сервис продуктов недоступен. Невозможно создать заказ.");
+    }
+
+    @Override
+    public void decreaseStock(Long id, Integer quantity) {
+        System.out.println("Не удалось списать товар со склада. Сервис недоступен.");
+    }
+}
+
+================================================
+FILE: ./order-service/src/main/java/org/example/orderservice/client/ProductClient.java
+================================================
+package org.example.orderservice.client;
+
+import org.example.orderservice.dto.ComponentDto;
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
+
+@FeignClient(name = "product-service", fallback = ProductClientFallback.class)
+public interface ProductClient {
+    @GetMapping("/components/{id}")
+    ComponentDto getComponentById(@PathVariable("id") Long id);
+
+    @PatchMapping("/components/{id}/decrease-stock")
+    void decreaseStock(@PathVariable("id") Long id, @RequestParam("quantity") Integer quantity);
+}
+
+================================================
+FILE: ./order-service/src/main/java/org/example/orderservice/config/OpenApiConfig.java
+================================================
+package org.example.orderservice.config;
+
+import io.swagger.v3.oas.models.Components;
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.security.SecurityRequirement;
+import io.swagger.v3.oas.models.security.SecurityScheme;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class OpenApiConfig {
+
+    @Bean
+    public OpenAPI customOpenAPI() {
+        return new OpenAPI()
+                .info(new Info()
+                        .title("Compatibility Service API")
+                        .description("Микросервис проверки совместимости компонентов")
+                        .version("1.0"))
+                .addSecurityItem(new SecurityRequirement().addList("bearerAuth"))
+                .components(new Components()
+                        .addSecuritySchemes("bearerAuth",
+                                new SecurityScheme()
+                                        .name("bearerAuth")
+                                        .type(SecurityScheme.Type.HTTP)
+                                        .scheme("bearer")
+                                        .bearerFormat("JWT")));
+    }
+}
+
+================================================
+FILE: ./order-service/src/main/java/org/example/orderservice/controller/OrderController.java
+================================================
+package org.example.orderservice.controller;
+
+import org.example.orderservice.client.ProductClient;
+import org.example.orderservice.dto.ComponentDto;
+import org.example.orderservice.dto.OrderItemRequest;
+import org.example.orderservice.dto.OrderRequest;
+import org.example.orderservice.model.Order;
+import org.example.orderservice.model.OrderItem;
+import org.example.orderservice.repository.OrderRepository;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+
+@RestController
+@RequestMapping("/orders")
+public class OrderController {
+
+    private final OrderRepository orderRepository;
+    private final ProductClient productClient;
+
+    public OrderController(OrderRepository orderRepository, ProductClient productClient) {
+        this.orderRepository = orderRepository;
+        this.productClient = productClient;
+    }
+
+    @GetMapping
+    public ResponseEntity<List<Order>> getAll() {
+        return ResponseEntity.ok(orderRepository.findAll());
+    }
+
+    @PostMapping
+    public ResponseEntity<Order> createOrder(@RequestBody OrderRequest request) {
+        Order order = new Order();
+        order.setUserId(request.getUserId());
+
+        List<OrderItem> items = new ArrayList<>();
+        BigDecimal total = BigDecimal.ZERO;
+
+        for (OrderItemRequest itemReq : request.getItems()) {
+            ComponentDto component = productClient.getComponentById(itemReq.getComponentId());
+
+            OrderItem item = new OrderItem();
+            item.setOrder(order);
+            item.setComponentId(component.getId());
+            item.setQuantity(itemReq.getQuantity());
+            item.setPriceAtPurchase(component.getPrice());
+            items.add(item);
+
+            total = total.add(component.getPrice().multiply(BigDecimal.valueOf(itemReq.getQuantity())));
+
+            productClient.decreaseStock(component.getId(), itemReq.getQuantity());
+        }
+
+        order.setItems(items);
+        order.setTotalPrice(total);
+
+        return ResponseEntity.ok(orderRepository.save(order));
+    }
+}
+
+================================================
+FILE: ./order-service/src/main/java/org/example/orderservice/controller/OrderItemController.java
+================================================
+package org.example.orderservice.controller;
+
+import org.example.orderservice.model.OrderItem;
+import org.example.orderservice.repository.OrderItemRepository;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/order-items")
+public class OrderItemController {
+
+    private final OrderItemRepository repository;
+
+    public OrderItemController(OrderItemRepository repository) {
+        this.repository = repository;
+    }
+
+    @GetMapping("/order/{orderId}")
+    public ResponseEntity<List<OrderItem>> getByOrderId(@PathVariable Long orderId) {
+        return ResponseEntity.ok(repository.findByOrderId(orderId));
+    }
+}
+
+================================================
+FILE: ./order-service/src/main/java/org/example/orderservice/controller/OrderStatusController.java
+================================================
+package org.example.orderservice.controller;
+
+import org.example.orderservice.model.Order;
+import org.example.orderservice.repository.OrderRepository;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/status")
+public class OrderStatusController {
+
+    private final OrderRepository repository;
+
+    public OrderStatusController(OrderRepository repository) {
+        this.repository = repository;
+    }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<Order> updateStatus(@PathVariable Long id, @RequestParam String status) {
+        return repository.findById(id)
+                .map(order -> {
+                    order.setStatus(status);
+                    return ResponseEntity.ok(repository.save(order));
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+}
+
+================================================
+FILE: ./order-service/src/main/java/org/example/orderservice/dto/ComponentDto.java
+================================================
+package org.example.orderservice.dto;
+
+import java.math.BigDecimal;
+
+public class ComponentDto {
+    private Long id;
+    private String name;
+    private BigDecimal price;
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+
+    public BigDecimal getPrice() { return price; }
+    public void setPrice(BigDecimal price) { this.price = price; }
+}
+
+================================================
+FILE: ./order-service/src/main/java/org/example/orderservice/dto/OrderItemRequest.java
+================================================
+package org.example.orderservice.dto;
+
+public class OrderItemRequest {
+    private Long componentId;
+    private Integer quantity;
+
+    public Long getComponentId() { return componentId; }
+    public void setComponentId(Long componentId) { this.componentId = componentId; }
+    public Integer getQuantity() { return quantity; }
+    public void setQuantity(Integer quantity) { this.quantity = quantity; }
+}
+
+================================================
+FILE: ./order-service/src/main/java/org/example/orderservice/dto/OrderRequest.java
+================================================
+package org.example.orderservice.dto;
+
+import java.util.List;
+
+public class OrderRequest {
+    private Long userId;
+    private List<OrderItemRequest> items;
+
+    public Long getUserId() { return userId; }
+    public void setUserId(Long userId) { this.userId = userId; }
+    public List<OrderItemRequest> getItems() { return items; }
+    public void setItems(List<OrderItemRequest> items) { this.items = items; }
+}
+
+================================================
+FILE: ./order-service/src/main/java/org/example/orderservice/model/OrderItem.java
+================================================
+package org.example.orderservice.model;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.*;
+import java.math.BigDecimal;
+
+@Entity
+@Table(name = "order_items")
+public class OrderItem {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @ManyToOne
+    @JoinColumn(name = "order_id")
+    @JsonIgnore
+    private Order order;
+
+    private Long componentId;
+
+    private Integer quantity;
+
+    private BigDecimal priceAtPurchase;
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public Order getOrder() { return order; }
+    public void setOrder(Order order) { this.order = order; }
+
+    public Long getComponentId() { return componentId; }
+    public void setComponentId(Long componentId) { this.componentId = componentId; }
+
+    public Integer getQuantity() { return quantity; }
+    public void setQuantity(Integer quantity) { this.quantity = quantity; }
+
+    public BigDecimal getPriceAtPurchase() { return priceAtPurchase; }
+    public void setPriceAtPurchase(BigDecimal priceAtPurchase) { this.priceAtPurchase = priceAtPurchase; }
+}
+
+================================================
+FILE: ./order-service/src/main/java/org/example/orderservice/model/Order.java
+================================================
+package org.example.orderservice.model;
+
+import jakarta.persistence.*;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Entity
+@Table(name = "orders")
+public class Order {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private Long userId;
+
+    private String status = "NEW";
+
+    private BigDecimal totalPrice;
+
+    private LocalDateTime createdAt = LocalDateTime.now();
+
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OrderItem> items;
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public Long getUserId() { return userId; }
+    public void setUserId(Long userId) { this.userId = userId; }
+
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+
+    public BigDecimal getTotalPrice() { return totalPrice; }
+    public void setTotalPrice(BigDecimal totalPrice) { this.totalPrice = totalPrice; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public List<OrderItem> getItems() { return items; }
+    public void setItems(List<OrderItem> items) { this.items = items; }
+}
+
+================================================
+FILE: ./order-service/src/main/java/org/example/orderservice/OrderServiceApplication.java
+================================================
+package org.example.orderservice;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+import org.springframework.cloud.openfeign.EnableFeignClients;
+
+@SpringBootApplication
+@EnableDiscoveryClient
+@EnableFeignClients
+public class OrderServiceApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(OrderServiceApplication.class, args);
+    }
+}
+
+================================================
+FILE: ./order-service/src/main/java/org/example/orderservice/repository/OrderItemRepository.java
+================================================
+package org.example.orderservice.repository;
+
+import org.example.orderservice.model.OrderItem;
+import org.springframework.data.jpa.repository.JpaRepository;
+import java.util.List;
+
+public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
+    List<OrderItem> findByOrderId(Long orderId);
+}
+
+================================================
+FILE: ./order-service/src/main/java/org/example/orderservice/repository/OrderRepository.java
+================================================
+package org.example.orderservice.repository;
+
+import org.example.orderservice.model.Order;
+import org.springframework.data.jpa.repository.JpaRepository;
+import java.util.List;
+
+public interface OrderRepository extends JpaRepository<Order, Long> {
+    List<Order> findByUserId(Long userId);
+}
+
+================================================
+FILE: ./order-service/src/main/resources/application.yaml
+================================================
+server:
+  port: 8083
+
+spring:
+  application:
+    name: order-service
+  config:
+    import: "configserver:http://localhost:8888"
+
+================================================
+FILE: ./order-service/src/test/java/org/example/orderservice/OrderServiceApplicationTests.java
+================================================
+package org.example.orderservice;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+
+@SpringBootTest
+class OrderServiceApplicationTests {
+
+    @Test
+    void contextLoads() {
+    }
+
+}
+
+
+================================================
+FILE: ./product-service/pom.xml
+================================================
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.3.5</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>com.pcbuilder</groupId>
+    <artifactId>product-service</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <name>product-service</name>
+    <description>Product Catalog and PC Builder Service</description>
+
+    <properties>
+        <java.version>17</java.version>
+        <spring-cloud.version>2023.0.3</spring-cloud.version>
+        <springdoc.version>2.6.0</springdoc.version>
+    </properties>
+
+    <dependencies>
+        <!-- Web -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <!-- Eureka Client -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+        </dependency>
+        <!-- Config Client -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-config</artifactId>
+        </dependency>
+        <!-- JPA -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+        <!-- PostgreSQL -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <!-- Validation -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+        <!-- Swagger -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <version>${springdoc.version}</version>
+        </dependency>
+        <!-- Actuator -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring-cloud.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+</project>
+
+================================================
+FILE: ./product-service/src/main/java/org/example/productservice/config/DataInitializer.java
+================================================
+package org.example.productservice.config;
+
+import org.example.productservice.model.Build;
+import org.example.productservice.model.BuildItem;
+import org.example.productservice.model.Category;
+import org.example.productservice.model.Component;
+import org.example.productservice.repository.BuildRepository;
+import org.example.productservice.repository.CategoryRepository;
+import org.example.productservice.repository.ComponentRepository;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+
+@Configuration
+public class DataInitializer {
+
+    @Bean
+    CommandLineRunner initData(CategoryRepository categoryRepo,
+                               ComponentRepository componentRepo,
+                               BuildRepository buildRepo) {
+        return args -> {
+            if (categoryRepo.count() == 0) {
+                List<String> names = List.of(
+                        "CPU", "GPU", "MOTHERBOARD", "RAM",
+                        "PSU", "CASE", "STORAGE", "COOLER"
+                );
+                names.forEach(n -> categoryRepo.save(new Category(n)));
+                System.out.println(">>> Product-service: 8 categories created");
+            }
+
+            if (componentRepo.count() == 0) {
+                Category cpu = categoryRepo.findByName("CPU").orElseThrow();
+                Category mb = categoryRepo.findByName("MOTHERBOARD").orElseThrow();
+                Category ram = categoryRepo.findByName("RAM").orElseThrow();
+
+                Component c1 = new Component();
+                c1.setName("Ryzen 5 7600X");
+                c1.setManufacturer("AMD");
+                c1.setPrice(new BigDecimal("25000"));
+                c1.setStockQuantity(10);
+                c1.setCategory(cpu);
+                c1.setSocket("AM5");
+                componentRepo.save(c1);
+
+                Component c2 = new Component();
+                c2.setName("Core i5-13400F");
+                c2.setManufacturer("Intel");
+                c2.setPrice(new BigDecimal("18000"));
+                c2.setStockQuantity(15);
+                c2.setCategory(cpu);
+                c2.setSocket("LGA1700");
+                componentRepo.save(c2);
+
+                Component m1 = new Component();
+                m1.setName("MSI B650 Gaming Plus");
+                m1.setManufacturer("MSI");
+                m1.setPrice(new BigDecimal("15000"));
+                m1.setStockQuantity(8);
+                m1.setCategory(mb);
+                m1.setSocket("AM5");
+                m1.setRamType("DDR5");
+                m1.setFormFactor("ATX");
+                componentRepo.save(m1);
+
+                Component m2 = new Component();
+                m2.setName("ASUS B760M");
+                m2.setManufacturer("ASUS");
+                m2.setPrice(new BigDecimal("12000"));
+                m2.setStockQuantity(10);
+                m2.setCategory(mb);
+                m2.setSocket("LGA1700");
+                m2.setRamType("DDR4");
+                m2.setFormFactor("mATX");
+                componentRepo.save(m2);
+
+                Component r1 = new Component();
+                r1.setName("Kingston Fury 16GB DDR5");
+                r1.setManufacturer("Kingston");
+                r1.setPrice(new BigDecimal("6000"));
+                r1.setStockQuantity(20);
+                r1.setCategory(ram);
+                r1.setRamType("DDR5");
+                r1.setCapacity("16GB");
+                componentRepo.save(r1);
+
+                Component r2 = new Component();
+                r2.setName("Crucial 16GB DDR4");
+                r2.setManufacturer("Crucial");
+                r2.setPrice(new BigDecimal("4000"));
+                r2.setStockQuantity(25);
+                r2.setCategory(ram);
+                r2.setRamType("DDR4");
+                r2.setCapacity("16GB");
+                componentRepo.save(r2);
+
+                System.out.println(">>> Product-service: 6 test components created");
+            }
+
+            if (buildRepo.count() == 0 && componentRepo.count() > 0) {
+                Build build = new Build();
+                build.setUserId(1L);
+                build.setName("Игровой ПК (demo)");
+
+                Component cpu = componentRepo.findByNameContainingIgnoreCase("Ryzen").stream().findFirst().orElse(null);
+                Component mb = componentRepo.findByNameContainingIgnoreCase("MSI").stream().findFirst().orElse(null);
+                Component ram = componentRepo.findByNameContainingIgnoreCase("Kingston").stream().findFirst().orElse(null);
+
+                List<BuildItem> items = new ArrayList<>();
+                BigDecimal total = BigDecimal.ZERO;
+
+                if (cpu != null) {
+                    items.add(new BuildItem(build, cpu, 1));
+                    total = total.add(cpu.getPrice());
+                }
+                if (mb != null) {
+                    items.add(new BuildItem(build, mb, 1));
+                    total = total.add(mb.getPrice());
+                }
+                if (ram != null) {
+                    items.add(new BuildItem(build, ram, 2));
+                    total = total.add(ram.getPrice().multiply(BigDecimal.valueOf(2)));
+                }
+
+                build.setItems(items);
+                build.setTotalPrice(total);
+                buildRepo.save(build);
+                System.out.println(">>> Product-service: demo build created with totalPrice=" + total);
+            }
+        };
+    }
+}
+
+================================================
+FILE: ./product-service/src/main/java/org/example/productservice/config/OpenApiConfig.java
+================================================
+package org.example.productservice.config;
+
+import io.swagger.v3.oas.models.Components;
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.security.SecurityRequirement;
+import io.swagger.v3.oas.models.security.SecurityScheme;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class OpenApiConfig {
+
+    @Bean
+    public OpenAPI customOpenAPI() {
+        return new OpenAPI()
+                .info(new Info()
+                        .title("Compatibility Service API")
+                        .description("Микросервис проверки совместимости компонентов")
+                        .version("1.0"))
+                .addSecurityItem(new SecurityRequirement().addList("bearerAuth"))
+                .components(new Components()
+                        .addSecuritySchemes("bearerAuth",
+                                new SecurityScheme()
+                                        .name("bearerAuth")
+                                        .type(SecurityScheme.Type.HTTP)
+                                        .scheme("bearer")
+                                        .bearerFormat("JWT")));
+    }
+}
+
+================================================
+FILE: ./product-service/src/main/java/org/example/productservice/controller/BuildController.java
+================================================
+package org.example.productservice.controller;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import org.example.productservice.dto.BuildItemRequest;
+import org.example.productservice.dto.BuildRequest;
+import org.example.productservice.model.Build;
+import org.example.productservice.model.BuildItem;
+import org.example.productservice.model.Component;
+import org.example.productservice.repository.BuildRepository;
+import org.example.productservice.repository.ComponentRepository;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+
+@RestController
+@RequestMapping("/builds")
+@Tag(name = "Сборки", description = "API для сборок ПК")
+public class BuildController {
+
+    private final BuildRepository buildRepository;
+    private final ComponentRepository componentRepository;
+
+    public BuildController(BuildRepository buildRepository,
+                           ComponentRepository componentRepository) {
+        this.buildRepository = buildRepository;
+        this.componentRepository = componentRepository;
+    }
+
+    @GetMapping
+    @Operation(summary = "Все сборки или по userId")
+    public ResponseEntity<List<Build>> getAll(@RequestParam(required = false) Long userId) {
+        return ResponseEntity.ok(userId != null
+                ? buildRepository.findByUserId(userId)
+                : buildRepository.findAll());
+    }
+
+    @GetMapping("/{id}")
+    @Operation(summary = "Сборка по ID")
+    public ResponseEntity<Build> getById(@PathVariable Long id) {
+        return buildRepository.findById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PostMapping
+    @Operation(summary = "Создать сборку (с пересчётом totalPrice)")
+    public ResponseEntity<Build> create(@RequestBody BuildRequest request) {
+        Build build = new Build();
+        build.setUserId(request.getUserId());
+        build.setName(request.getName());
+
+        List<BuildItem> items = new ArrayList<>();
+        BigDecimal total = BigDecimal.ZERO;
+
+        if (request.getItems() != null) {
+            for (BuildItemRequest itemReq : request.getItems()) {
+                Component component = componentRepository.findById(itemReq.getComponentId())
+                        .orElseThrow(() -> new RuntimeException("Компонент не найден: " + itemReq.getComponentId()));
+                int qty = itemReq.getQuantity() != null ? itemReq.getQuantity() : 1;
+                BuildItem item = new BuildItem(build, component, qty);
+                items.add(item);
+                total = total.add(component.getPrice().multiply(BigDecimal.valueOf(qty)));
+            }
+        }
+
+        build.setItems(items);
+        build.setTotalPrice(total);
+
+        return ResponseEntity.status(201).body(buildRepository.save(build));
+    }
+
+    @PostMapping("/{id}/items")
+    @Operation(summary = "Добавить компонент в сборку + пересчёт")
+    public ResponseEntity<Build> addItem(@PathVariable Long id, @RequestBody BuildItemRequest itemReq) {
+        return buildRepository.findById(id).map(build -> {
+            Component component = componentRepository.findById(itemReq.getComponentId())
+                    .orElseThrow(() -> new RuntimeException("Компонент не найден"));
+            int qty = itemReq.getQuantity() != null ? itemReq.getQuantity() : 1;
+            build.getItems().add(new BuildItem(build, component, qty));
+            recalcTotal(build);
+            return ResponseEntity.ok(buildRepository.save(build));
+        }).orElse(ResponseEntity.notFound().build());
+    }
+
+    @DeleteMapping("/{id}/items/{itemId}")
+    @Operation(summary = "Удалить компонент из сборки + пересчёт")
+    public ResponseEntity<Build> removeItem(@PathVariable Long id, @PathVariable Long itemId) {
+        return buildRepository.findById(id).map(build -> {
+            build.getItems().removeIf(i -> i.getId().equals(itemId));
+            recalcTotal(build);
+            return ResponseEntity.ok(buildRepository.save(build));
+        }).orElse(ResponseEntity.notFound().build());
+    }
+
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Удалить сборку")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        buildRepository.deleteById(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    private void recalcTotal(Build build) {
+        BigDecimal total = build.getItems().stream()
+                .map(i -> i.getComponent().getPrice().multiply(BigDecimal.valueOf(i.getQuantity())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        build.setTotalPrice(total);
+    }
+}
+
+================================================
+FILE: ./product-service/src/main/java/org/example/productservice/controller/CategoryController.java
+================================================
+package org.example.productservice.controller;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import org.example.productservice.model.Category;
+import org.example.productservice.repository.CategoryRepository;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/categories")
+@Tag(name = "Категории", description = "API для управления категориями компонентов")
+public class CategoryController {
+
+    private final CategoryRepository categoryRepository;
+
+    public CategoryController(CategoryRepository categoryRepository) {
+        this.categoryRepository = categoryRepository;
+    }
+
+    @GetMapping
+    @Operation(summary = "Получить все категории")
+    public ResponseEntity<List<Category>> getAll() {
+        return ResponseEntity.ok(categoryRepository.findAll());
+    }
+
+    @GetMapping("/{id}")
+    @Operation(summary = "Получить категорию по ID")
+    public ResponseEntity<Category> getById(@PathVariable Long id) {
+        return categoryRepository.findById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PostMapping
+    @Operation(summary = "Создать категорию")
+    public ResponseEntity<Category> create(@Valid @RequestBody Category category) {
+        return ResponseEntity.status(201).body(categoryRepository.save(category));
+    }
+
+    @PutMapping("/{id}")
+    @Operation(summary = "Обновить категорию")
+    public ResponseEntity<Category> update(@PathVariable Long id,
+                                           @Valid @RequestBody Category category) {
+        return categoryRepository.findById(id)
+                .map(existing -> {
+                    existing.setName(category.getName());
+                    return ResponseEntity.ok(categoryRepository.save(existing));
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Удалить категорию")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        categoryRepository.deleteById(id);
+        return ResponseEntity.noContent().build();
+    }
+}
+
+================================================
+FILE: ./product-service/src/main/java/org/example/productservice/controller/ComponentController.java
+================================================
+package org.example.productservice.controller;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import org.example.productservice.model.Component;
+import org.example.productservice.repository.CategoryRepository;
+import org.example.productservice.repository.ComponentRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/components")
+@Tag(name = "Компоненты", description = "API для управления компонентами ПК")
+public class ComponentController {
+
+    private final ComponentRepository componentRepository;
+    private final CategoryRepository categoryRepository;
+
+    public ComponentController(ComponentRepository componentRepository,
+                               CategoryRepository categoryRepository) {
+        this.componentRepository = componentRepository;
+        this.categoryRepository = categoryRepository;
+    }
+
+    @GetMapping
+    @Operation(summary = "Получить компоненты с пагинацией и поиском")
+    public ResponseEntity<Page<Component>> getAll(
+            @Parameter(description = "Номер страницы (с 0)")
+            @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Размер страницы")
+            @RequestParam(defaultValue = "10") int size,
+            @Parameter(description = "Поиск по названию (частичное совпадение)")
+            @RequestParam(required = false) String search) {
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Component> result = (search != null && !search.isBlank())
+                ? componentRepository.findByNameContainingIgnoreCase(search, pageable)
+                : componentRepository.findAll(pageable);
+
+        return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/{id}")
+    @Operation(summary = "Получить компонент по ID")
+    public ResponseEntity<Component> getById(@PathVariable Long id) {
+        return componentRepository.findById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/by-category/{categoryId}")
+    @Operation(summary = "Получить компоненты по категории (для Feign)")
+    public ResponseEntity<List<Component>> getByCategory(@PathVariable Long categoryId) {
+        return ResponseEntity.ok(componentRepository.findByCategoryId(categoryId));
+    }
+
+    @PostMapping
+    @Operation(summary = "Создать компонент")
+    public ResponseEntity<Component> create(@Valid @RequestBody Component component) {
+        if (component.getCategory() != null && component.getCategory().getId() != null) {
+            component.setCategory(
+                    categoryRepository.findById(component.getCategory().getId()).orElse(null)
+            );
+        }
+        return ResponseEntity.status(201).body(componentRepository.save(component));
+    }
+
+    @PutMapping("/{id}")
+    @Operation(summary = "Обновить компонент")
+    public ResponseEntity<Component> update(@PathVariable Long id,
+                                            @Valid @RequestBody Component component) {
+        return componentRepository.findById(id)
+                .map(existing -> {
+                    existing.setName(component.getName());
+                    existing.setManufacturer(component.getManufacturer());
+                    existing.setPrice(component.getPrice());
+                    existing.setStockQuantity(component.getStockQuantity());
+                    existing.setDescription(component.getDescription());
+                    existing.setSocket(component.getSocket());
+                    existing.setRamType(component.getRamType());
+                    existing.setFormFactor(component.getFormFactor());
+                    existing.setWattage(component.getWattage());
+                    existing.setCapacity(component.getCapacity());
+                    if (component.getCategory() != null && component.getCategory().getId() != null) {
+                        existing.setCategory(
+                                categoryRepository.findById(component.getCategory().getId()).orElse(null)
+                        );
+                    }
+                    return ResponseEntity.ok(componentRepository.save(existing));
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Удалить компонент")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        componentRepository.deleteById(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{id}/decrease-stock")
+    @Operation(summary = "Уменьшить остаток (для order-service)")
+    public ResponseEntity<Component> decreaseStock(@PathVariable Long id,
+                                                   @RequestParam Integer quantity) {
+        return componentRepository.findById(id)
+                .map(existing -> {
+                    if (existing.getStockQuantity() < quantity) {
+                        return ResponseEntity.badRequest().<Component>build();
+                    }
+                    existing.setStockQuantity(existing.getStockQuantity() - quantity);
+                    return ResponseEntity.ok(componentRepository.save(existing));
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+}
+
+================================================
+FILE: ./product-service/src/main/java/org/example/productservice/controller/ProductController.java
+================================================
+/*package org.example.productservice.controller;
+
+import org.example.productservice.dto.ProductDto;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import java.util.List;
+
+@RestController
+@RequestMapping("/products")
+public class ProductController {
+
+    @GetMapping
+    public ResponseEntity<List<ProductDto>> getAll() {
+        return ResponseEntity.ok(List.of(
+                new ProductDto(1L, "Product 1", 1000.0),
+                new ProductDto(2L, "Product 2", 2000.0)
+        ));
+    }
+}*/
+
+================================================
+FILE: ./product-service/src/main/java/org/example/productservice/controller/TestController.java
+================================================
+/*package org.example.productservice.controller;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
+
+@RestController
+@RequestMapping("/products")
+public class TestController {
+
+    @GetMapping("/test-headers")
+    public ResponseEntity<Map<String, String>> testHeaders(
+            @RequestHeader(value = "X-User-Id", required = false) String userId,
+            @RequestHeader(value = "X-User-Name", required = false) String username,
+            @RequestHeader(value = "X-User-Roles", required = false) String roles
+    ) {
+        return ResponseEntity.ok(Map.of(
+                "X-User-Id", userId != null ? userId : "null",
+                "X-User-Name", username != null ? username : "null",
+                "X-User-Roles", roles != null ? roles : "null"
+        ));
+    }
+}*/
+
+================================================
+FILE: ./product-service/src/main/java/org/example/productservice/dto/BuildItemRequest.java
+================================================
+package org.example.productservice.dto;
+
+public class BuildItemRequest {
+    private Long componentId;
+    private Integer quantity = 1;
+
+    public Long getComponentId() { return componentId; }
+    public void setComponentId(Long componentId) { this.componentId = componentId; }
+
+    public Integer getQuantity() { return quantity; }
+    public void setQuantity(Integer quantity) { this.quantity = quantity; }
+}
+
+================================================
+FILE: ./product-service/src/main/java/org/example/productservice/dto/BuildRequest.java
+================================================
+package org.example.productservice.dto;
+
+import java.util.List;
+
+public class BuildRequest {
+    private Long userId;
+    private String name;
+    private List<BuildItemRequest> items;
+
+    public Long getUserId() { return userId; }
+    public void setUserId(Long userId) { this.userId = userId; }
+
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+
+    public List<BuildItemRequest> getItems() { return items; }
+    public void setItems(List<BuildItemRequest> items) { this.items = items; }
+}
+
+================================================
+FILE: ./product-service/src/main/java/org/example/productservice/dto/ProductDto.java
+================================================
+package org.example.productservice.dto;
+
+public class ProductDto {
+    private Long id;
+    private String name;
+    private Double price;
+
+    public ProductDto() {}
+
+    public ProductDto(Long id, String name, Double price) {
+        this.id = id;
+        this.name = name;
+        this.price = price;
+    }
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+    public Double getPrice() { return price; }
+    public void setPrice(Double price) { this.price = price; }
+}
+
+================================================
+FILE: ./product-service/src/main/java/org/example/productservice/GlobalExceptionHandler.java
+================================================
+package org.example.productservice;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+
+import java.util.Map;
+
+@ControllerAdvice
+public class GlobalExceptionHandler {
+
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<Map<String, String>> handleRuntimeException(RuntimeException ex) {
+        if (ex.getMessage() != null && ex.getMessage().contains("не найден")) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", ex.getMessage()));
+        }
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(Map.of("error", ex.getMessage()));
+    }
+}
+
+================================================
+FILE: ./product-service/src/main/java/org/example/productservice/model/BuildItem.java
+================================================
+package org.example.productservice.model;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.persistence.*;
+
+@Entity
+@Table(name = "build_items")
+@Schema(description = "Элемент сборки — компонент + количество")
+public class BuildItem {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "build_id", nullable = false)
+    @JsonIgnore
+    private Build build;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "component_id", nullable = false)
+    private Component component;
+
+    @Schema(description = "Количество", example = "1")
+    private Integer quantity = 1;
+
+    public BuildItem() {}
+
+    public BuildItem(Build build, Component component, Integer quantity) {
+        this.build = build;
+        this.component = component;
+        this.quantity = quantity;
+    }
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public Build getBuild() { return build; }
+    public void setBuild(Build build) { this.build = build; }
+
+    public Component getComponent() { return component; }
+    public void setComponent(Component component) { this.component = component; }
+
+    public Integer getQuantity() { return quantity; }
+    public void setQuantity(Integer quantity) { this.quantity = quantity; }
+}
+
+================================================
+FILE: ./product-service/src/main/java/org/example/productservice/model/Build.java
+================================================
+package org.example.productservice.model;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.persistence.*;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+@Entity
+@Table(name = "builds")
+@Schema(description = "Сборка ПК пользователя")
+public class Build {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Schema(description = "ID пользователя (из auth-service)", example = "1")
+    private Long userId;
+
+    @Schema(description = "Название сборки", example = "Мой игровой ПК")
+    private String name;
+
+    @Column(precision = 10, scale = 2)
+    @Schema(description = "Общая стоимость", accessMode = Schema.AccessMode.READ_ONLY)
+    private BigDecimal totalPrice = BigDecimal.ZERO;
+
+    @Column(updatable = false)
+    @Schema(description = "Дата создания", accessMode = Schema.AccessMode.READ_ONLY)
+    private LocalDateTime createdAt = LocalDateTime.now();
+
+    @OneToMany(mappedBy = "build", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    private List<BuildItem> items = new ArrayList<>();
+
+    public Build() {}
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public Long getUserId() { return userId; }
+    public void setUserId(Long userId) { this.userId = userId; }
+
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+
+    public BigDecimal getTotalPrice() { return totalPrice; }
+    public void setTotalPrice(BigDecimal totalPrice) { this.totalPrice = totalPrice; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public List<BuildItem> getItems() { return items; }
+    public void setItems(List<BuildItem> items) { this.items = items; }
+}
+
+================================================
+FILE: ./product-service/src/main/java/org/example/productservice/model/Category.java
+================================================
+package org.example.productservice.model;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+
+@Entity
+@Table(name = "categories")
+@Schema(description = "Категория компонента")
+public class Category {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @NotBlank(message = "Название категории обязательно")
+    @Column(unique = true, nullable = false)
+    @Schema(description = "Название категории", example = "CPU")
+    private String name;
+
+    public Category() {}
+
+    public Category(String name) {
+        this.name = name;
+    }
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+}
+
+================================================
+FILE: ./product-service/src/main/java/org/example/productservice/model/Component.java
+================================================
+package org.example.productservice.model;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "components")
+@Schema(description = "Комплектующее ПК")
+public class Component {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @NotBlank(message = "Название обязательно")
+    @Schema(description = "Название компонента", example = "Ryzen 5 7600X")
+    private String name;
+
+    @Schema(description = "Производитель", example = "AMD")
+    private String manufacturer;
+
+    @NotNull(message = "Цена обязательна")
+    @Min(value = 0, message = "Цена не может быть отрицательной")
+    @Column(precision = 10, scale = 2)
+    @Schema(description = "Цена", example = "25000.00")
+    private BigDecimal price;
+
+    @NotNull(message = "Количество обязательно")
+    @Min(value = 0, message = "Количество не может быть отрицательным")
+    @Schema(description = "Количество на складе", example = "10")
+    private Integer stockQuantity = 0;
+
+    @Column(columnDefinition = "TEXT")
+    @Schema(description = "Описание")
+    private String description;
+
+    @ManyToOne
+    @JoinColumn(name = "category_id")
+    @Schema(description = "Категория компонента")
+    private Category category;
+
+    @Schema(description = "Сокет (для CPU/MOTHERBOARD)", example = "AM5")
+    private String socket;
+
+    @Schema(description = "Тип памяти (для RAM/MOTHERBOARD)", example = "DDR5")
+    private String ramType;
+
+    @Schema(description = "Форм-фактор (для CASE/MOTHERBOARD)", example = "ATX")
+    private String formFactor;
+
+    @Schema(description = "Мощность (для PSU)", example = "750")
+    private Integer wattage;
+
+    @Schema(description = "Объём (для STORAGE/RAM)", example = "16GB")
+    private String capacity;
+
+    @Column(updatable = false)
+    @Schema(description = "Дата создания", accessMode = Schema.AccessMode.READ_ONLY)
+    private LocalDateTime createdAt = LocalDateTime.now();
+
+    public Component() {}
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+
+    public String getManufacturer() { return manufacturer; }
+    public void setManufacturer(String manufacturer) { this.manufacturer = manufacturer; }
+
+    public BigDecimal getPrice() { return price; }
+    public void setPrice(BigDecimal price) { this.price = price; }
+
+    public Integer getStockQuantity() { return stockQuantity; }
+    public void setStockQuantity(Integer stockQuantity) { this.stockQuantity = stockQuantity; }
+
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
+
+    public Category getCategory() { return category; }
+    public void setCategory(Category category) { this.category = category; }
+
+    public String getSocket() { return socket; }
+    public void setSocket(String socket) { this.socket = socket; }
+
+    public String getRamType() { return ramType; }
+    public void setRamType(String ramType) { this.ramType = ramType; }
+
+    public String getFormFactor() { return formFactor; }
+    public void setFormFactor(String formFactor) { this.formFactor = formFactor; }
+
+    public Integer getWattage() { return wattage; }
+    public void setWattage(Integer wattage) { this.wattage = wattage; }
+
+    public String getCapacity() { return capacity; }
+    public void setCapacity(String capacity) { this.capacity = capacity; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+}
+
+================================================
+FILE: ./product-service/src/main/java/org/example/productservice/ProductServiceApplication.java
+================================================
+package org.example.productservice;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+
+@SpringBootApplication
+@EnableDiscoveryClient
+public class ProductServiceApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(ProductServiceApplication.class, args);
+    }
+
+}
+
+
+================================================
+FILE: ./product-service/src/main/java/org/example/productservice/repository/BuildItemRepository.java
+================================================
+package org.example.productservice.repository;
+
+import org.example.productservice.model.BuildItem;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.List;
+
+public interface BuildItemRepository extends JpaRepository<BuildItem, Long> {
+    List<BuildItem> findByBuildId(Long buildId);
+}
+
+================================================
+FILE: ./product-service/src/main/java/org/example/productservice/repository/BuildRepository.java
+================================================
+package org.example.productservice.repository;
+
+import org.example.productservice.model.Build;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.List;
+
+public interface BuildRepository extends JpaRepository<Build, Long> {
+    List<Build> findByUserId(Long userId);
+}
+
+================================================
+FILE: ./product-service/src/main/java/org/example/productservice/repository/CategoryRepository.java
+================================================
+package org.example.productservice.repository;
+
+import org.example.productservice.model.Category;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.Optional;
+
+public interface CategoryRepository extends JpaRepository<Category, Long> {
+    Optional<Category> findByName(String name);
+}
+
+================================================
+FILE: ./product-service/src/main/java/org/example/productservice/repository/ComponentRepository.java
+================================================
+package org.example.productservice.repository;
+
+import org.example.productservice.model.Component;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.List;
+
+public interface ComponentRepository extends JpaRepository<Component, Long> {
+
+    Page<Component> findByNameContainingIgnoreCase(String name, Pageable pageable);
+
+    List<Component> findByNameContainingIgnoreCase(String name);
+
+    List<Component> findByCategoryId(Long categoryId);
+}
+
+================================================
+FILE: ./product-service/src/main/resources/application.yaml
+================================================
+server:
+  port: 8082
+
+spring:
+  application:
+    name: product-service
+  config:
+    import: "optional:configserver:http://localhost:8888"
+
+================================================
+FILE: ./product-service/src/test/java/org/example/productservice/ProductServiceApplicationTests.java
+================================================
+package org.example.productservice;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+
+@SpringBootTest
+class ProductServiceApplicationTests {
+
+    @Test
+    void contextLoads() {
+    }
+
+}

@@ -1,0 +1,692 @@
+
+============================================================
+FILE: src/main/java/org/example/frontendservice/controller/BuilderController.java
+============================================================
+package org.example.frontendservice.controller;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import jakarta.servlet.http.HttpSession;
+import org.example.frontendservice.dto.ProductDto;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.*;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestClientResponseException;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriUtils;
+
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+@Controller
+public class BuilderController {
+
+    private static final Logger log =
+            LoggerFactory.getLogger(BuilderController.class);
+
+    private final RestTemplate restTemplate;
+    private final ObjectMapper objectMapper;
+
+    @Value("${gateway.url}")
+    private String gatewayUrl;
+
+    public BuilderController(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
+        this.objectMapper = new ObjectMapper();
+        this.objectMapper.registerModule(new JavaTimeModule());
+    }
+
+    @GetMapping("/builder")
+    public String builderPage(HttpSession session, Model model) {
+
+        String token = (String) session.getAttribute("token");
+
+        if (token == null) {
+            return "redirect:/login";
+        }
+
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setBearerAuth(token);
+
+            ResponseEntity<Map> response = restTemplate.exchange(
+                    gatewayUrl + "/api/components?size=100",
+                    HttpMethod.GET,
+                    new HttpEntity<>(headers),
+                    Map.class
+            );
+
+            List<ProductDto> components = new ArrayList<>();
+
+            if (response.getBody() != null) {
+                Object content = response.getBody().get("content");
+
+                if (content instanceof List<?> items) {
+                    components = items.stream()
+                            .map(item -> objectMapper.convertValue(
+                                    item, ProductDto.class))
+                            .toList();
+                }
+            }
+
+            model.addAttribute("components", components);
+            model.addAttribute("username",
+                    session.getAttribute("username"));
+
+        } catch (RestClientResponseException e) {
+            log.error("Backend returned {} while loading components",
+                    e.getStatusCode());
+
+            model.addAttribute("components", List.of());
+            model.addAttribute("error",
+                    "Не удалось загрузить комплектующие. Попробуйте позже.");
+
+        } catch (Exception e) {
+            log.error("Error loading builder components", e);
+
+            model.addAttribute("components", List.of());
+            model.addAttribute("error",
+                    "Ошибка загрузки комплектующих.");
+        }
+
+        return "builder";
+    }
+
+    @PostMapping("/builder/save")
+    public String saveBuild(
+            @RequestParam String name,
+            @RequestParam List<Long> componentId,
+            @RequestParam List<Integer> quantity,
+            HttpSession session) {
+
+        String token = (String) session.getAttribute("token");
+
+        if (token == null) {
+            return "redirect:/login";
+        }
+
+        if (name == null || name.isBlank()
+                || componentId == null || componentId.isEmpty()
+                || quantity == null
+                || componentId.size() != quantity.size()) {
+
+            return "redirect:/builder?error=invalid";
+        }
+
+        for (int i = 0; i < componentId.size(); i++) {
+            if (componentId.get(i) == null
+                    || componentId.get(i) <= 0
+                    || quantity.get(i) == null
+                    || quantity.get(i) < 1
+                    || quantity.get(i) > 99) {
+
+                return "redirect:/builder?error=invalid";
+            }
+        }
+
+        try {
+            Long userId = extractUserIdFromToken(token);
+
+            if (userId == null) {
+                return "redirect:/builder?error=user";
+            }
+
+            List<Map<String, Object>> items = new ArrayList<>();
+
+            for (int i = 0; i < componentId.size(); i++) {
+
+                Map<String, Object> item = new LinkedHashMap<>();
+
+                item.put("componentId", componentId.get(i));
+                item.put("quantity", quantity.get(i));
+
+                items.add(item);
+            }
+
+            Map<String, Object> buildRequest = new LinkedHashMap<>();
+
+            buildRequest.put("userId", userId);
+            buildRequest.put("name", name.trim());
+            buildRequest.put("items", items);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setBearerAuth(token);
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            restTemplate.exchange(
+                    gatewayUrl + "/api/builds",
+                    HttpMethod.POST,
+                    new HttpEntity<>(buildRequest, headers),
+                    Void.class
+            );
+
+            return "redirect:/builds?success";
+
+        } catch (RestClientResponseException e) {
+
+            log.error("Backend rejected build creation: {}",
+                    e.getStatusCode());
+
+            return "redirect:/builder?error=backend";
+
+        } catch (Exception e) {
+
+            log.error("Error saving PC build", e);
+
+            return "redirect:/builder?error=save";
+        }
+    }
+
+    private Long extractUserIdFromToken(String token) {
+
+        try {
+            String[] parts = token.split("\\.");
+
+            if (parts.length < 2) {
+                return null;
+            }
+
+            byte[] decoded = java.util.Base64
+                    .getUrlDecoder()
+                    .decode(parts[1]);
+
+            JsonNode payload = objectMapper.readTree(decoded);
+            JsonNode userIdNode = payload.get("userId");
+
+            if (userIdNode == null || userIdNode.isNull()) {
+                return null;
+            }
+
+            if (userIdNode.canConvertToLong()) {
+                return userIdNode.asLong();
+            }
+
+            return null;
+
+        } catch (Exception e) {
+            log.warn("Cannot extract userId from JWT");
+            return null;
+        }
+    }
+}
+
+============================================================
+FILE: src/main/java/org/example/frontendservice/controller/BuildsController.java
+============================================================
+package org.example.frontendservice.controller;
+
+import jakarta.servlet.http.HttpSession;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.*;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+@Controller
+@RequestMapping("/builds")
+public class BuildsController {
+
+    private final RestTemplate restTemplate;
+    @Value("${gateway.url}")
+    private String gatewayUrl;
+
+    public BuildsController(RestTemplate restTemplate) { this.restTemplate = restTemplate; }
+
+    @GetMapping
+    public String listBuilds(HttpSession session, Model model) {
+        String token = (String) session.getAttribute("token");
+        if (token == null) return "redirect:/login";
+
+        try {
+            Long userId = extractUserIdFromToken(token);
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Authorization", "Bearer " + token);
+
+            ResponseEntity<List> response = restTemplate.exchange(
+                    gatewayUrl + "/api/builds?userId=" + userId,
+                    HttpMethod.GET, new HttpEntity<>(headers), List.class);
+
+            model.addAttribute("builds", response.getBody());
+        } catch (Exception e) {
+            model.addAttribute("error", "Ошибка загрузки сборок");
+        }
+        return "builds";
+    }
+
+    @PostMapping("/checkout/{id}")
+    public String checkoutBuild(@PathVariable Long id, HttpSession session) {
+        String token = (String) session.getAttribute("token");
+        if (token == null) return "redirect:/login";
+
+        try {
+            Long userId = extractUserIdFromToken(token);
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Authorization", "Bearer " + token);
+
+            ResponseEntity<Map> buildResponse = restTemplate.exchange(
+                    gatewayUrl + "/api/builds/" + id,
+                    HttpMethod.GET, new HttpEntity<>(headers), Map.class);
+            Map<String, Object> build = buildResponse.getBody();
+
+            List<Map<String, Object>> buildItems = (List<Map<String, Object>>) build.get("items");
+            List<Map<String, Object>> orderItems = new ArrayList<>();
+            for (Map<String, Object> item : buildItems) {
+                Map<String, Object> component = (Map<String, Object>) item.get("component");
+                orderItems.add(Map.of(
+                        "componentId", component.get("id"),
+                        "quantity", item.get("quantity")
+                ));
+            }
+
+            Map<String, Object> orderBody = Map.of("userId", userId, "items", orderItems);
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            restTemplate.exchange(gatewayUrl + "/api/orders", HttpMethod.POST, new HttpEntity<>(orderBody, headers), Void.class);
+
+            // Удаляем сборку после оформления
+            restTemplate.exchange(gatewayUrl + "/api/builds/" + id, HttpMethod.DELETE, new HttpEntity<>(headers), Void.class);
+
+            return "redirect:/orders?success";
+        } catch (Exception e) {
+            return "redirect:/builds?error=" + e.getMessage();
+        }
+    }
+
+    private Long extractUserIdFromToken(String token) {
+        String[] parts = token.split("\\.");
+        String payload = new String(java.util.Base64.getUrlDecoder().decode(parts[1]));
+        java.util.regex.Matcher m = java.util.regex.Pattern.compile("\"userId\":(\\d+)").matcher(payload);
+        if (m.find()) return Long.parseLong(m.group(1));
+        return 1L;
+    }
+}
+
+============================================================
+FILE: src/main/java/org/example/frontendservice/controller/CatalogController.java
+============================================================
+package org.example.frontendservice.controller;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.HttpSession;
+import org.example.frontendservice.dto.ProductDto;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.*;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.client.RestTemplate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+@Controller
+public class CatalogController {
+
+    private final RestTemplate restTemplate;
+
+    @Value("${gateway.url}")
+    private String gatewayUrl;
+
+    public CatalogController(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
+    }
+
+    @GetMapping("/catalog")
+    public String catalog(HttpSession session, Model model) {
+        String token = (String) session.getAttribute("token");
+        if (token == null) return "redirect:/login";
+
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Authorization", "Bearer " + token);
+
+            // Запрашиваем компоненты (с параметром size=100, чтобы получить все)
+            ResponseEntity<Map> response = restTemplate.exchange(
+                    gatewayUrl + "/api/components?size=100",
+                    HttpMethod.GET,
+                    new HttpEntity<>(headers),
+                    Map.class
+            );
+
+            List<ProductDto> products = new ArrayList<>();
+            if (response.getBody() != null && response.getBody().containsKey("content")) {
+                // Достаем список из поля content
+                List<Map<String, Object>> content = (List<Map<String, Object>>) response.getBody().get("content");
+                ObjectMapper mapper = new ObjectMapper();
+                mapper.registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule()); // <--- ВОТ ЭТО
+                for (Map<String, Object> item : content) {
+                    products.add(mapper.convertValue(item, ProductDto.class));
+                }
+            }
+
+            model.addAttribute("products", products);
+            model.addAttribute("username", session.getAttribute("username"));
+
+            Object roles = session.getAttribute("roles");
+            model.addAttribute("isAdmin", roles != null && roles.toString().contains("ROLE_ADMIN"));
+
+        } catch (Exception e) {
+            e.printStackTrace(); // Чтобы видеть ошибку в консоли, если что-то пойдет не так
+            model.addAttribute("error", "Ошибка загрузки каталога: " + e.getMessage());
+        }
+        return "catalog";
+    }
+}
+
+============================================================
+FILE: src/main/java/org/example/frontendservice/controller/OrderController.java
+============================================================
+package org.example.frontendservice.controller;
+
+import jakarta.servlet.http.HttpSession;
+import org.example.frontendservice.dto.OrderDto;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.*;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.client.RestTemplate;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+
+@Controller
+public class OrderController {
+    private final RestTemplate restTemplate;
+    @Value("${gateway.url}")
+    private String gatewayUrl;
+
+    public OrderController(RestTemplate restTemplate) { this.restTemplate = restTemplate; }
+
+    @GetMapping("/orders")
+    public String ordersPage(HttpSession session, Model model) {
+        String token = (String) session.getAttribute("token");
+        if (token == null) return "redirect:/login";
+
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Authorization", "Bearer " + token);
+            ResponseEntity<OrderDto[]> response = restTemplate.exchange(
+                    gatewayUrl + "/api/orders", HttpMethod.GET, new HttpEntity<>(headers), OrderDto[].class);
+
+            model.addAttribute("orders", Arrays.asList(response.getBody()));
+            model.addAttribute("isAdmin", session.getAttribute("roles") != null && session.getAttribute("roles").toString().contains("ROLE_ADMIN"));
+        } catch (Exception e) {
+            model.addAttribute("error", "Ошибка загрузки заказов");
+        }
+        return "orders";
+    }
+
+    @PostMapping("/orders/create")
+    public String createOrder(@RequestParam Long componentId, @RequestParam Integer quantity, HttpSession session) {
+        String token = (String) session.getAttribute("token");
+        if (token == null) return "redirect:/login";
+
+        try {
+            // ВМЕСТО 1 ДОСТАЕМ ID ИЗ ТОКЕНА
+            Long userId = extractUserIdFromToken(token);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Authorization", "Bearer " + token);
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            Map<String, Object> body = Map.of(
+                    "userId", userId, // <-- ИСПОЛЬЗУЕМ РЕАЛЬНЫЙ ID
+                    "items", List.of(Map.of("componentId", componentId, "quantity", quantity))
+            );
+            restTemplate.exchange(gatewayUrl + "/api/orders", HttpMethod.POST, new HttpEntity<>(body, headers), Void.class);
+            return "redirect:/orders?success";
+        } catch (Exception e) {
+            return "redirect:/catalog?error";
+        }
+    }
+
+    private Long extractUserIdFromToken(String token) {
+        // Простейший парсинг JWT (без библиотек) — достаем payload
+        String[] parts = token.split("\\.");
+        String payload = new String(java.util.Base64.getUrlDecoder().decode(parts[1]));
+        // payload выглядит как {"sub":"admin","userId":1,"roles":["ROLE_ADMIN"],...}
+        java.util.regex.Matcher m = java.util.regex.Pattern.compile("\"userId\":(\\d+)").matcher(payload);
+        if (m.find()) return Long.parseLong(m.group(1));
+        return 1L; // Fallback
+    }
+}
+
+============================================================
+FILE: src/main/java/org/example/frontendservice/dto/AuthRequest.java
+============================================================
+package org.example.frontendservice.dto;
+
+public class AuthRequest {
+    private String username;
+    private String password;
+
+    public AuthRequest() {}
+    public AuthRequest(String username, String password) {
+        this.username = username;
+        this.password = password;
+    }
+    public String getUsername() { return username; }
+    public void setUsername(String username) { this.username = username; }
+    public String getPassword() { return password; }
+    public void setPassword(String password) { this.password = password; }
+}
+
+============================================================
+FILE: src/main/java/org/example/frontendservice/dto/CartDto.java
+============================================================
+package org.example.frontendservice.dto;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import java.util.List;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class CartDto {
+    private Long id;
+    private Long userId;
+    private List<CartItemDto> items;
+
+    public CartDto() {}
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public Long getUserId() { return userId; }
+    public void setUserId(Long userId) { this.userId = userId; }
+
+    public List<CartItemDto> getItems() { return items; }
+    public void setItems(List<CartItemDto> items) { this.items = items; }
+}
+
+============================================================
+FILE: src/main/java/org/example/frontendservice/dto/CartItemDto.java
+============================================================
+package org.example.frontendservice.dto;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class CartItemDto {
+    private Long id;
+    private Long componentId;
+    private Integer quantity;
+
+    public CartItemDto() {}
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public Long getComponentId() { return componentId; }
+    public void setComponentId(Long componentId) { this.componentId = componentId; }
+
+    public Integer getQuantity() { return quantity; }
+    public void setQuantity(Integer quantity) { this.quantity = quantity; }
+}
+
+============================================================
+FILE: src/main/java/org/example/frontendservice/dto/CategoryDto.java
+============================================================
+package org.example.frontendservice.dto;
+
+public class CategoryDto {
+    private Long id;
+    private String name;
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+}
+
+============================================================
+FILE: src/main/java/org/example/frontendservice/dto/OrderDto.java
+============================================================
+package org.example.frontendservice.dto;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
+
+public class OrderDto {
+    private Long id;
+    private Long userId;
+    private String status;
+    private BigDecimal totalPrice;
+    private LocalDateTime createdAt;
+    private List<OrderItemDto> items;
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public Long getUserId() { return userId; }
+    public void setUserId(Long userId) { this.userId = userId; }
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+    public BigDecimal getTotalPrice() { return totalPrice; }
+    public void setTotalPrice(BigDecimal totalPrice) { this.totalPrice = totalPrice; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public List<OrderItemDto> getItems() { return items; }
+    public void setItems(List<OrderItemDto> items) { this.items = items; }
+}
+
+============================================================
+FILE: src/main/java/org/example/frontendservice/dto/OrderItemDto.java
+============================================================
+package org.example.frontendservice.dto;
+
+import java.math.BigDecimal;
+
+public class OrderItemDto {
+    private Long id;
+    private Long componentId;
+    private Integer quantity;
+    private BigDecimal priceAtPurchase;
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public Long getComponentId() { return componentId; }
+    public void setComponentId(Long componentId) { this.componentId = componentId; }
+    public Integer getQuantity() { return quantity; }
+    public void setQuantity(Integer quantity) { this.quantity = quantity; }
+    public BigDecimal getPriceAtPurchase() { return priceAtPurchase; }
+    public void setPriceAtPurchase(BigDecimal priceAtPurchase) { this.priceAtPurchase = priceAtPurchase; }
+}
+
+============================================================
+FILE: src/main/java/org/example/frontendservice/dto/ProductDto.java
+============================================================
+package org.example.frontendservice.dto;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class ProductDto {
+    private Long id;
+    private String name;
+    private String manufacturer;
+    private BigDecimal price;
+    private Integer stockQuantity;
+    private String description;
+    private CategoryDto category;
+    private String socket;
+    private String ramType;
+    private String formFactor;
+    private Integer wattage;
+    private String capacity;
+    private LocalDateTime createdAt;
+
+    // ВОТ ЭТО НУЖНО ДОБАВИТЬ
+    private String imageUrl;
+
+    // Если ты хочешь несколько картинок (карусель), то добавь еще это:
+    private List<String> imageUrls;
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+    public String getManufacturer() { return manufacturer; }
+    public void setManufacturer(String manufacturer) { this.manufacturer = manufacturer; }
+    public BigDecimal getPrice() { return price; }
+    public void setPrice(BigDecimal price) { this.price = price; }
+    public Integer getStockQuantity() { return stockQuantity; }
+    public void setStockQuantity(Integer stockQuantity) { this.stockQuantity = stockQuantity; }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
+    public CategoryDto getCategory() { return category; }
+    public void setCategory(CategoryDto category) { this.category = category; }
+    public String getSocket() { return socket; }
+    public void setSocket(String socket) { this.socket = socket; }
+    public String getRamType() { return ramType; }
+    public void setRamType(String ramType) { this.ramType = ramType; }
+    public String getFormFactor() { return formFactor; }
+    public void setFormFactor(String formFactor) { this.formFactor = formFactor; }
+    public Integer getWattage() { return wattage; }
+    public void setWattage(Integer wattage) { this.wattage = wattage; }
+    public String getCapacity() { return capacity; }
+    public void setCapacity(String capacity) { this.capacity = capacity; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public String getImageUrl() { return imageUrl; }
+    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
+
+    public List<String> getImageUrls() { return imageUrls; }
+    public void setImageUrls(List<String> imageUrls) { this.imageUrls = imageUrls; }
+}
+
+============================================================
+FILE: src/test/java/org/example/frontendservice/FrontedServiceApplicationTests.java
+============================================================
+package org.example.frontendservice;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+
+@SpringBootTest
+class FrontedServiceApplicationTests {
+
+    @Test
+    void contextLoads() {
+    }
+
+}
+

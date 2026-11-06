@@ -36,25 +36,19 @@ public class CategoryController {
     }
 
     @PostMapping
-    @Operation(summary = "Создать категорию")
     public ResponseEntity<Category> create(@Valid @RequestBody Category category) {
         return ResponseEntity.status(201).body(categoryRepository.save(category));
     }
 
     @PutMapping("/{id}")
-    @Operation(summary = "Обновить категорию")
-    public ResponseEntity<Category> update(@PathVariable Long id,
-                                           @Valid @RequestBody Category category) {
-        return categoryRepository.findById(id)
-                .map(existing -> {
-                    existing.setName(category.getName());
-                    return ResponseEntity.ok(categoryRepository.save(existing));
-                })
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<Category> update(@PathVariable Long id, @Valid @RequestBody Category category) {
+        return categoryRepository.findById(id).map(existing -> {
+            existing.setName(category.getName());
+            return ResponseEntity.ok(categoryRepository.save(existing));
+        }).orElse(ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/{id}")
-    @Operation(summary = "Удалить категорию")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         categoryRepository.deleteById(id);
         return ResponseEntity.noContent().build();

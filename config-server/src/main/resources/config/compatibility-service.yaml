@@ -3,7 +3,7 @@ server:
   forward-headers-strategy: framework
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5433/compatibility_db
+    url: jdbc:postgresql://localhost:5432/compatibility_db
     username: postgres
     password: postgres
     driver-class-name: org.postgresql.Driver

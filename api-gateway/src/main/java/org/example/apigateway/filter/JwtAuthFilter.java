@@ -1,10 +1,8 @@
-
 package org.example.apigateway.filter;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
-import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
@@ -39,7 +37,10 @@ public class JwtAuthFilter implements GlobalFilter, Ordered {
             "/webjars/**",
             "/v3/api-docs",
             "/v3/api-docs/**",
-            "/auth/v3/api-docs",
+            "/v3/api-docs/auth",
+            "/v3/api-docs/product",
+            "/v3/api-docs/compatibility",
+            "/v3/api-docs/order",
             "/actuator/**",
             "/fallback/**"
     );
@@ -53,12 +54,11 @@ public class JwtAuthFilter implements GlobalFilter, Ordered {
         ServerHttpRequest request = exchange.getRequest();
         String path = request.getURI().getPath();
 
-        if (PUBLIC_PATHS.stream().anyMatch(pattern -> MATCHER.match(pattern, path))) {
+        if (PUBLIC_PATHS.stream().anyMatch(p -> MATCHER.match(p, path))) {
             return chain.filter(exchange);
         }
 
         String authHeader = request.getHeaders().getFirst("Authorization");
-
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             return onError(exchange, "Missing or invalid Authorization header", HttpStatus.UNAUTHORIZED);
         }
@@ -81,20 +81,14 @@ public class JwtAuthFilter implements GlobalFilter, Ordered {
                     : "";
 
             ServerHttpRequest mutatedRequest = request.mutate()
-                    .headers(headers -> {
-                        headers.remove("X-User-Id");
-                        headers.remove("X-User-Name");
-                        headers.remove("X-User-Roles");
-                        headers.set("X-User-Id", userId != null ? userId.toString() : "");
-                        headers.set("X-User-Name", username != null ? username : "");
-                        headers.set("X-User-Roles", rolesString);
-                    })
+                    .header("X-User-Id", userId != null ? userId.toString() : "")
+                    .header("X-User-Name", username != null ? username : "")
+                    .header("X-User-Roles", rolesString)
                     .build();
 
             return chain.filter(exchange.mutate().request(mutatedRequest).build());
 
         } catch (Exception e) {
-            e.printStackTrace();
             return onError(exchange, "Invalid or expired JWT token", HttpStatus.UNAUTHORIZED);
         }
     }
@@ -102,32 +96,10 @@ public class JwtAuthFilter implements GlobalFilter, Ordered {
     private Mono<Void> onError(ServerWebExchange exchange, String message, HttpStatus status) {
         exchange.getResponse().setStatusCode(status);
         exchange.getResponse().getHeaders().add("Content-Type", "application/json");
-
         String body = "{\"error\":\"" + message + "\"}";
-
         return exchange.getResponse().writeWith(
-                Mono.just(exchange.getResponse()
-                        .bufferFactory()
-                        .wrap(body.getBytes(StandardCharsets.UTF_8)))
+                Mono.just(exchange.getResponse().bufferFactory().wrap(body.getBytes(StandardCharsets.UTF_8)))
         );
-    }
-
-    private String getSecretFingerprint() {
-        try {
-            byte[] hash = java.security.MessageDigest
-                    .getInstance("SHA-256")
-                    .digest(secret.getBytes(java.nio.charset.StandardCharsets.UTF_8));
-
-            return java.util.HexFormat.of().formatHex(hash);
-        } catch (Exception e) {
-            throw new IllegalStateException(e);
-        }
-    }
-
-    @PostConstruct
-    public void printSecretFingerprint() {
-        System.out.println("JWT SECRET FINGERPRINT: " + getSecretFingerprint());
-
     }
 
     @Override

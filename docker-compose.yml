@@ -1,23 +1,49 @@
-version: '3.8'
 services:
   postgres:
     image: postgres:15
     container_name: pc_builder_db
+    restart: unless-stopped
+
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+
     ports:
       - "5432:5432"
+
     volumes:
-      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+      - pgdata:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   pgadmin:
     image: dpage/pgadmin4
     container_name: pc_builder_pgadmin
+    restart: unless-stopped
+
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@admin.com
       PGADMIN_DEFAULT_PASSWORD: admin
+
     ports:
       - "5050:80"
+
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+    external: true
+    name: pract9_pgdata
+
+  pgadmin_data:

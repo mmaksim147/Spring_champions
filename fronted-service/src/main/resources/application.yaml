@@ -1,13 +1,34 @@
 server:
   port: 8085
+  servlet:
+    session:
+      timeout: 12h
+      cookie:
+        http-only: true
+        same-site: lax
 
 spring:
   application:
     name: frontend-service
+
   config:
     import: "optional:configserver:http://localhost:8888"
+
   thymeleaf:
     cache: false
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 2s
+
+  session:
+    store-type: redis
+    timeout: 12h
+    redis:
+      namespace: colizant:frontend:sessions
+      repository-type: indexed
 
 eureka:
   client:
@@ -24,6 +45,7 @@ management:
     web:
       exposure:
         include: health,info,metrics
+
   endpoint:
     health:
       show-details: always

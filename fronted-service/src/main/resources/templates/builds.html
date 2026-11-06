@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Мои сборки: Colizant</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Geologica:wght@500;600;700&family=Onest:wght@400;500;600&display=swap"
+          rel="stylesheet">
+
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/dashboard-polish.css}">
+
+    <style>
+        .saved-build-card {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        .build-composition {
+            border-top: 1px solid #e0e4eb;
+            padding-top: 16px;
+        }
+
+        .build-composition summary {
+            cursor: pointer;
+            color: #304cff;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .build-items {
+            display: grid;
+            gap: 10px;
+            margin-top: 16px;
+        }
+
+        .build-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            padding: 13px 15px;
+            background: #f8f9fb;
+            border: 1px solid #e1e5ec;
+            border-radius: 10px;
+        }
+
+        .build-item-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #202630;
+        }
+
+        .build-item-name a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .build-item-name a:hover {
+            color: #304cff;
+        }
+
+        .build-item-quantity {
+            white-space: nowrap;
+            font-size: 13px;
+            color: #657184;
+        }
+
+        .build-items-empty {
+            margin-top: 12px;
+            color: #657184;
+            font-size: 13px;
+        }
+
+        .build-card-actions {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .build-card-actions form {
+            margin: 0;
+        }
+
+        .build-delete-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 16px;
+            border: 1px solid #ef4444;
+            border-radius: 999px;
+            background: transparent;
+            color: #dc2626;
+            font: inherit;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background .2s, color .2s;
+        }
+
+        .build-delete-button:hover {
+            background: #fef2f2;
+            color: #b91c1c;
+        }
+    </style>
+</head>
+
+<body>
+
+<div th:replace="~{fragments/layout :: header('builds')}"></div>
+<div th:replace="~{fragments/layout :: alerts}"></div>
+
+<main>
+    <div class="container page">
+
+        <div class="page-head">
+            <div>
+                <h1>Мои сборки</h1>
+                <p>Сохранённые сборки. Любую можно сразу оформить как заказ.</p>
+            </div>
+
+            <a th:href="@{/builder}" class="btn btn-primary">
+                Новая сборка
+            </a>
+        </div>
+
+        <div class="builds-grid"
+             th:if="${builds != null and !#lists.isEmpty(builds)}">
+
+            <article class="card saved-build-card"
+                     th:each="b : ${builds}">
+
+                <div class="card-head">
+                    <h2 th:text="${b['name']}">
+                        Название сборки
+                    </h2>
+
+                    <span class="meta">
+                        ID:
+                        <span th:text="${b['id']}"></span>
+                    </span>
+                </div>
+
+                <details class="build-composition">
+                    <summary>Посмотреть состав сборки</summary>
+
+                    <div class="build-items"
+                         th:if="${b['items'] != null and !#lists.isEmpty(b['items'])}">
+
+                        <div class="build-item"
+                             th:each="item : ${b['items']}">
+
+                            <div class="build-item-name">
+
+                                <a th:if="${item['component'] != null and item['component']['id'] != null}"
+                                   th:href="@{/components/{id}(id=${item['component']['id']})}"
+                                   th:text="${item['component']['name'] != null
+                                       ? item['component']['name']
+                                       : 'Комплектующее #' + item['component']['id']}">
+                                    Название комплектующего
+                                </a>
+
+                                <span th:if="${item['component'] == null or item['component']['id'] == null}"
+                                      th:text="${item['componentId'] != null
+                                          ? 'Комплектующее #' + item['componentId']
+                                          : 'Комплектующее'}">
+                                    Комплектующее
+                                </span>
+
+                            </div>
+
+                            <span class="build-item-quantity"
+                                  th:text="${'× ' + item['quantity']}">
+                                × 1
+                            </span>
+
+                        </div>
+                    </div>
+
+                    <p class="build-items-empty"
+                       th:if="${b['items'] == null or #lists.isEmpty(b['items'])}">
+                        Состав сборки не передан сервером.
+                    </p>
+                </details>
+
+                <div class="card-foot">
+
+                    <div class="total">
+                        <small>Итого</small>
+
+                        <span th:text="${b['totalPrice'] + ' ₽'}">
+                            0 ₽
+                        </span>
+                    </div>
+
+                    <div class="actions build-card-actions">
+
+                        <form th:action="@{'/builds/checkout/' + ${b['id']}}"
+                              method="post">
+
+                            <button type="submit" class="btn btn-primary">
+                                Оформить заказ
+                            </button>
+                        </form>
+
+                        <form th:action="@{'/builds/delete/' + ${b['id']}}"
+                              method="post"
+                              class="delete-build-form"
+                              th:attr="data-build-name=${b['name']}">
+
+                            <button type="submit"
+                                    class="build-delete-button">
+                                Удалить
+                            </button>
+                        </form>
+
+                    </div>
+                </div>
+
+            </article>
+        </div>
+
+        <div class="empty"
+             th:if="${builds == null or #lists.isEmpty(builds)}">
+
+            <p>Вы ещё не создали ни одной сборки.</p>
+
+            <a th:href="@{/builder}" class="btn btn-primary">
+                Собрать первую
+            </a>
+        </div>
+
+    </div>
+</main>
+
+<script>
+    document.querySelectorAll('.delete-build-form').forEach(form => {
+        form.addEventListener('submit', event => {
+            const buildName = form.dataset.buildName || 'эту сборку';
+
+            const confirmed = confirm(
+                'Удалить сборку «' + buildName + '»?\n\n' +
+                'Это действие нельзя отменить.'
+            );
+
+            if (!confirmed) {
+                event.preventDefault();
+            }
+        });
+    });
+</script>
+
+<footer class="site-footer">© 2026 Colizant</footer>
+
+</body>
+</html>

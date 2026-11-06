@@ -6,6 +6,8 @@ import jakarta.validation.constraints.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "components")
@@ -62,6 +64,11 @@ public class Component {
     @Schema(description = "Дата создания", accessMode = Schema.AccessMode.READ_ONLY)
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "component_images", joinColumns = @JoinColumn(name = "component_id"))
+    @Column(name = "image_url")
+    private List<String> imageUrls = new ArrayList<>();
+
     public Component() {}
 
     public Long getId() { return id; }
@@ -102,4 +109,7 @@ public class Component {
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public List<String> getImageUrls() { return imageUrls; }
+    public void setImageUrls(List<String> imageUrls) { this.imageUrls = imageUrls; }
 }

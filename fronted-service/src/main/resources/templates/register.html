@@ -2,28 +2,86 @@
 <html lang="ru" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Регистрация</title>
-    <style>
-        body { font-family: Arial, sans-serif; background: #f4f4f7; }
-        .auth { max-width: 400px; margin: 100px auto; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-        h1 { text-align: center; margin-bottom: 20px; }
-        input { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
-        button { width: 100%; padding: 10px; background: #2563eb; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 15px; }
-        .error { color: red; text-align: center; margin-bottom: 10px; }
-        a { display: block; text-align: center; margin-top: 10px; color: #2563eb; }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Регистрация: Colizant</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Geologica:wght@500;600;700&family=Onest:wght@400;500;600&display=swap"
+          rel="stylesheet">
+
+    <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 <body>
-<div class="auth">
-    <h1>Регистрация</h1>
-    <div th:if="${error}" class="error" th:text="${error}"></div>
-    <form method="post" action="/register">
-        <input type="text" name="username" placeholder="Логин" required>
-        <input type="email" name="email" placeholder="Email" required>
-        <input type="password" name="password" placeholder="Пароль" required>
-        <button type="submit">Зарегистрироваться</button>
-    </form>
-    <a href="/login">Уже есть аккаунт? Войти</a>
-</div>
+
+<div th:replace="~{fragments/layout :: header('register')}"></div>
+<div th:replace="~{fragments/layout :: alerts}"></div>
+
+<main class="auth-wrapper">
+
+    <div class="auth-aside">
+        <img th:src="@{/logo.png}" alt="Colizant">
+
+        <p>
+            Создайте аккаунт, чтобы собирать ПК
+            и оформлять заказы в пару кликов.
+        </p>
+    </div>
+
+    <div class="auth-card">
+
+        <h1>Создать аккаунт</h1>
+
+        <form th:action="@{/register}" method="post">
+
+            <div class="form-group">
+                <label for="username">Логин</label>
+
+                <input class="input"
+                       type="text"
+                       id="username"
+                       name="username"
+                       autocomplete="username"
+                       required>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email</label>
+
+                <input class="input"
+                       type="email"
+                       id="email"
+                       name="email"
+                       autocomplete="email"
+                       required>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Пароль</label>
+
+                <input class="input"
+                       type="password"
+                       id="password"
+                       name="password"
+                       autocomplete="new-password"
+                       required>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block">
+                Зарегистрироваться
+            </button>
+
+        </form>
+
+        <p class="auth-switch">
+            Уже есть аккаунт?
+            <a th:href="@{/login}">Войти</a>
+        </p>
+
+    </div>
+</main>
+
+<footer class="site-footer">© 2026 Colizant</footer>
 </body>
 </html>

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Админ-панель: Colizant</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Geologica:wght@500;600;700&family=Onest:wght@400;500;600&display=swap"
+          rel="stylesheet">
+
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/dashboard-polish.css}">
+</head>
+<body>
+
+<div th:replace="~{fragments/layout :: header('admin')}"></div>
+<div th:replace="~{fragments/layout :: alerts}"></div>
+
+<main>
+    <div class="container page">
+
+        <div class="page-head">
+            <div>
+                <h1>Админ-панель</h1>
+                <p>Разделы управления магазином.</p>
+            </div>
+        </div>
+
+        <div class="admin-dashboard-grid">
+
+            <!-- Комплектующие -->
+            <a th:href="@{/admin/components}" class="admin-dashboard-tile">
+                <span class="admin-tile-icon">▦</span>
+
+                <h3>Комплектующие</h3>
+
+                <p>
+                    Управление ассортиментом, ценами,
+                    остатками и характеристиками товаров.
+                </p>
+
+                <span class="admin-tile-link">
+                    Управлять товарами →
+                </span>
+            </a>
+
+            <!-- Категории -->
+            <a th:href="@{/admin/categories}" class="admin-dashboard-tile">
+                <span class="admin-tile-icon">▤</span>
+
+                <h3>Категории</h3>
+
+                <p>
+                    Создание и редактирование разделов,
+                    по которым организован каталог.
+                </p>
+
+                <span class="admin-tile-link">
+                    Управлять категориями →
+                </span>
+            </a>
+
+            <!-- Пользователи -->
+            <a th:href="@{/admin/users}" class="admin-dashboard-tile">
+                <span class="admin-tile-icon">♙</span>
+
+                <h3>Пользователи</h3>
+
+                <p>
+                    Просмотр учётных записей,
+                    управление ролями и доступом.
+                </p>
+
+                <span class="admin-tile-link">
+                    Управлять пользователями →
+                </span>
+            </a>
+
+            <!-- Заказы -->
+            <a th:href="@{/admin/orders}" class="admin-dashboard-tile">
+                <span class="admin-tile-icon">▣</span>
+
+                <h3>Заказы</h3>
+
+                <p>
+                    Просмотр всех заказов,
+                    фильтрация по статусам, датам
+                    и пользователям.
+                </p>
+
+                <span class="admin-tile-link">
+                    Управлять заказами →
+                </span>
+            </a>
+
+        </div>
+
+    </div>
+</main>
+
+<footer class="site-footer">
+    © 2026 Colizant
+</footer>
+
+</body>
+</html>

@@ -2,30 +2,64 @@
 <html lang="ru" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Вход</title>
-    <style>
-        body { font-family: Arial, sans-serif; background: #f4f4f7; }
-        .auth { max-width: 400px; margin: 100px auto; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-        h1 { text-align: center; margin-bottom: 20px; }
-        input { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
-        button { width: 100%; padding: 10px; background: #2563eb; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 15px; }
-        button:hover { background: #1d4ed8; }
-        .error { color: red; text-align: center; margin-bottom: 10px; }
-        .success { color: green; text-align: center; margin-bottom: 10px; }
-        a { display: block; text-align: center; margin-top: 10px; color: #2563eb; }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Вход: Colizant</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geologica:wght@500;600;700&family=Onest:wght@400;500;600&display=swap"
+          rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 <body>
-<div class="auth">
-    <h1>Вход</h1>
-    <div th:if="${error}" class="error" th:text="${error}"></div>
-    <div th:if="${param.registered}" class="success">Регистрация успешна, войдите</div>
-    <form method="post" action="/login">
-        <input type="text" name="username" placeholder="Логин" required>
-        <input type="password" name="password" placeholder="Пароль" required>
-        <button type="submit">Войти</button>
-    </form>
-    <a href="/register">Регистрация</a>
-</div>
+
+<div th:replace="~{fragments/layout :: header('login')}"></div>
+<div th:replace="~{fragments/layout :: alerts}"></div>
+
+<main class="auth-wrapper">
+
+    <div class="auth-aside">
+        <img th:src="@{/logo.png}" alt="Colizant">
+    </div>
+
+    <div class="auth-card">
+        <h1>Вход в аккаунт</h1>
+
+        <form th:action="@{/login}" method="post">
+
+            <div class="form-group">
+                <label for="username">Логин</label>
+
+                <input class="input"
+                       type="text"
+                       id="username"
+                       name="username"
+                       autocomplete="username"
+                       required>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Пароль</label>
+
+                <input class="input"
+                       type="password"
+                       id="password"
+                       name="password"
+                       autocomplete="current-password"
+                       required>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block">
+                Войти
+            </button>
+        </form>
+
+        <p class="auth-switch">
+            Нет аккаунта?
+            <a th:href="@{/register}">Зарегистрироваться</a>
+        </p>
+    </div>
+</main>
+
+<footer class="site-footer">© 2026 Colizant</footer>
 </body>
 </html>

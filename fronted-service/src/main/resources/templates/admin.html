@@ -1,10 +1,98 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8">
-  <title>$Title$</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Админ-панель | Colizant</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geologica:wght@500;600;700&family=Onest:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 <body>
-$END$
+
+<div th:replace="~{fragments/layout :: header('admin')}"></div>
+<div th:replace="~{fragments/layout :: alerts}"></div>
+
+<main class="admin-page">
+  <div class="container">
+
+    <div class="admin-heading">
+      <div>
+        <span class="admin-eyebrow">COLIZANT CONTROL CENTER</span>
+        <h1>Админ-панель</h1>
+        <p>Управление магазином, каталогом и пользователями.</p>
+      </div>
+      <div class="admin-heading-icon"><span>⚙</span></div>
+    </div>
+
+    <section class="admin-section">
+      <div class="admin-section-heading">
+        <h2>Управление магазином</h2>
+        <span>Выберите необходимый раздел</span>
+      </div>
+
+      <div class="admin-grid">
+
+        <a th:href="@{/admin/components}" class="admin-card" style="text-decoration: none; display: flex; flex-direction: column; justify-content: space-between;">
+          <div class="admin-card-top">
+            <div class="admin-icon admin-icon-blue"><span>▦</span></div>
+            <span class="admin-card-arrow">↗</span>
+          </div>
+          <div class="admin-card-content">
+            <span class="admin-card-number">01 / CATALOG</span>
+            <h3>Комплектующие</h3>
+            <p>Добавление, редактирование, поиск и удаление товаров магазина.</p>
+          </div>
+          <div class="admin-card-bottom" style="margin-top: 1.5rem;">
+            <span class="btn btn-primary" style="display: inline-block; width: 100%; text-align: center; padding: 0.6rem;">Перейти к товарам →</span>
+          </div>
+        </a>
+
+        <a th:href="@{/admin/categories}" class="admin-card" style="text-decoration: none; display: flex; flex-direction: column; justify-content: space-between;">
+          <div class="admin-card-top">
+            <div class="admin-icon admin-icon-purple"><span>▤</span></div>
+            <span class="admin-card-arrow">↗</span>
+          </div>
+          <div class="admin-card-content">
+            <span class="admin-card-number">02 / CATEGORIES</span>
+            <h3>Категории</h3>
+            <p>Управление категориями и структурой каталога комплектующих.</p>
+          </div>
+          <div class="admin-card-bottom" style="margin-top: 1.5rem;">
+            <span class="btn btn-primary" style="display: inline-block; width: 100%; text-align: center; padding: 0.6rem;">Перейти к категориям →</span>
+          </div>
+        </a>
+
+        <a th:href="@{/admin/users}" class="admin-card" style="text-decoration: none; display: flex; flex-direction: column; justify-content: space-between;">
+          <div class="admin-card-top">
+            <div class="admin-icon admin-icon-orange"><span>♙</span></div>
+            <span class="admin-card-arrow">↗</span>
+          </div>
+          <div class="admin-card-content">
+            <span class="admin-card-number">03 / USERS</span>
+            <h3>Пользователи</h3>
+            <p>Просмотр учётных записей, управление ролями и доступом.</p>
+          </div>
+          <div class="admin-card-bottom" style="margin-top: 1.5rem;">
+            <span class="btn btn-primary" style="display: inline-block; width: 100%; text-align: center; padding: 0.6rem;">Перейти к пользователям →</span>
+          </div>
+        </a>
+
+      </div>
+    </section>
+
+    <div class="admin-info">
+      <div class="admin-info-icon">i</div>
+      <div>
+        <strong>Панель администратора</strong>
+        <p>Изменения каталога и пользовательских данных влияют на работу магазина.</p>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<footer class="site-footer">© 2026 Colizant</footer>
 </body>
 </html>

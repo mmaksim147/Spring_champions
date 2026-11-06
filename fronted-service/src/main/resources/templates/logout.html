@@ -1,0 +1,62 @@
+
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Выход из аккаунта — Colizant</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geologica:wght@500;600;700&family=Onest:wght@400;500;600&display=swap"
+          rel="stylesheet">
+
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+
+<header class="site-header">
+    <a th:href="@{/}" class="logo">
+        <img th:src="@{/images/logo.jpg}"
+             alt=""
+             class="logo-img"
+             width="56"
+             height="56">
+        Colizant
+    </a>
+
+    <nav class="main-nav">
+        <a th:href="@{/}">Главная</a>
+        <a th:href="@{/catalog}">Каталог</a>
+    </nav>
+</header>
+
+<main class="error-page">
+    <div class="error-code" style="font-size: 64px;">↗</div>
+
+    <h1>Выйти из аккаунта?</h1>
+
+    <p>
+        Вы завершите текущий сеанс Colizant.
+        Чтобы вернуться к покупкам, потребуется войти снова.
+    </p>
+
+    <div class="error-actions">
+        <form th:action="@{/logout/confirm}" method="post" class="logout-form">
+            <button type="submit" class="btn btn-primary">
+                Да, выйти
+            </button>
+        </form>
+
+        <a th:href="@{/catalog}" class="btn btn-outline">
+            Остаться на сайте
+        </a>
+    </div>
+</main>
+
+<footer class="site-footer">
+    © 2026 Colizant
+</footer>
+
+</body>
+</html>

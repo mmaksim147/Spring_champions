@@ -4,7 +4,7 @@ server:
 
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5433/auth_db
+    url: jdbc:postgresql://localhost:5432/auth_db
     username: postgres
     password: postgres
     driver-class-name: org.postgresql.Driver
@@ -18,7 +18,7 @@ spring:
         format_sql: true
 
 jwt:
-  secret: 1h0FhMtnHGyjVa6yMJh4Si5TgOJNuzl7IGLcY9LXIc=
+  secret: 1h0FhMtnHGyjVa6yMJh4Si5TgOJNuzl7IGLcYQ9LXIc=
   expiration: 86400000
 
 eureka:
@@ -36,7 +36,7 @@ management:
       show-details: always
 
 springdoc:
-  server:
-    url: http://localhost:8080/api/auth
+  api-docs:
+    path: /v3/api-docs
   swagger-ui:
     path: /swagger-ui.html

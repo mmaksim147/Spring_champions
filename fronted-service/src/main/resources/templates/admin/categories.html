@@ -1,0 +1,483 @@
+
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Категории — Colizant</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geologica:wght@500;600;700&family=Onest:wght@400;500;600&display=swap"
+          rel="stylesheet">
+
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/dashboard-polish.css}">
+
+    <style>
+        .category-toolbar {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(280px, 0.8fr);
+            gap: 24px;
+            align-items: end;
+            padding: 26px;
+            margin-bottom: 24px;
+            background: #f8f9fa;
+            border: 1px solid #d4d9df;
+            border-radius: 17px;
+        }
+
+        .category-field label {
+            display: block;
+            margin-bottom: 9px;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .category-field p {
+            margin: 8px 0 0;
+            color: #667180;
+            font-size: 12px;
+        }
+
+        .category-field .input {
+            width: 100%;
+            min-height: 46px;
+        }
+
+        .category-create-form {
+            display: flex;
+            gap: 10px;
+        }
+
+        .category-create-form .input {
+            min-width: 0;
+            flex: 1;
+        }
+
+        .category-create-form .btn {
+            flex-shrink: 0;
+        }
+
+        .category-list-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+            margin: 0 0 15px;
+        }
+
+        .category-list-head h2 {
+            margin: 0;
+            font-size: 19px;
+        }
+
+        .category-count {
+            color: #667180;
+            font-size: 13px;
+        }
+
+        #categoriesTable td {
+            vertical-align: middle;
+        }
+
+        #categoriesTable td:first-child {
+            width: 110px;
+            color: #667180;
+        }
+
+        .category-name {
+            font-weight: 600;
+        }
+
+        .category-row-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 9px;
+        }
+
+        #categoriesTable tr[hidden],
+        #categoryNoResults[hidden] {
+            display: none !important;
+        }
+
+        #categoryEditDialog {
+            width: min(480px, calc(100vw - 32px));
+            padding: 30px;
+            border: 1px solid #d4d9df;
+            border-radius: 20px;
+            background: #f8f9fa;
+            color: #15181c;
+            box-shadow: 0 24px 80px #0003;
+        }
+
+        #categoryEditDialog::backdrop {
+            background: rgb(12 17 24 / 55%);
+            backdrop-filter: blur(3px);
+        }
+
+        .category-dialog-head {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 25px;
+        }
+
+        .category-dialog-head h2 {
+            margin: 0 0 8px;
+            font-size: 24px;
+        }
+
+        .category-dialog-head p {
+            margin: 0;
+            color: #667180;
+            font-size: 13px;
+        }
+
+        .category-dialog-close {
+            width: 35px;
+            height: 35px;
+            flex-shrink: 0;
+            border: 1px solid #d4d9df;
+            border-radius: 10px;
+            background: white;
+            font-size: 23px;
+            cursor: pointer;
+        }
+
+        .category-dialog-field label {
+            display: block;
+            margin-bottom: 9px;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .category-dialog-field .input {
+            width: 100%;
+        }
+
+        .category-dialog-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 26px;
+            padding-top: 20px;
+            border-top: 1px solid #d4d9df;
+        }
+
+        @media (max-width: 760px) {
+            .category-toolbar {
+                grid-template-columns: 1fr;
+                padding: 20px;
+            }
+
+            .category-create-form {
+                flex-wrap: wrap;
+            }
+        }
+        /* Выравнивание формы добавления категории */
+        .category-create-form {
+            display: flex;
+            align-items: stretch;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .category-create-form .input {
+            flex: 1 1 auto;
+            min-width: 0;
+            height: 46px;
+            box-sizing: border-box;
+        }
+
+        .category-create-form .btn {
+            flex: 0 0 auto;
+            height: 46px;
+            min-height: 46px;
+            margin: 0;
+            white-space: nowrap;
+            box-sizing: border-box;
+        }
+
+        @media (max-width: 560px) {
+            .category-create-form {
+                flex-direction: column;
+            }
+
+            .category-create-form .btn {
+                width: 100%;
+            }
+        }
+        /* Выравнивание поля и кнопки добавления категории */
+        .category-create-form {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            flex-wrap: nowrap;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .category-create-form input.input {
+            flex: 1 1 0;
+            width: 0;
+            min-width: 0;
+            height: 46px;
+            min-height: 46px;
+            margin: 0;
+        }
+
+        .category-create-form button.btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex: 0 0 auto;
+
+            height: 46px;
+            min-height: 46px;
+            padding: 0 20px;
+            margin: 0;
+            white-space: nowrap;
+        }
+
+        @media (max-width: 560px) {
+            .category-create-form {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .category-create-form input.input {
+                width: 100%;
+                flex: none;
+            }
+
+            .category-create-form button.btn {
+                width: 100%;
+            }
+        }
+        .category-toolbar {
+            align-items: start;
+        }
+
+        .category-create-form {
+            margin-top: 0;
+        }
+
+        .category-field {
+            align-self: start;
+        }
+    </style>
+</head>
+
+<body>
+
+<div th:replace="~{fragments/layout :: header('admin')}"></div>
+<div th:replace="~{fragments/layout :: alerts}"></div>
+
+<main>
+    <div class="container page">
+
+        <div class="page-head">
+            <div>
+                <h1>Категории</h1>
+                <p>Управление разделами каталога комплектующих.</p>
+            </div>
+
+            <a th:href="@{/admin}" class="btn btn-outline">
+                ← Админ-панель
+            </a>
+        </div>
+
+        <section class="category-toolbar">
+
+            <div class="category-field">
+                <label for="categoryLiveSearch">Быстрый поиск</label>
+
+                <input class="input"
+                       type="search"
+                       id="categoryLiveSearch"
+                       placeholder="Поиск по ID или названию..."
+                       autocomplete="off">
+
+                <p>Результаты обновляются по мере ввода.</p>
+            </div>
+
+            <div class="category-field">
+                <label for="newCategoryName">Добавить категорию</label>
+
+                <form class="category-create-form"
+                      th:action="@{/admin/categories/create}"
+                      method="post">
+
+                    <input class="input"
+                           id="newCategoryName"
+                           name="name"
+                           type="text"
+                           maxlength="120"
+                           placeholder="Название категории"
+                           required>
+
+                    <button type="submit" class="btn btn-primary">
+                        + Добавить
+                    </button>
+                </form>
+            </div>
+
+        </section>
+
+        <div class="category-list-head">
+            <h2>Список категорий</h2>
+
+            <span class="category-count"
+                  id="categoryCounter"
+                  aria-live="polite"></span>
+        </div>
+
+        <div class="empty"
+             th:if="${categories == null or #lists.isEmpty(categories)}">
+            <p>Категории пока не добавлены.</p>
+        </div>
+
+        <div class="table-wrap admin-table-wrap"
+             th:if="${categories != null and !#lists.isEmpty(categories)}">
+
+            <table id="categoriesTable">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Название категории</th>
+                    <th class="end">Действия</th>
+                </tr>
+                </thead>
+
+                <tbody>
+                <tr th:each="c : ${categories}">
+                    <td th:text="${c.id}">1</td>
+
+                    <td>
+                        <span class="category-name"
+                              th:text="${c.name}">
+                            Процессоры
+                        </span>
+                    </td>
+
+                    <td class="end">
+                        <div class="category-row-actions">
+
+                            <button type="button"
+                                    class="btn btn-sm btn-outline js-category-edit"
+                                    th:attr="data-id=${c.id},data-name=${c.name}">
+                                Изменить
+                            </button>
+
+                            <form th:action="@{'/admin/categories/delete/' + ${c.id}}"
+                                  method="post"
+                                  onsubmit="return confirm('Удалить категорию?');">
+
+                                <button type="submit"
+                                        class="btn btn-sm btn-danger">
+                                    Удалить
+                                </button>
+                            </form>
+
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="empty" id="categoryNoResults" hidden>
+            <p>По вашему запросу категории не найдены.</p>
+        </div>
+
+    </div>
+</main>
+
+<dialog id="categoryEditDialog">
+
+    <div class="category-dialog-head">
+        <div>
+            <h2>Изменить категорию</h2>
+            <p>Обновите название раздела каталога.</p>
+        </div>
+
+        <button type="button"
+                class="category-dialog-close"
+                id="closeCategoryDialog"
+                aria-label="Закрыть">
+            ×
+        </button>
+    </div>
+
+    <form th:action="@{/admin/categories/update}"
+          method="post">
+
+        <input type="hidden"
+               name="id"
+               id="categoryEditId">
+
+        <div class="category-dialog-field">
+            <label for="categoryEditName">Название категории</label>
+
+            <input class="input"
+                   type="text"
+                   name="name"
+                   id="categoryEditName"
+                   maxlength="120"
+                   required>
+        </div>
+
+        <div class="category-dialog-actions">
+            <button type="button"
+                    class="btn btn-outline"
+                    id="cancelCategoryEdit">
+                Отмена
+            </button>
+
+            <button type="submit" class="btn btn-primary">
+                Сохранить изменения
+            </button>
+        </div>
+    </form>
+
+</dialog>
+
+<footer class="site-footer">© 2026 Colizant</footer>
+
+<script defer th:src="@{/js/admin-live-search.js}"></script>
+
+<script>
+    (() => {
+        "use strict";
+
+        const dialog = document.getElementById("categoryEditDialog");
+        const idField = document.getElementById("categoryEditId");
+        const nameField = document.getElementById("categoryEditName");
+
+        document.querySelectorAll(".js-category-edit")
+            .forEach(button => {
+                button.addEventListener("click", () => {
+                    idField.value = button.dataset.id ?? "";
+                    nameField.value = button.dataset.name ?? "";
+
+                    dialog.showModal();
+                    nameField.focus();
+                });
+            });
+
+        document.getElementById("closeCategoryDialog")
+            .addEventListener("click", () => dialog.close());
+
+        document.getElementById("cancelCategoryEdit")
+            .addEventListener("click", () => dialog.close());
+
+        dialog.addEventListener("click", event => {
+            if (event.target === dialog) dialog.close();
+        });
+    })();
+</script>
+
+</body>
+</html>
