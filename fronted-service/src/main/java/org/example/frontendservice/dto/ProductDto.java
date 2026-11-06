@@ -21,10 +21,8 @@ public class ProductDto {
     private String capacity;
     private LocalDateTime createdAt;
 
-    // ВОТ ЭТО НУЖНО ДОБАВИТЬ
     private String imageUrl;
 
-    // Если ты хочешь несколько картинок (карусель), то добавь еще это:
     private List<String> imageUrls;
 
     public Long getId() { return id; }

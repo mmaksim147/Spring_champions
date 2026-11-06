@@ -1,9 +1,4 @@
 
-/*
- * Colizant — улучшения существующего интерфейса.
- * Не заменяет style.css, а дополняет его.
- */
-
 :root {
     --cp-bg: #eceef0;
     --cp-surface: #f8f9fa;
@@ -68,10 +63,6 @@ main > .container.page {
 .builder-add-button:hover {
     transform: translateY(-1px);
 }
-
-/* -----------------------------
-   Конструктор
------------------------------ */
 
 .builder-page {
     padding-top: 54px !important;
@@ -229,7 +220,6 @@ main > .container.page {
     line-height: 1;
 }
 
-/* Правая чёрная панель */
 
 .build-sheet {
     position: sticky;
@@ -462,10 +452,6 @@ main > .container.page {
     margin: 0;
 }
 
-/* -----------------------------
-   Админ-панель
------------------------------ */
-
 .admin-dashboard-grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -520,10 +506,6 @@ main > .container.page {
     font-weight: 700;
     color: var(--cp-blue);
 }
-
-/* -----------------------------
-   CRUD
------------------------------ */
 
 .admin-toolbar {
     display: flex;
@@ -638,8 +620,6 @@ main > .container.page {
     display: none !important;
 }
 
-/* Диалог редактирования */
-
 #editDialog {
     width: min(560px, calc(100vw - 32px));
     max-height: calc(100vh - 40px);
@@ -687,9 +667,6 @@ main > .container.page {
     border-top: 1px solid var(--cp-border);
 }
 
-/* -----------------------------
-   Адаптивность
------------------------------ */
 
 @media (max-width: 950px) {
     .builder-layout {
@@ -760,3 +737,229 @@ main > .container.page {
         flex-direction: column;
     }
 }
+
+@keyframes colizantFadeUp {
+    from {
+        opacity: 0;
+        transform: translateY(16px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes colizantFadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes colizantScaleIn {
+    from {
+        opacity: 0;
+        transform: scale(.97);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* Основные блоки */
+
+main > .container.page,
+.hero,
+.auth-wrapper,
+.admin-page {
+    animation: colizantFadeUp .55s ease both;
+}
+
+.site-header {
+    animation: colizantFadeIn .45s ease both;
+}
+
+.logo-img {
+    transition: transform .3s ease;
+}
+
+.logo:hover .logo-img {
+    transform: rotate(-5deg) scale(1.06);
+}
+
+.main-nav a {
+    transition:
+        color .2s ease,
+        background .2s ease,
+        transform .2s ease;
+}
+
+.main-nav a:hover {
+    transform: translateY(-2px);
+}
+
+.btn,
+button,
+.buy-btn,
+.builder-save-button,
+.builder-add-button {
+    transition:
+        transform .2s ease,
+        background .2s ease,
+        color .2s ease,
+        box-shadow .2s ease;
+}
+
+.btn:hover,
+button:not(:disabled):hover,
+.buy-btn:hover {
+    transform: translateY(-2px);
+}
+
+.btn:active,
+button:not(:disabled):active,
+.buy-btn:active {
+    transform: scale(.97);
+}
+
+.product-card {
+    transition:
+        transform .25s ease,
+        border-color .25s ease,
+        box-shadow .25s ease;
+}
+
+.product-card:hover {
+    transform: translateY(-6px);
+    border-color: var(--accent);
+    box-shadow: 0 12px 28px rgba(17, 20, 23, .08);
+}
+
+.grid > .product-card {
+    animation: colizantFadeUp .5s ease both;
+}
+
+.grid > .product-card:nth-child(1) { animation-delay: .04s; }
+.grid > .product-card:nth-child(2) { animation-delay: .09s; }
+.grid > .product-card:nth-child(3) { animation-delay: .14s; }
+.grid > .product-card:nth-child(4) { animation-delay: .19s; }
+.grid > .product-card:nth-child(5) { animation-delay: .24s; }
+.grid > .product-card:nth-child(6) { animation-delay: .29s; }
+.grid > .product-card:nth-child(n+7) { animation-delay: .32s; }
+
+.product-media img {
+    transition: transform .35s ease;
+}
+
+.product-card:hover .product-media img {
+    transform: scale(1.06);
+}
+
+.builder-form-card,
+.saved-build-card,
+.build-sheet {
+    animation: colizantScaleIn .45s ease both;
+}
+
+.build-item {
+    transition:
+        border-color .2s ease,
+        transform .2s ease,
+        box-shadow .2s ease;
+}
+
+.build-item:hover {
+    border-color: #aebaff;
+    box-shadow: 0 5px 16px rgba(17, 20, 23, .045);
+}
+
+/* Админ-панель */
+
+.admin-card,
+.admin-dashboard-tile {
+    transition:
+        transform .25s ease,
+        box-shadow .25s ease,
+        border-color .25s ease;
+}
+
+.admin-card:hover,
+.admin-dashboard-tile:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 30px rgba(17, 20, 23, .07);
+}
+
+.admin-grid > *,
+.admin-dashboard-grid > * {
+    animation: colizantFadeUp .45s ease both;
+}
+
+.admin-grid > :nth-child(2),
+.admin-dashboard-grid > :nth-child(2) {
+    animation-delay: .08s;
+}
+
+.admin-grid > :nth-child(3),
+.admin-dashboard-grid > :nth-child(3) {
+    animation-delay: .16s;
+}
+
+.alert {
+    animation: colizantFadeUp .35s ease both;
+}
+
+.component-card {
+    animation: colizantScaleIn .5s ease both;
+}
+
+.component-visual-icon {
+    transition: transform .3s ease;
+}
+
+.component-visual-inner:hover .component-visual-icon {
+    transform: scale(1.07) rotate(-3deg);
+}
+
+.component-action {
+    transition:
+        transform .2s ease,
+        background .2s ease,
+        box-shadow .2s ease;
+}
+
+.component-action:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, .12);
+}
+
+.input,
+.select,
+.form-group input {
+    transition:
+        border-color .2s ease,
+        box-shadow .2s ease,
+        background .2s ease;
+}
+
+dialog[open] {
+    animation: colizantScaleIn .2s ease both;
+}
+
+dialog::backdrop {
+    animation: colizantFadeIn .2s ease both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: .01ms !important;
+    }
+}
+

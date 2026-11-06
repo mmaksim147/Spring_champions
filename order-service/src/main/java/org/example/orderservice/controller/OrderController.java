@@ -219,7 +219,6 @@ public class OrderController {
                     orderRepository.saveAndFlush(order)
             );
         } catch (Exception e) {
-            // Компенсация изменения склада при ошибке сохранения.
             try {
                 if (difference > 0) {
                     productClient.increaseStock(
@@ -233,7 +232,6 @@ public class OrderController {
                     );
                 }
             } catch (Exception ignored) {
-                // Требуется ручная сверка остатков при сбое компенсации.
             }
 
             throw e;

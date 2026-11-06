@@ -8,6 +8,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.HttpStatusCodeException;
+import org.springframework.web.client.ResourceAccessException;
 
 import java.util.Map;
 
@@ -36,7 +38,6 @@ public class AuthController {
                 session.setAttribute("token", response.getBody().get("token"));
                 session.setAttribute("username", response.getBody().get("username"));
                 session.setAttribute("roles", response.getBody().get("roles"));
-                // Безопасно сохраняем ID, если бэкенд его вернул, иначе оставляем 1
                 if (response.getBody().containsKey("userId")) {
                     session.setAttribute("userId", response.getBody().get("userId"));
                 }
@@ -51,17 +52,72 @@ public class AuthController {
     @GetMapping("/register")
     public String registerPage() { return "register"; }
 
+
     @PostMapping("/register")
-    public String register(@RequestParam String username, @RequestParam String email, @RequestParam String password, Model model) {
-        try {
-            Map<String, String> body = Map.of("username", username, "email", email, "password", password);
-            restTemplate.postForEntity(gatewayUrl + "/api/auth/register", body, Map.class);
-            return "redirect:/login?registered";
-        } catch (Exception e) {
-            model.addAttribute("error", "Ошибка регистрации. Возможно, логин занят.");
+    public String register(
+            @RequestParam String username,
+            @RequestParam String email,
+            @RequestParam String password,
+            Model model
+    ) {
+        username = username.trim();
+        email = email.trim();
+
+        if (username.length() < 3 || username.length() > 50) {
+            model.addAttribute("error", "Логин должен содержать от 3 до 50 символов.");
             return "register";
         }
+
+        if (email.isBlank() || !email.contains("@")) {
+            model.addAttribute("error", "Введите корректный email.");
+            return "register";
+        }
+
+        if (password.length() < 6) {
+            model.addAttribute("error", "Пароль должен содержать минимум 6 символов.");
+            return "register";
+        }
+
+        try {
+            Map<String, String> body = Map.of(
+                    "username", username,
+                    "email", email,
+                    "password", password
+            );
+
+            restTemplate.postForEntity(
+                    gatewayUrl + "/api/auth/register",
+                    body,
+                    Map.class
+            );
+
+            return "redirect:/login?registered";
+
+        } catch (org.springframework.web.client.HttpStatusCodeException e) {
+            int status = e.getStatusCode().value();
+
+            System.err.println("[REGISTER] HTTP " + status);
+            System.err.println("[REGISTER] " + e.getResponseBodyAsString());
+
+            if (status == 409) {
+                model.addAttribute("error", "Этот логин уже занят.");
+            } else if (status == 400) {
+                model.addAttribute("error",
+                        "Сервер отклонил данные регистрации. Проверьте логин, email и пароль.");
+            } else {
+                model.addAttribute("error", "Ошибка сервера при регистрации.");
+            }
+
+        } catch (Exception e) {
+            System.err.println("[REGISTER] " + e.getClass().getSimpleName()
+                    + ": " + e.getMessage());
+
+            model.addAttribute("error", "Не удалось выполнить регистрацию.");
+        }
+
+        return "register";
     }
+
 
     @GetMapping("/logout")
     public String logout(HttpSession session) {

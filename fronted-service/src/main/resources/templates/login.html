@@ -9,6 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Geologica:wght@500;600;700&family=Onest:wght@400;500;600&display=swap"
           rel="stylesheet">
     <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/animations.css}">
 </head>
 <body>
 
@@ -17,9 +18,9 @@
 
 <main class="auth-wrapper">
 
-    <div class="auth-aside">
-        <img th:src="@{/logo.png}" alt="Colizant">
-    </div>
+    <img th:src="@{/images/mascot.png}"
+         alt="Colizant mascot"
+         class="auth-mascot">
 
     <div class="auth-card">
         <h1>Вход в аккаунт</h1>

@@ -11,6 +11,7 @@
 
     <link rel="stylesheet" th:href="@{/css/style.css}">
     <link rel="stylesheet" th:href="@{/css/component.css}">
+    <link rel="stylesheet" th:href="@{/css/animations.css}">
 
     <style>
         .component-cart-form {
@@ -32,12 +33,12 @@
             font-size: 15px;
             font-weight: 700;
             cursor: pointer;
-            transition: background 0.2s, transform 0.2s;
+            transition: background-color .2s ease;
         }
 
         .component-cart-button:hover {
             background: #2139d0;
-            transform: translateY(-1px);
+            transform: none;
         }
 
         .component-cart-button:disabled {
@@ -48,6 +49,155 @@
 
         .component-action {
             margin-top: 14px;
+        }
+
+        .component-gallery {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            min-width: 0;
+            padding: 24px;
+        }
+
+        .component-gallery-main {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            max-width: 650px;
+            height: 420px;
+            overflow: hidden;
+            border: 1px solid #dfe1e5;
+            border-radius: 16px;
+            background: #f7f8f8;
+        }
+
+        .component-gallery-image {
+            display: none;
+            width: 100%;
+            height: 100%;
+            padding: 24px;
+            object-fit: contain;
+        }
+
+        .component-gallery-image.is-active {
+            display: block;
+        }
+
+        .component-gallery-arrow {
+            position: absolute;
+            top: 50%;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 42px;
+            height: 42px;
+            padding: 0;
+            border: 1px solid #d2d5d9;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, .95);
+            color: #111417;
+            font-size: 22px;
+            cursor: pointer;
+            transform: translateY(-50%);
+            transition:
+                    background-color .2s ease,
+                    color .2s ease,
+                    box-shadow .2s ease;
+        }
+
+        .component-gallery-arrow.prev {
+            left: 12px;
+        }
+
+        .component-gallery-arrow.next {
+            right: 12px;
+        }
+
+        .component-gallery-arrow:hover,
+        .component-gallery-arrow:active {
+            background: #304cff;
+            color: white;
+            transform: translateY(-50%);
+        }
+
+        .component-gallery-dots {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 9px;
+            padding-top: 18px;
+        }
+
+        .component-gallery-dot {
+            width: 9px;
+            height: 9px;
+            min-width: 9px;
+            padding: 0;
+            border: none;
+            border-radius: 50%;
+            background: #c6cad2;
+            cursor: pointer;
+            transform: none;
+            transition: background-color .2s ease;
+        }
+
+        .component-gallery-dot.is-active {
+            background: #304cff;
+        }
+
+        .component-gallery-dot:hover,
+        .component-gallery-dot:active {
+            transform: none;
+            background: #7385ff;
+        }
+
+        .component-gallery-dot.is-active:hover {
+            background: #304cff;
+        }
+
+        .component-gallery-arrow:focus-visible,
+        .component-gallery-dot:focus-visible {
+            outline: 3px solid rgba(48, 76, 255, .4);
+            outline-offset: 3px;
+        }
+
+        @media (max-width: 768px) {
+            .component-gallery {
+                padding: 16px;
+            }
+
+            .component-gallery-main {
+                height: 300px;
+            }
+
+            .component-gallery-image {
+                padding: 14px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .component-gallery-main {
+                height: 240px;
+            }
+
+            .component-gallery-arrow {
+                width: 34px;
+                height: 34px;
+                font-size: 18px;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .component-gallery-arrow,
+            .component-gallery-dot {
+                transition: none;
+            }
         }
     </style>
 </head>
@@ -91,10 +241,64 @@
     <div class="component-card">
 
         <section class="component-visual">
-            <div class="component-visual-inner">
+
+            <div class="component-gallery"
+                 th:if="${product.imageUrls != null and !product.imageUrls.isEmpty()}">
+
+                <div class="component-gallery-main">
+
+                    <img th:each="image, stat : ${product.imageUrls}"
+                         th:src="${image}"
+                         th:alt="${product.name}"
+                         th:classappend="${stat.first} ? ' is-active' : ''"
+                         class="component-gallery-image"
+                         th:attr="data-index=${stat.index}"
+                         loading="lazy">
+
+                    <th:block th:if="${product.imageUrls.size() > 1}">
+
+                        <button type="button"
+                                class="component-gallery-arrow prev"
+                                aria-label="Предыдущее фото"
+                                onclick="changeComponentImage(-1)">
+                            &#10094;
+                        </button>
+
+                        <button type="button"
+                                class="component-gallery-arrow next"
+                                aria-label="Следующее фото"
+                                onclick="changeComponentImage(1)">
+                            &#10095;
+                        </button>
+
+                    </th:block>
+                </div>
+
+                <div class="component-gallery-dots"
+                     th:if="${product.imageUrls.size() > 1}">
+
+                    <button th:each="image, stat : ${product.imageUrls}"
+                            type="button"
+                            class="component-gallery-dot"
+                            th:classappend="${stat.first} ? ' is-active' : ''"
+                            th:attr="data-index=${stat.index}"
+                            th:aria-label="'Фото ' + ${stat.count}"
+                            th:aria-pressed="${stat.first}"
+                            onclick="showComponentImage(Number(this.dataset.index))">
+                    </button>
+
+                </div>
+
+            </div>
+
+            <div class="component-visual-inner"
+                 th:unless="${product.imageUrls != null and !product.imageUrls.isEmpty()}">
+
                 <div class="component-visual-icon">⚙</div>
                 <span>COLIZANT COMPONENT</span>
+
             </div>
+
         </section>
 
         <section class="component-info">
@@ -131,7 +335,7 @@
             </div>
 
             <p class="component-description"
-               th:if="${product.description != null}"
+               th:if="${product.description != null and !product.description.isBlank()}"
                th:text="${product.description}">
             </p>
 
@@ -161,6 +365,16 @@
                     <dd th:text="${product.formFactor}">mATX</dd>
                 </div>
 
+                <div th:if="${product.capacity != null}">
+                    <dt>Объём памяти / накопителя</dt>
+                    <dd th:text="${product.capacity}">16GB</dd>
+                </div>
+
+                <div th:if="${product.wattage != null}">
+                    <dt>Мощность</dt>
+                    <dd th:text="${product.wattage} + ' Вт'">650 Вт</dd>
+                </div>
+
             </dl>
 
             <!-- Добавление товара в корзину -->
@@ -187,7 +401,7 @@
 
                     <span th:if="${product.stockQuantity == null
                         or product.stockQuantity > 0}">
-                        🛒 Добавить в корзину
+                        Добавить в корзину
                     </span>
 
                     <span th:if="${product.stockQuantity != null
@@ -212,6 +426,67 @@
 <footer class="site-footer">
     © 2026 Colizant
 </footer>
+
+<script>
+    let currentComponentImage = 0;
+
+    function showComponentImage(index) {
+        const gallery = document.querySelector(".component-gallery");
+
+        if (!gallery) {
+            return;
+        }
+
+        const images = gallery.querySelectorAll(
+            ".component-gallery-image"
+        );
+
+        const dots = gallery.querySelectorAll(
+            ".component-gallery-dot"
+        );
+
+        if (images.length === 0) {
+            return;
+        }
+
+        currentComponentImage =
+            ((index % images.length) + images.length) % images.length;
+
+        images.forEach((image, i) => {
+            image.classList.toggle(
+                "is-active",
+                i === currentComponentImage
+            );
+        });
+
+        dots.forEach((dot, i) => {
+            const active = i === currentComponentImage;
+
+            dot.classList.toggle("is-active", active);
+            dot.setAttribute("aria-pressed", String(active));
+        });
+    }
+
+    function changeComponentImage(direction) {
+        showComponentImage(currentComponentImage + direction);
+    }
+
+    document.addEventListener("keydown", function(event) {
+        const gallery = document.querySelector(".component-gallery");
+
+        if (!gallery) {
+            return;
+        }
+
+        if (event.key === "ArrowLeft") {
+            changeComponentImage(-1);
+        }
+
+        if (event.key === "ArrowRight") {
+            changeComponentImage(1);
+        }
+    });
+</script>
 
 </body>
 </html>

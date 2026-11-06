@@ -1,4 +1,3 @@
-
 package org.example.frontendservice.controller;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -6,11 +5,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.ui.ExtendedModelMap;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verifyNoInteractions;
 
@@ -119,17 +117,9 @@ class AdminValidationTest {
 
     @Test
     void rejectsBlankCategoryName() {
-        RedirectAttributesModelMap redirect =
-                new RedirectAttributesModelMap();
-
         assertEquals(
-                "redirect:/admin/categories",
-                categories.create("   ", session, redirect)
-        );
-
-        assertEquals(
-                "Название категории не может быть пустым",
-                redirect.getAttribute("error")
+                "redirect:/admin/categories?error",
+                categories.create("   ", session)
         );
 
         verifyNoInteractions(restTemplate);
@@ -189,15 +179,11 @@ class AdminValidationTest {
                 List.of("ROLE_USER")
         );
 
-        RedirectAttributesModelMap redirect =
-                new RedirectAttributesModelMap();
-
         assertEquals(
                 "redirect:/catalog",
-                categories.create("Processors", session, redirect)
+                categories.create("Processors", session)
         );
 
-        assertFalse(redirect.containsAttribute("error"));
         verifyNoInteractions(restTemplate);
     }
 }

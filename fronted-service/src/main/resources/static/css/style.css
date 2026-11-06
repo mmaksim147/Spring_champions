@@ -1,4 +1,3 @@
-/* PC Builder — стили. */
 
 :root {
     --bg: #ecedee;
@@ -53,8 +52,6 @@ a {
     outline: 2px solid var(--accent);
     outline-offset: 3px;
 }
-
-/* ---------- Шапка ---------- */
 
 .site-header {
     position: sticky;
@@ -127,8 +124,6 @@ a {
     margin: 0;
     display: inline;
 }
-
-/* ---------- Кнопки ---------- */
 
 button,
 .btn {
@@ -204,8 +199,6 @@ button,
     margin-top: 6px;
 }
 
-/* ---------- Контейнер и заголовки ---------- */
-
 .container {
     max-width: 1200px;
     margin: 0 auto;
@@ -239,8 +232,6 @@ button,
     margin-top: 8px;
     max-width: 54ch;
 }
-
-/* ---------- Поля ввода ---------- */
 
 .form-group {
     margin-bottom: 18px;
@@ -289,8 +280,6 @@ button,
     background-repeat: no-repeat;
     background-position: right 14px center;
 }
-
-/* ---------- Главная (Hero) ---------- */
 
 .hero {
     padding: 72px 0 88px;
@@ -397,8 +386,6 @@ button,
     font-weight: 600;
     font-variant-numeric: tabular-nums;
 }
-
-/* ---------- Сетка товаров ---------- */
 
 .grid {
     display: grid;
@@ -522,8 +509,6 @@ button,
     color: #fff;
 }
 
-/* ---------- Таблицы (Админка) ---------- */
-
 .table-wrap {
     background: var(--surface);
     border: 1px solid var(--line);
@@ -589,8 +574,6 @@ td.end {
     margin: 0;
 }
 
-/* ---------- Пагинация ---------- */
-
 .pagination {
     display: flex;
     gap: 6px;
@@ -621,8 +604,6 @@ td.end {
     border-color: var(--ink);
 }
 
-/* ---------- Алерты ---------- */
-
 .alert {
     padding: 14px 18px;
     border-radius: 12px;
@@ -643,8 +624,6 @@ td.end {
     border-color: rgba(31, 122, 69, 0.3);
 }
 
-/* ---------- Пустые состояния ---------- */
-
 .empty {
     border: 1px dashed #aeb3ba;
     border-radius: 14px;
@@ -656,8 +635,6 @@ td.end {
 .empty .btn {
     margin-top: 16px;
 }
-
-/* ---------- Диалоговое окно ---------- */
 
 dialog {
     border: 1px solid var(--line);
@@ -687,8 +664,6 @@ dialog h2 {
     margin-top: 8px;
 }
 
-/* ---------- Футер ---------- */
-
 .site-footer {
     border-top: 1px solid var(--line);
     padding: 24px 48px;
@@ -696,8 +671,6 @@ dialog h2 {
     font-size: 14px;
     text-align: center;
 }
-
-/* ---------- Адаптивность ---------- */
 
 @media (max-width: 880px) {
     .site-header {
@@ -742,8 +715,6 @@ dialog h2 {
         padding: 9px 16px;
     }
 }
-
-/* ---------- Страницы входа и регистрации ---------- */
 
 .auth-wrapper {
     flex: 1;
@@ -861,8 +832,6 @@ dialog h2 {
         padding: 28px 22px;
     }
 }
-
-/* ---------- Colizant frontend audit refinements ---------- */
 
 :root {
     color-scheme: light;
@@ -1193,10 +1162,6 @@ button:disabled {
     }
 }
 
-/* ==========================================
-   COLIZANT — ADMIN DASHBOARD
-   ========================================== */
-
 .admin-page {
     min-height: calc(100vh - 180px);
     padding: 54px 0 80px;
@@ -1447,10 +1412,6 @@ button:disabled {
     }
 }
 
-/* ==========================================
-   COLIZANT — PC BUILDER
-   ========================================== */
-
 .builder-layout {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
@@ -1620,7 +1581,6 @@ button:disabled {
     }
 }
 
-/* Отступы конструктора */
 .container.page:has(.builder-layout) {
     padding-bottom: 55px;
 }
@@ -1674,8 +1634,6 @@ button:disabled {
     opacity: 0.4;
     cursor: not-allowed;
 }
-
-/* ---------- Страницы ошибок ---------- */
 
 .error-page {
     flex: 1;
@@ -1737,4 +1695,39 @@ button:disabled {
     .error-dog {
         width: min(100%, 260px);
     }
+}
+
+.auth-mascot {
+    display: block;
+    width: 100%;
+    max-width: 340px;
+    height: auto;
+    object-fit: contain;
+    background: transparent;
+}
+.image-carousel [hidden] {
+    display: none !important;
+}
+
+.product-card button,
+.product-card .btn,
+.product-card .add-to-cart {
+    transform: none;
+    transition: background-color 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.product-card button:hover,
+.product-card .btn:hover,
+.product-card .add-to-cart:hover {
+    transform: none;
+    filter: none;
+    box-shadow: 0 3px 10px rgba(45, 70, 255, 0.18);
+}
+
+.product-card button:active,
+.product-card .btn:active,
+.product-card .add-to-cart:active {
+    transform: none;
 }

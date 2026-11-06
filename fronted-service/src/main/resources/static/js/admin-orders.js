@@ -220,7 +220,6 @@
             order.hidden = true;
         });
 
-        // Переставляем карточки согласно выбранной сортировке.
         if (list) {
             filtered.forEach(order => list.append(order));
         }

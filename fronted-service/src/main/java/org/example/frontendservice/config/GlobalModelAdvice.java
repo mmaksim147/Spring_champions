@@ -67,7 +67,6 @@ public class GlobalModelAdvice {
                 );
             }
         } catch (Exception e) {
-            // При недоступности gateway оставляем cartCount = 0.
         }
     }
 }

@@ -5,12 +5,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const addBtn = document.getElementById("addBtn");
     const editForm = document.getElementById("editForm");
 
-    // Открытие создания
     addBtn?.addEventListener("click", () => {
         createDialog?.showModal();
     });
 
-    // Открытие редактирования
     document.querySelectorAll(".js-edit").forEach(button => {
         button.addEventListener("click", () => {
             document.getElementById("edit-id").value = button.dataset.id || "";
@@ -23,14 +21,12 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    // Закрытие окон
     document.querySelectorAll(".js-close").forEach(button => {
         button.addEventListener("click", () => {
             button.closest("dialog")?.close();
         });
     });
 
-    // Закрытие по нажатию на фон
     [createDialog, editDialog].forEach(dialog => {
         dialog?.addEventListener("click", event => {
             if (event.target === dialog) {
@@ -39,7 +35,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    // Подтверждение удаления
     document.querySelectorAll(".js-delete-form").forEach(form => {
         form.addEventListener("submit", event => {
             if (!confirm("Удалить комплектующее?")) {

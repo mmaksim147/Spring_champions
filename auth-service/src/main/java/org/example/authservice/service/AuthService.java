@@ -9,11 +9,13 @@ import org.example.authservice.repository.RoleRepository;
 import org.example.authservice.repository.UserRepository;
 import org.example.authservice.security.CustomUserDetailsService;
 import org.example.authservice.security.JwtService;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -42,7 +44,10 @@ public class AuthService {
 
     public AuthResponse register(RegisterRequest request) {
         if (userRepository.existsByUsername(request.getUsername())) {
-            throw new RuntimeException("Username already exists");
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Username already exists"
+            );
         }
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new RuntimeException("Email already exists");
