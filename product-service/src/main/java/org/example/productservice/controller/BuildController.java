@@ -14,7 +14,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
-
+import org.example.productservice.security.CurrentUser;
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -27,36 +27,69 @@ public class BuildController {
     private final BuildRepository buildRepository;
     private final ComponentRepository componentRepository;
     private final RestTemplate restTemplate = new RestTemplate();
+    private final CurrentUser currentUser;
 
     @Value("${compatibility.rules-url:http://localhost:8080/api/compatibility/rules}")
     private String rulesUrl;
 
     public BuildController(
             BuildRepository buildRepository,
-            ComponentRepository componentRepository
+            ComponentRepository componentRepository,
+            CurrentUser currentUser
     ) {
         this.buildRepository = buildRepository;
         this.componentRepository = componentRepository;
+        this.currentUser = currentUser;
     }
 
     @GetMapping
     @Operation(summary = "Все сборки или по userId")
     public ResponseEntity<List<Build>> getAll(
-            @RequestParam(required = false) Long userId
+            @RequestParam(required = false) Long userId,
+            @RequestHeader(
+                    value = HttpHeaders.AUTHORIZATION,
+                    required = false
+            ) String authorization
     ) {
+        CurrentUser.Identity identity = currentUser.require(authorization);
+
+        if (identity.admin()) {
+            return ResponseEntity.ok(
+                    userId != null
+                            ? buildRepository.findByUserId(userId)
+                            : buildRepository.findAll()
+            );
+        }
+
+        if (userId != null && !userId.equals(identity.userId())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
         return ResponseEntity.ok(
-                userId != null
-                        ? buildRepository.findByUserId(userId)
-                        : buildRepository.findAll()
+                buildRepository.findByUserId(identity.userId())
         );
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Сборка по ID")
-    public ResponseEntity<Build> getById(@PathVariable Long id) {
-        return buildRepository.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<Build> getById(
+            @PathVariable Long id,
+            @RequestHeader(
+                    value = HttpHeaders.AUTHORIZATION,
+                    required = false
+            ) String authorization
+    ) {
+        CurrentUser.Identity identity = currentUser.require(authorization);
+
+        Build build = buildRepository.findById(id).orElse(null);
+
+        if (build == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        currentUser.requireOwnerOrAdmin(identity, build.getUserId());
+
+        return ResponseEntity.ok(build);
     }
 
     @PostMapping
@@ -77,7 +110,8 @@ public class BuildController {
 
             return badRequest("Заполните название и комплектующие сборки.");
         }
-
+        CurrentUser.Identity identity = currentUser.require(authorization);
+        currentUser.requireOwnerOrAdmin(identity, request.getUserId());
         try {
             Build build = new Build();
             build.setUserId(request.getUserId());
@@ -109,9 +143,11 @@ public class BuildController {
                         .orElse(null);
 
                 if (component == null) {
-                    return badRequest(
-                            "Комплектующее не найдено: " + componentId
-                    );
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                            .body(Map.of(
+                                    "error",
+                                    "Комплектующее не найдено: " + componentId
+                            ));
                 }
 
                 items.add(new BuildItem(build, component, quantity));
@@ -157,7 +193,8 @@ public class BuildController {
         if (build == null) {
             return ResponseEntity.notFound().build();
         }
-
+        CurrentUser.Identity identity = currentUser.require(authorization);
+        currentUser.requireOwnerOrAdmin(identity, build.getUserId());
         if (itemReq == null
                 || itemReq.getComponentId() == null
                 || itemReq.getComponentId() <= 0
@@ -177,8 +214,6 @@ public class BuildController {
         }
 
         try {
-            // Проверяем предполагаемый состав,
-            // не изменяя сохранённую сборку заранее.
             List<BuildItem> proposedItems =
                     new ArrayList<>(build.getItems());
 
@@ -210,9 +245,17 @@ public class BuildController {
     @Operation(summary = "Удалить компонент из сборки + пересчёт")
     public ResponseEntity<Build> removeItem(
             @PathVariable Long id,
-            @PathVariable Long itemId
+            @PathVariable Long itemId,
+            @RequestHeader(
+                    value = HttpHeaders.AUTHORIZATION,
+                    required = false
+            ) String authorization
     ) {
+        CurrentUser.Identity identity = currentUser.require(authorization);
+
         return buildRepository.findById(id).map(build -> {
+            currentUser.requireOwnerOrAdmin(identity, build.getUserId());
+
             build.getItems().removeIf(
                     item -> Objects.equals(item.getId(), itemId)
             );
@@ -225,8 +268,25 @@ public class BuildController {
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Удалить сборку")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-        buildRepository.deleteById(id);
+    public ResponseEntity<Void> delete(
+            @PathVariable Long id,
+            @RequestHeader(
+                    value = HttpHeaders.AUTHORIZATION,
+                    required = false
+            ) String authorization
+    ) {
+        CurrentUser.Identity identity = currentUser.require(authorization);
+
+        Build build = buildRepository.findById(id).orElse(null);
+
+        if (build == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        currentUser.requireOwnerOrAdmin(identity, build.getUserId());
+
+        buildRepository.delete(build);
+
         return ResponseEntity.noContent().build();
     }
 
@@ -299,7 +359,6 @@ public class BuildController {
             );
         }
 
-        // Проверяем все подходящие пары по правилам из БД.
         for (RuleDto rule : rules) {
             if (rule.sourceCategory == null
                     || rule.targetCategory == null
@@ -406,7 +465,6 @@ public class BuildController {
             return true;
         }
 
-        // Базовая поддержка распространённых размеров.
         return switch (pcCase) {
             case "EATX" -> Set.of(
                     "ATX", "MATX", "MITX"
@@ -496,8 +554,6 @@ public class BuildController {
         build.setTotalPrice(total);
     }
 
-    // DTO ответа GET /rules.
-    // Поля public нужны для простой десериализации Jackson.
     public static class RuleDto {
         public String sourceCategory;
         public String targetCategory;

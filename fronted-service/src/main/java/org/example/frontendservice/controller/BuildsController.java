@@ -84,7 +84,6 @@ public class BuildsController {
             HttpHeaders headers = new HttpHeaders();
             headers.setBearerAuth(token);
 
-            // Сначала проверяем, что сборка принадлежит пользователю.
             ResponseEntity<Map> response = restTemplate.exchange(
                     gatewayUrl + "/api/builds/" + id,
                     HttpMethod.GET,
@@ -198,8 +197,6 @@ public class BuildsController {
                     Void.class
             );
 
-            // Сохраняем прежнюю логику:
-            // после успешного заказа сборка удаляется.
             restTemplate.exchange(
                     gatewayUrl + "/api/builds/" + id,
                     HttpMethod.DELETE,

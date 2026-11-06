@@ -33,3 +33,6 @@ management:
 springdoc:
   server:
     url: http://localhost:8080/api/products
+
+jwt:
+  secret: 1h0FhMtnHGyjVa6yMJh4Si5TgOJNuzl7IGLcYQ9LXIc=

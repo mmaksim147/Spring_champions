@@ -95,7 +95,6 @@ public class CatalogController {
 
             HttpEntity<Void> entity = new HttpEntity<>(headers);
 
-            // Без поиска сохраняем серверную пагинацию.
             if (search.isBlank()) {
                 Map<?, ?> body = fetchPage(
                         page, search, sort, direction, entity
@@ -111,8 +110,6 @@ public class CatalogController {
 
                 List<ProductDto> products = readProducts(body);
 
-                // Сортировка внутри страницы — дополнительная защита
-                // на случай, если gateway игнорирует параметр sort.
                 sortProducts(products, sort, direction);
 
                 int totalPages = readTotalPages(body);
@@ -130,9 +127,6 @@ public class CatalogController {
                 return "catalog";
             }
 
-            // При поиске собираем страницы и фильтруем локально.
-            // Первым запрашиваем page из URL — сохраняем
-            // совместимость с существующими тестами.
             Map<?, ?> firstBody = fetchPage(
                     page, search, sort, direction, entity
             );
@@ -158,7 +152,6 @@ public class CatalogController {
 
             List<ProductDto> allProducts = new ArrayList<>();
 
-            // Если запрошенная страница существует, используем её ответ.
             if (page < gatewayPages || gatewayPages == 0) {
                 allProducts.addAll(readProducts(firstBody));
             }
@@ -224,6 +217,8 @@ public class CatalogController {
                     "error",
                     "Не удалось загрузить каталог. Попробуйте позже."
             );
+            System.err.println("[CATALOG] Ошибка загрузки каталога:");
+            e.printStackTrace();
         }
 
         return "catalog";
@@ -275,7 +270,6 @@ public class CatalogController {
                             )
                     );
                 } catch (IllegalArgumentException ignored) {
-                    // Некорректный элемент не ломает всю страницу.
                 }
             }
         }

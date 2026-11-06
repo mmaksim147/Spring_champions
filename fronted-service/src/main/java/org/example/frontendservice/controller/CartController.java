@@ -107,7 +107,6 @@ public class CartController {
                                 }
                             }
                         } catch (Exception ignored) {
-                            // Товар может быть недоступен.
                         }
 
                         componentNames.putIfAbsent(

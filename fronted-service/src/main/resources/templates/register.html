@@ -12,6 +12,7 @@
           rel="stylesheet">
 
     <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/animations.css}">
 </head>
 <body>
 
@@ -20,14 +21,9 @@
 
 <main class="auth-wrapper">
 
-    <div class="auth-aside">
-        <img th:src="@{/logo.png}" alt="Colizant">
-
-        <p>
-            Создайте аккаунт, чтобы собирать ПК
-            и оформлять заказы в пару кликов.
-        </p>
-    </div>
+    <img th:src="@{/images/mascot.png}"
+         alt="Colizant mascot"
+         class="auth-mascot">
 
     <div class="auth-card">
 

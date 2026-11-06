@@ -11,7 +11,6 @@ import java.util.List;
 public class AdminController {
 
     public AdminController(RestTemplate restTemplate) {
-        // Сохраняем существующий конструктор для совместимости.
     }
 
     @GetMapping("/admin")

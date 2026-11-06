@@ -1,4 +1,3 @@
-
 package org.example.frontendservice.controller;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -10,12 +9,14 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.ui.ExtendedModelMap;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.springframework.test.web.client.match.MockRestRequestMatchers.*;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.header;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.jsonPath;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.*;
 
 class AdminCategoryOperationsTest {
@@ -34,9 +35,7 @@ class AdminCategoryOperationsTest {
         controller = new AdminCategoryController(restTemplate);
 
         ReflectionTestUtils.setField(
-                controller,
-                "gatewayUrl",
-                GATEWAY
+                controller, "gatewayUrl", GATEWAY
         );
 
         server = MockRestServiceServer
@@ -63,6 +62,7 @@ class AdminCategoryOperationsTest {
         );
 
         assertEquals(List.of(), model.get("categories"));
+
         server.verify();
     }
 
@@ -70,16 +70,13 @@ class AdminCategoryOperationsTest {
     void loadsExistingCategories() {
         server.expect(requestTo(GATEWAY + "/api/categories"))
                 .andExpect(method(HttpMethod.GET))
-                .andRespond(withSuccess(
-                        """
+                .andRespond(withSuccess("""
                         [
                           {"id":1,"name":"CPU"},
                           {"id":2,"name":"GPU"},
                           {"id":3,"name":"RAM"}
                         ]
-                        """,
-                        MediaType.APPLICATION_JSON
-                ));
+                        """, MediaType.APPLICATION_JSON));
 
         assertEquals(
                 "admin/categories",
@@ -98,8 +95,7 @@ class AdminCategoryOperationsTest {
     void handlesNullCategoryResponse() {
         server.expect(requestTo(GATEWAY + "/api/categories"))
                 .andRespond(withSuccess(
-                        "null",
-                        MediaType.APPLICATION_JSON
+                        "null", MediaType.APPLICATION_JSON
                 ));
 
         assertEquals(
@@ -108,6 +104,7 @@ class AdminCategoryOperationsTest {
         );
 
         assertEquals(List.of(), model.get("categories"));
+
         server.verify();
     }
 
@@ -122,6 +119,7 @@ class AdminCategoryOperationsTest {
         );
 
         assertEquals("Ошибка загрузки", model.get("error"));
+
         server.verify();
     }
 
@@ -130,19 +128,19 @@ class AdminCategoryOperationsTest {
         server.expect(requestTo(GATEWAY + "/api/categories"))
                 .andExpect(method(HttpMethod.POST))
                 .andExpect(header("Authorization", "Bearer admin-token"))
-                .andExpect(header("Content-Type", "application/json"))
-                .andExpect(jsonPath("$.name").value("Processors"))
+                .andExpect(
+                        header("Content-Type", "application/json")
+                )
+                .andExpect(
+                        jsonPath("$.name").value("Processors")
+                )
                 .andRespond(withSuccess());
-
-        RedirectAttributesModelMap redirect =
-                new RedirectAttributesModelMap();
 
         assertEquals(
                 "redirect:/admin/categories",
-                controller.create("Processors", session, redirect)
+                controller.create("Processors", session)
         );
 
-        assertFalse(redirect.containsAttribute("error"));
         server.verify();
     }
 
@@ -155,15 +153,11 @@ class AdminCategoryOperationsTest {
                 )
                 .andRespond(withSuccess());
 
-        RedirectAttributesModelMap redirect =
-                new RedirectAttributesModelMap();
-
         assertEquals(
                 "redirect:/admin/categories",
-                controller.create("  Graphics Cards  ", session, redirect)
+                controller.create("  Graphics Cards  ", session)
         );
 
-        assertFalse(redirect.containsAttribute("error"));
         server.verify();
     }
 
@@ -173,17 +167,9 @@ class AdminCategoryOperationsTest {
                 .andExpect(method(HttpMethod.POST))
                 .andRespond(withServerError());
 
-        RedirectAttributesModelMap redirect =
-                new RedirectAttributesModelMap();
-
         assertEquals(
-                "redirect:/admin/categories",
-                controller.create("Processors", session, redirect)
-        );
-
-        assertEquals(
-                "Не удалось добавить категорию. Возможно, она уже существует.",
-                redirect.getAttribute("error")
+                "redirect:/admin/categories?error",
+                controller.create("Processors", session)
         );
 
         server.verify();
@@ -191,17 +177,9 @@ class AdminCategoryOperationsTest {
 
     @Test
     void rejectsNullCategoryName() {
-        RedirectAttributesModelMap redirect =
-                new RedirectAttributesModelMap();
-
         assertEquals(
-                "redirect:/admin/categories",
-                controller.create(null, session, redirect)
-        );
-
-        assertEquals(
-                "Название категории не может быть пустым",
-                redirect.getAttribute("error")
+                "redirect:/admin/categories?error",
+                controller.create(null, session)
         );
 
         server.verify();

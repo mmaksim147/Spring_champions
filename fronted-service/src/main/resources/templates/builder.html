@@ -7,6 +7,7 @@
   <title>Конструктор ПК — Colizant</title>
   <link rel="stylesheet" th:href="@{/css/style.css}">
   <link rel="stylesheet" th:href="@{/css/dashboard-polish.css}">
+    <link rel="stylesheet" th:href="@{/css/animations.css}">
 </head>
 
 <body>
@@ -235,15 +236,6 @@
       return;
     }
 
-    /*
-     * Сохраняем черновик в рамках вкладки браузера.
-     *
-     * При ошибке backend возвращает пользователя на /builder,
-     * и мы восстанавливаем его предыдущий выбор.
-     *
-     * При обычном открытии /builder без ошибки старый черновик
-     * не восстанавливаем.
-     */
     const DRAFT_KEY = 'colizant_builder_draft_v1';
     const PENDING_KEY = 'colizant_builder_pending_v1';
 
@@ -415,8 +407,6 @@
                 ? draft.items
                 : [{ componentId: '', quantity: 1 }];
 
-        // Убираем стартовую строку, чтобы восстановить
-        // ровно столько комплектующих, сколько было выбрано.
         list.replaceChildren();
 
         savedItems.forEach(item => {
@@ -430,7 +420,6 @@
                           ? String(item.componentId)
                           : '';
 
-          // Восстанавливаем только существующие в каталоге ID.
           const optionExists = Array.from(select.options)
                   .some(option => option.value === componentId);
 
@@ -457,7 +446,6 @@
       }
     }
 
-    // Привязываем события к исходной строке.
     bindRow(list.querySelector('.build-item'));
 
     nameInput.addEventListener('input', saveDraft);
@@ -506,7 +494,6 @@
         seen.add(select.value);
       }
 
-      // Сохраняем черновик непосредственно перед запросом.
       saveDraft();
 
       try {
@@ -516,13 +503,6 @@
       }
     });
 
-    /*
-     * Восстанавливаем черновик только после попытки сохранения,
-     * если backend вернул пользователя на страницу конструктора.
-     *
-     * Если пользователь просто открыл /builder, начинаем
-     * новую сборку.
-     */
     const url = new URL(window.location.href);
     const hasLegacyError = url.searchParams.has('error');
 
@@ -549,7 +529,6 @@
       try {
         sessionStorage.removeItem(PENDING_KEY);
       } catch (error) {
-        // sessionStorage может быть недоступен.
       }
 
     } else {

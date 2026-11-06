@@ -7,7 +7,8 @@
     <title>Каталог комплектующих — Colizant</title>
 
     <link rel="stylesheet" th:href="@{/css/style.css}">
-
+    <link rel="stylesheet"
+          th:href="@{/css/image-carousel.css}">
     <style>
         .catalog-add-form {
             margin-top: 14px;
@@ -23,6 +24,7 @@
             cursor: not-allowed;
         }
     </style>
+    <link rel="stylesheet" th:href="@{/css/animations.css}">
 </head>
 
 <body>
@@ -40,7 +42,6 @@
             </div>
         </div>
 
-        <!-- Поиск и сортировка -->
         <form class="catalog-toolbar"
               th:action="@{/catalog}"
               method="get"
@@ -89,7 +90,6 @@
             </button>
         </form>
 
-        <!-- Ошибка загрузки -->
         <div class="notice"
              th:if="${error != null}"
              role="alert">
@@ -98,33 +98,65 @@
             </p>
         </div>
 
-        <!-- Результаты поиска -->
         <p th:if="${error == null and search != null and !#strings.isEmpty(search)}"
            class="notice">
             Результаты поиска:
             <strong th:text="${search}">RTX</strong>
         </p>
 
-        <!-- Карточки товаров -->
         <div class="grid"
              th:if="${products != null and !#lists.isEmpty(products)}">
 
             <article class="product-card"
                      th:each="p : ${products}">
 
-                <div class="product-media">
 
-                    <img th:if="${p.imageUrl != null and !#strings.isEmpty(p.imageUrl)}"
+                <div class="product-media image-carousel"
+                     data-image-carousel>
+
+                    <th:block th:if="${p.imageUrls != null and !#lists.isEmpty(p.imageUrls)}">
+
+                        <img th:each="url, stat : ${p.imageUrls}"
+                             th:if="${url != null and !#strings.isEmpty(url)}"
+                             class="carousel-slide"
+                             th:classappend="${stat.index == 0} ? ' is-active' : ''"
+                             th:src="${url}"
+                             th:alt="${p.name}"
+                             loading="lazy">
+
+                    </th:block>
+
+                    <img th:if="${(p.imageUrls == null or #lists.isEmpty(p.imageUrls))
+                  and p.imageUrl != null
+                  and !#strings.isEmpty(p.imageUrl)}"
+                         class="carousel-slide is-active"
                          th:src="${p.imageUrl}"
                          th:alt="${p.name}"
                          loading="lazy">
 
                     <div class="brand"
-                         th:if="${p.imageUrl == null or #strings.isEmpty(p.imageUrl)}"
+                         th:if="${(p.imageUrls == null or #lists.isEmpty(p.imageUrls))
+                 and (p.imageUrl == null or #strings.isEmpty(p.imageUrl))}"
                          th:text="${p.manufacturer != null ? p.manufacturer : 'Colizant'}">
                         Бренд
                     </div>
+
+                    <button type="button"
+                            class="carousel-prev"
+                            aria-label="Предыдущая фотография">
+                        ‹
+                    </button>
+
+                    <button type="button"
+                            class="carousel-next"
+                            aria-label="Следующая фотография">
+                        ›
+                    </button>
+
+                    <div class="carousel-indicators"></div>
+
                 </div>
+
 
                 <div class="product-body">
 
@@ -185,7 +217,6 @@
 
                     </div>
 
-                    <!-- Добавление в корзину -->
                     <form class="catalog-add-form"
                           th:action="@{/cart/add}"
                           method="post">
@@ -221,7 +252,6 @@
             </article>
         </div>
 
-        <!-- Пустой результат -->
         <div class="empty"
              th:if="${error == null and (products == null or #lists.isEmpty(products))}">
 
@@ -232,7 +262,6 @@
             </a>
         </div>
 
-        <!-- Пагинация -->
         <nav class="pagination"
              th:if="${totalPages != null and totalPages > 1}"
              aria-label="Страницы каталога">
@@ -297,6 +326,6 @@
 <footer class="site-footer">
     © 2026 Colizant
 </footer>
-
+<script th:src="@{/js/image-carousel.js}" defer></script>
 </body>
 </html>
