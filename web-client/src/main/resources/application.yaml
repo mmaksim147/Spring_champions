@@ -9,7 +9,7 @@ server:
 
 spring:
   application:
-    name: frontend-service
+    name: web-client
 
   config:
     import: "optional:configserver:http://localhost:8888"

@@ -12,7 +12,7 @@
     </parent>
 
     <groupId>com.pcbuilder</groupId>
-    <artifactId>frontend-service</artifactId>
+    <artifactId>web-client</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>frontend-service</name>
     <description>Frontend on Thymeleaf</description>
