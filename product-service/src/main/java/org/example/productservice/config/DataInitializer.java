@@ -19,140 +19,77 @@ public class DataInitializer {
 
     private static final Map<String, List<String>> PRODUCT_IMAGES = Map.ofEntries(
 
-            Map.entry("Ryzen 5 7600X", List.of(
-                    "https://placehold.co/900x600?text=AMD+Ryzen+5+7600X"
-            )),
-            Map.entry("Ryzen 7 7700X", List.of(
-                    "https://placehold.co/900x600?text=AMD+Ryzen+7+7700X"
-            )),
-            Map.entry("Ryzen 7 7800X3D", List.of(
-                    "https://placehold.co/900x600?text=AMD+Ryzen+7+7800X3D"
-            )),
-            Map.entry("Ryzen 9 7900X", List.of(
-                    "https://placehold.co/900x600?text=AMD+Ryzen+9+7900X"
-            )),
-            Map.entry("Ryzen 5 5600", List.of(
-                    "https://placehold.co/900x600?text=AMD+Ryzen+5+5600"
-            )),
-            Map.entry("Core i5-12400F", List.of(
-                    "https://placehold.co/900x600?text=Intel+Core+i5-12400F"
-            )),
-            Map.entry("Core i5-13400F", List.of(
-                    "https://placehold.co/900x600?text=Intel+Core+i5-13400F"
-            )),
-            Map.entry("Core i7-13700K", List.of(
-                    "https://placehold.co/900x600?text=Intel+Core+i7-13700K"
-            )),
+            // CPU
+            Map.entry("Ryzen 5 7600X", images("cpu/ryzen-5-7600x")),
+            Map.entry("Ryzen 7 7700X", images("cpu/ryzen-7-7700x")),
+            Map.entry("Ryzen 7 7800X3D", images("cpu/ryzen-7-7800x3d")),
+            Map.entry("Ryzen 9 7900X", images("cpu/ryzen-9-7900x")),
+            Map.entry("Ryzen 5 5600", images("cpu/ryzen-5-5600")),
+            Map.entry("Core i5-12400F", images("cpu/core-i5-12400f")),
+            Map.entry("Core i5-13400F", images("cpu/core-i5-13400f")),
+            Map.entry("Core i7-13700K", images("cpu/core-i7-13700k")),
 
-            Map.entry("GeForce RTX 4060", List.of(
-                    "https://placehold.co/900x600?text=NVIDIA+RTX+4060"
-            )),
-            Map.entry("GeForce RTX 4060 Ti", List.of(
-                    "https://placehold.co/900x600?text=MSI+RTX+4060+Ti"
-            )),
-            Map.entry("GeForce RTX 4070 SUPER", List.of(
-                    "https://placehold.co/900x600?text=ASUS+RTX+4070+SUPER"
-            )),
-            Map.entry("GeForce RTX 4080 SUPER", List.of(
-                    "https://placehold.co/900x600?text=Gigabyte+RTX+4080+SUPER"
-            )),
-            Map.entry("Radeon RX 7600", List.of(
-                    "https://placehold.co/900x600?text=AMD+Radeon+RX+7600"
-            )),
-            Map.entry("Radeon RX 7800 XT", List.of(
-                    "https://placehold.co/900x600?text=Sapphire+RX+7800+XT"
-            )),
+            // GPU
+            Map.entry("GeForce RTX 4060", images("gpu/rtx-4060")),
+            Map.entry("GeForce RTX 4060 Ti", images("gpu/rtx-4060-ti")),
+            Map.entry("GeForce RTX 4070 SUPER", images("gpu/rtx-4070-super")),
+            Map.entry("GeForce RTX 4080 SUPER", images("gpu/rtx-4080-super")),
+            Map.entry("Radeon RX 7600", images("gpu/rx-7600")),
+            Map.entry("Radeon RX 7800 XT", images("gpu/rx-7800-xt")),
 
-            Map.entry("MSI B650 Gaming Plus WiFi", List.of(
-                    "https://placehold.co/900x600?text=MSI+B650+Gaming+Plus+WiFi"
-            )),
-            Map.entry("ASUS TUF Gaming B650-PLUS", List.of(
-                    "https://placehold.co/900x600?text=ASUS+TUF+B650-PLUS"
-            )),
-            Map.entry("Gigabyte B650M DS3H", List.of(
-                    "https://placehold.co/900x600?text=Gigabyte+B650M+DS3H"
-            )),
-            Map.entry("ASUS PRIME B760M-K", List.of(
-                    "https://placehold.co/900x600?text=ASUS+PRIME+B760M-K"
-            )),
-            Map.entry("MSI PRO B760-P", List.of(
-                    "https://placehold.co/900x600?text=MSI+PRO+B760-P"
-            )),
-            Map.entry("Gigabyte Z790 AORUS ELITE", List.of(
-                    "https://placehold.co/900x600?text=Gigabyte+Z790+AORUS+ELITE"
-            )),
+            // MOTHERBOARD
+            Map.entry("MSI B650 Gaming Plus", images("motherboard/msi-b650-gaming-plus-old")),
+            Map.entry("ASUS B760M", images("motherboard/asus-b760m")),
+            Map.entry("MSI B650 Gaming Plus WiFi", images("motherboard/msi-b650-gaming-plus")),
+            Map.entry("ASUS TUF Gaming B650-PLUS", images("motherboard/asus-tuf-b650-plus")),
+            Map.entry("Gigabyte B650M DS3H", images("motherboard/gigabyte-b650m-ds3h")),
+            Map.entry("ASUS PRIME B760M-K", images("motherboard/asus-prime-b760m-k")),
+            Map.entry("MSI PRO B760-P", images("motherboard/msi-pro-b760-p")),
+            Map.entry("Gigabyte Z790 AORUS ELITE", images("motherboard/gigabyte-z790-aorus-elite")),
 
-            Map.entry("Kingston Fury Beast 16GB DDR5", List.of(
-                    "https://placehold.co/900x600?text=Kingston+Fury+16GB+DDR5"
-            )),
-            Map.entry("Kingston Fury Beast 32GB DDR5", List.of(
-                    "https://placehold.co/900x600?text=Kingston+Fury+32GB+DDR5"
-            )),
-            Map.entry("Corsair Vengeance 32GB DDR5", List.of(
-                    "https://placehold.co/900x600?text=Corsair+Vengeance+32GB+DDR5"
-            )),
-            Map.entry("G.Skill Trident Z5 32GB", List.of(
-                    "https://placehold.co/900x600?text=G.Skill+Trident+Z5+32GB"
-            )),
-            Map.entry("Crucial 16GB DDR4", List.of(
-                    "https://placehold.co/900x600?text=Crucial+16GB+DDR4"
-            )),
-            Map.entry("Kingston Fury Beast 32GB DDR4", List.of(
-                    "https://placehold.co/900x600?text=Kingston+Fury+32GB+DDR4"
-            )),
+            // RAM
+            Map.entry("Kingston Fury 16GB DDR5", images("ram/kingston-fury-16gb-ddr5")),
+            Map.entry("Kingston Fury Beast 16GB DDR5", images("ram/kingston-fury-16gb-ddr5")),
+            Map.entry("Kingston Fury Beast 32GB DDR5", images("ram/kingston-fury-32gb-ddr5")),
+            Map.entry("Corsair Vengeance 32GB DDR5", images("ram/corsair-vengeance-32gb-ddr5")),
+            Map.entry("G.Skill Trident Z5 32GB", images("ram/gskill-trident-z5-32gb")),
+            Map.entry("Crucial 16GB DDR4", images("ram/crucial-16gb-ddr4")),
+            Map.entry("Kingston Fury Beast 32GB DDR4", images("ram/kingston-fury-32gb-ddr4")),
 
-            Map.entry("Corsair RM750e 750W", List.of(
-                    "https://placehold.co/900x600?text=Corsair+RM750e+750W"
-            )),
-            Map.entry("be quiet! Pure Power 12 M 850W", List.of(
-                    "https://placehold.co/900x600?text=be+quiet+Pure+Power+850W"
-            )),
-            Map.entry("MSI MAG A650BN 650W", List.of(
-                    "https://placehold.co/900x600?text=MSI+MAG+A650BN+650W"
-            )),
-            Map.entry("DeepCool PQ1000M 1000W", List.of(
-                    "https://placehold.co/900x600?text=DeepCool+PQ1000M+1000W"
-            )),
+            // PSU
+            Map.entry("Corsair RM750e 750W", images("psu/corsair-rm750e")),
+            Map.entry("be quiet! Pure Power 12 M 850W", images("psu/bequiet-pure-power-850w")),
+            Map.entry("MSI MAG A650BN 650W", images("psu/msi-mag-a650bn")),
+            Map.entry("DeepCool PQ1000M 1000W", images("psu/deepcool-pq1000m")),
 
-            Map.entry("DeepCool CC560", List.of(
-                    "https://placehold.co/900x600?text=DeepCool+CC560"
-            )),
-            Map.entry("NZXT H5 Flow", List.of(
-                    "https://placehold.co/900x600?text=NZXT+H5+Flow"
-            )),
-            Map.entry("Corsair 4000D Airflow", List.of(
-                    "https://placehold.co/900x600?text=Corsair+4000D+Airflow"
-            )),
-            Map.entry("Cooler Master Q300L", List.of(
-                    "https://placehold.co/900x600?text=Cooler+Master+Q300L"
-            )),
+            // CASE
+            Map.entry("DeepCool CC560", images("case/deepcool-cc560")),
+            Map.entry("NZXT H5 Flow", images("case/nzxt-h5-flow")),
+            Map.entry("Corsair 4000D Airflow", images("case/corsair-4000d-airflow")),
+            Map.entry("Cooler Master Q300L", images("case/cooler-master-q300l")),
 
-            Map.entry("Samsung 980 PRO 1TB", List.of(
-                    "https://placehold.co/900x600?text=Samsung+980+PRO+1TB"
-            )),
-            Map.entry("Samsung 990 EVO 2TB", List.of(
-                    "https://placehold.co/900x600?text=Samsung+990+EVO+2TB"
-            )),
-            Map.entry("WD Black SN850X 1TB", List.of(
-                    "https://placehold.co/900x600?text=WD+Black+SN850X+1TB"
-            )),
-            Map.entry("Kingston NV2 1TB", List.of(
-                    "https://placehold.co/900x600?text=Kingston+NV2+1TB"
-            )),
+            // STORAGE
+            Map.entry("Samsung 980 PRO 1TB", images("storage/samsung-980-pro")),
+            Map.entry("Samsung 990 EVO 2TB", images("storage/samsung-990-evo")),
+            Map.entry("WD Black SN850X 1TB", images("storage/wd-black-sn850x")),
+            Map.entry("Kingston NV2 1TB", images("storage/kingston-nv2")),
 
-            Map.entry("DeepCool AK400", List.of(
-                    "https://placehold.co/900x600?text=DeepCool+AK400"
-            )),
-            Map.entry("DeepCool AK620", List.of(
-                    "https://placehold.co/900x600?text=DeepCool+AK620"
-            )),
-            Map.entry("Noctua NH-D15", List.of(
-                    "https://placehold.co/900x600?text=Noctua+NH-D15"
-            )),
-            Map.entry("Arctic Liquid Freezer III 360", List.of(
-                    "https://placehold.co/900x600?text=Arctic+Liquid+Freezer+III+360"
-            ))
+            // COOLER
+            Map.entry("DeepCool AK400", images("cooler/deepcool-ak400")),
+            Map.entry("DeepCool AK620", images("cooler/deepcool-ak620")),
+            Map.entry("Noctua NH-D15", images("cooler/noctua-nh-d15")),
+            Map.entry("Arctic Liquid Freezer III 360", images("cooler/arctic-liquid-freezer-iii-360"))
     );
+
+    private static List<String> images(String path) {
+        String base = "/images/products/" + path;
+
+        return List.of(
+                base + ".webp",
+                base + "-2.webp",
+                base + "-3.webp"
+        );
+    }
 
     @Bean
     CommandLineRunner initData(
@@ -348,11 +285,19 @@ public class DataInitializer {
             String capacity,
             String description
     ) {
-        if (repo.findAll().stream().anyMatch(c -> c.getName().equalsIgnoreCase(name))) {
+        Component existing = find(repo, name);
+
+        if (existing != null) {
             return 0;
         }
 
+        List<String> urls = PRODUCT_IMAGES.getOrDefault(
+                name,
+                List.of()
+        );
+
         Component c = new Component();
+
         c.setName(name);
         c.setManufacturer(manufacturer);
         c.setPrice(new BigDecimal(price));
@@ -364,15 +309,10 @@ public class DataInitializer {
         c.setFormFactor(formFactor);
         c.setWattage(wattage);
         c.setCapacity(capacity);
-
-        List<String> urls = PRODUCT_IMAGES.get(name);
-        if (urls == null || urls.isEmpty()) {
-            urls = List.of("https://placehold.co/900x600?text=" +
-                    name.replace(" ", "+").replace("!", "%21"));
-        }
         c.setImageUrls(new ArrayList<>(urls));
 
         repo.save(c);
+
         return 1;
     }
 

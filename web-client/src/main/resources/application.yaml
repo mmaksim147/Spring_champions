@@ -6,6 +6,7 @@ server:
       cookie:
         http-only: true
         same-site: lax
+  forward-headers-strategy: framework
 
 spring:
   application:

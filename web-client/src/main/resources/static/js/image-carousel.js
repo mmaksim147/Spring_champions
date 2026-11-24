@@ -4,6 +4,10 @@ document.addEventListener('DOMContentLoaded', () => {
             carousel.querySelectorAll('.carousel-slide')
         );
 
+        const previous = carousel.querySelector('.carousel-prev');
+        const next = carousel.querySelector('.carousel-next');
+        const indicators = carousel.querySelector('.carousel-indicators');
+
         if (images.length <= 1) {
             if (previous) previous.hidden = true;
             if (next) next.hidden = true;
@@ -11,32 +15,32 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const previous = carousel.querySelector('.carousel-prev');
-        const next = carousel.querySelector('.carousel-next');
-        const indicators = carousel.querySelector('.carousel-indicators');
-
-        if (images.length === 1) return;
-
         let current = 0;
         let timer = null;
         let paused = false;
         let touchStartX = 0;
 
-        const dots = images.map((image, index) => {
-            const dot = document.createElement('button');
+        const dots = [];
 
-            dot.type = 'button';
-            dot.className = 'carousel-dot';
-            dot.setAttribute('aria-label', `Фотография ${index + 1}`);
+        if (indicators) {
+            indicators.replaceChildren();
 
-            dot.addEventListener('click', () => {
-                show(index);
-                restartTimer();
+            images.forEach((image, index) => {
+                const dot = document.createElement('button');
+
+                dot.type = 'button';
+                dot.className = 'carousel-dot';
+                dot.setAttribute('aria-label', `Фотография ${index + 1}`);
+
+                dot.addEventListener('click', () => {
+                    show(index);
+                    restartTimer();
+                });
+
+                indicators.appendChild(dot);
+                dots.push(dot);
             });
-
-            indicators.appendChild(dot);
-            return dot;
-        });
+        }
 
         function show(index) {
             current = (index + images.length) % images.length;
@@ -47,6 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             dots.forEach((dot, i) => {
                 dot.classList.toggle('is-active', i === current);
+
                 dot.setAttribute(
                     'aria-current',
                     i === current ? 'true' : 'false'
@@ -67,6 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (
                 paused ||
                 document.hidden ||
+                carousel.contains(document.activeElement) ||
                 window.matchMedia('(prefers-reduced-motion: reduce)').matches
             ) return;
 
@@ -80,15 +86,19 @@ document.addEventListener('DOMContentLoaded', () => {
             startTimer();
         }
 
-        previous.addEventListener('click', () => {
-            show(current - 1);
-            restartTimer();
-        });
+        if (previous) {
+            previous.addEventListener('click', () => {
+                show(current - 1);
+                restartTimer();
+            });
+        }
 
-        next.addEventListener('click', () => {
-            show(current + 1);
-            restartTimer();
-        });
+        if (next) {
+            next.addEventListener('click', () => {
+                show(current + 1);
+                restartTimer();
+            });
+        }
 
         carousel.addEventListener('mouseenter', () => {
             paused = true;
@@ -104,8 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         carousel.addEventListener('focusout', event => {
             if (!carousel.contains(event.relatedTarget)) {
-                paused = false;
-                startTimer();
+                setTimeout(startTimer, 0);
             }
         });
 
