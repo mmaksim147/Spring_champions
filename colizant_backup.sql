@@ -2,7 +2,7 @@
 -- PostgreSQL database cluster dump
 --
 
-\restrict RmvRuVlFyWK0PHNO2BIeyRmjhg8VKTA9cM35YGi8dVEZGEsS1xiMeS28yz3eiX0
+\restrict auWKyMDLNxkWXGQ9iPh5SFt6xl2xl70bkfE7NSdz0VQGXbM0Opc1ragsPnvhOHc
 
 SET default_transaction_read_only = off;
 
@@ -27,7 +27,7 @@ ALTER ROLE postgres WITH SUPERUSER INHERIT CREATEROLE CREATEDB LOGIN REPLICATION
 
 
 
-\unrestrict RmvRuVlFyWK0PHNO2BIeyRmjhg8VKTA9cM35YGi8dVEZGEsS1xiMeS28yz3eiX0
+\unrestrict auWKyMDLNxkWXGQ9iPh5SFt6xl2xl70bkfE7NSdz0VQGXbM0Opc1ragsPnvhOHc
 
 --
 -- Databases
@@ -43,7 +43,7 @@ ALTER ROLE postgres WITH SUPERUSER INHERIT CREATEROLE CREATEDB LOGIN REPLICATION
 -- PostgreSQL database dump
 --
 
-\restrict znU1MyeXKr9WRZnh4oVDavseU24VI8zydagYhih2YhuZDZcOuC5GWqfeMJoARln
+\restrict DguOKo0dm8SUXhEAgqvpy4OBNHP1gmTPrCjtWrFjqAKSw2BbfgTkaTx7S92kvgA
 
 -- Dumped from database version 15.19 (Debian 15.19-1.pgdg13+2)
 -- Dumped by pg_dump version 15.19 (Debian 15.19-1.pgdg13+2)
@@ -63,7 +63,7 @@ SET row_security = off;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict znU1MyeXKr9WRZnh4oVDavseU24VI8zydagYhih2YhuZDZcOuC5GWqfeMJoARln
+\unrestrict DguOKo0dm8SUXhEAgqvpy4OBNHP1gmTPrCjtWrFjqAKSw2BbfgTkaTx7S92kvgA
 
 --
 -- Database "auth_db" dump
@@ -73,7 +73,7 @@ SET row_security = off;
 -- PostgreSQL database dump
 --
 
-\restrict wcr8rlAFpeYJ3ccQfgxOeJkiBUSBKaL38S9oBQA0KhKpNGgOLd6emnk7x1xy9nk
+\restrict kRXbfEX0mU0cTzH9rI2ybejAhye7R6UJrZ3j7gbpcdRcGpD2WU3C2GW7Wt8zwaE
 
 -- Dumped from database version 15.19 (Debian 15.19-1.pgdg13+2)
 -- Dumped by pg_dump version 15.19 (Debian 15.19-1.pgdg13+2)
@@ -98,9 +98,9 @@ CREATE DATABASE auth_db WITH TEMPLATE = template0 ENCODING = 'UTF8' LOCALE_PROVI
 
 ALTER DATABASE auth_db OWNER TO postgres;
 
-\unrestrict wcr8rlAFpeYJ3ccQfgxOeJkiBUSBKaL38S9oBQA0KhKpNGgOLd6emnk7x1xy9nk
+\unrestrict kRXbfEX0mU0cTzH9rI2ybejAhye7R6UJrZ3j7gbpcdRcGpD2WU3C2GW7Wt8zwaE
 \connect auth_db
-\restrict wcr8rlAFpeYJ3ccQfgxOeJkiBUSBKaL38S9oBQA0KhKpNGgOLd6emnk7x1xy9nk
+\restrict kRXbfEX0mU0cTzH9rI2ybejAhye7R6UJrZ3j7gbpcdRcGpD2WU3C2GW7Wt8zwaE
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -203,6 +203,14 @@ COPY public.user_roles (user_id, role_id) FROM stdin;
 2	1
 3	1
 4	1
+5	1
+6	1
+7	1
+8	1
+29	1
+30	1
+31	1
+32	1
 \.
 
 
@@ -215,6 +223,14 @@ COPY public.users (id, created_at, email, password, username) FROM stdin;
 2	2026-11-05 00:45:14.722859	e2e_17938287148497@example.com	$2a$10$QXbPC61IRGPBTVuYClAPZef7jhpen/QlDoKd/0BIeWDxbBDSscSLK	e2e_17938287148497
 3	2026-11-05 00:54:42.654936	e2e_179382928119381@example.com	$2a$10$vOobAjOIUvpJRnHbwy3smOQKEW75MDk8H9l96oF2UATC/pC5pKvaq	e2e_179382928119381
 4	2026-11-05 01:01:59.788083	e2e_179382971830574@example.com	$2a$10$GvUARbg6Vy1MiTObaDVeZenx80YnwGazzTXqeGdIMHqMdIgd7Rfy2	e2e_179382971830574
+5	2026-11-06 14:56:19.495228	2mmax09@gmail.com	$2a$10$64aNkPno5zaKaKXhvTcIAe8eLyvbWtXLxygXF2LX4s4IbEH0kIus2	maks
+6	2026-11-06 20:37:40.61721	e2e_179398665823165@example.com	$2a$10$cOiRM.L1COUZpiGUYkWZ7.gpn/h0aAxjDojYO/TRk7l/PeTwq6VJi	e2e_179398665823165
+7	2026-11-06 21:47:44.810885	e2e_179399086325098@example.com	$2a$10$KyIQn0orUaS8CelorBP3/OmMTbPErKYbdCOsbyLSh9hJBMPmkOdae	e2e_179399086325098
+8	2026-11-06 21:54:28.396921	e2e_179399126711316@example.com	$2a$10$87t/cjx6jBTbnc60NJHWxOu9hScquErTW17.mDO9Fn68WvFwjH6z.	e2e_179399126711316
+29	2026-11-06 23:58:52.818904	test987654@example.com	$2a$10$dOzvLsDNMYDDc/kLFEjCw.f8dRwxb5JWq5gcb10mNyhQzHNZsWLnK	test_user_987654
+30	2026-11-07 00:01:18.856513	testuser@gmail.com	$2a$10$FNIfiO1KUr/rq3jLHewWAuWrrcvZgGvkWheD.9YLquQ3cqcM69TDW	testuser
+31	2026-11-07 08:51:44.303553	testus@gmail.com	$2a$10$3pKWXxp0PwvylcJ12/BU5uiZ.4FYPL4U2UXBmB3iPtQ6RIoYvuf6C	testus
+32	2026-11-24 11:38:46.130308	killer008@gmail.com	$2a$10$GoYe29Ddt0jkcsENCDv6rOQQCI4jRAXY7oitsXd2TZnQecJC.qNbi	killer008
 \.
 
 
@@ -229,7 +245,7 @@ SELECT pg_catalog.setval('public.roles_id_seq', 2, true);
 -- Name: users_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.users_id_seq', 4, true);
+SELECT pg_catalog.setval('public.users_id_seq', 32, true);
 
 
 --
@@ -300,7 +316,7 @@ ALTER TABLE ONLY public.user_roles
 -- PostgreSQL database dump complete
 --
 
-\unrestrict wcr8rlAFpeYJ3ccQfgxOeJkiBUSBKaL38S9oBQA0KhKpNGgOLd6emnk7x1xy9nk
+\unrestrict kRXbfEX0mU0cTzH9rI2ybejAhye7R6UJrZ3j7gbpcdRcGpD2WU3C2GW7Wt8zwaE
 
 --
 -- Database "compatibility_db" dump
@@ -310,7 +326,7 @@ ALTER TABLE ONLY public.user_roles
 -- PostgreSQL database dump
 --
 
-\restrict OSdpA73bugVqgpABoDMWOcLfWGrsMt7fQQ7Tq98bGjSIgMtSTAwfWuI05ykYjMn
+\restrict A3EpqomuIIBB0Kznr4RwcCgZyTn2qWHwZ2L24ueAqkbk0nZNhTP0RVHRK8r8Jx0
 
 -- Dumped from database version 15.19 (Debian 15.19-1.pgdg13+2)
 -- Dumped by pg_dump version 15.19 (Debian 15.19-1.pgdg13+2)
@@ -335,9 +351,9 @@ CREATE DATABASE compatibility_db WITH TEMPLATE = template0 ENCODING = 'UTF8' LOC
 
 ALTER DATABASE compatibility_db OWNER TO postgres;
 
-\unrestrict OSdpA73bugVqgpABoDMWOcLfWGrsMt7fQQ7Tq98bGjSIgMtSTAwfWuI05ykYjMn
+\unrestrict A3EpqomuIIBB0Kznr4RwcCgZyTn2qWHwZ2L24ueAqkbk0nZNhTP0RVHRK8r8Jx0
 \connect compatibility_db
-\restrict OSdpA73bugVqgpABoDMWOcLfWGrsMt7fQQ7Tq98bGjSIgMtSTAwfWuI05ykYjMn
+\restrict A3EpqomuIIBB0Kznr4RwcCgZyTn2qWHwZ2L24ueAqkbk0nZNhTP0RVHRK8r8Jx0
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -416,18 +432,48 @@ ALTER TABLE public.compatibility_rules ALTER COLUMN id ADD GENERATED BY DEFAULT 
 --
 
 COPY public.compatibility_checks_log (id, checked_at, source_component_id, target_category) FROM stdin;
-1	2026-11-05 00:54:44.188911	16	socket
-2	2026-11-05 00:54:44.22293	16	socket
-3	2026-11-05 00:54:44.254362	18	ramType
-4	2026-11-05 00:54:44.285599	19	ramType
-5	2026-11-05 00:54:44.314552	18	formFactor
-6	2026-11-05 00:54:44.343781	19	formFactor
-7	2026-11-05 01:02:01.245357	24	socket
-8	2026-11-05 01:02:01.272684	24	socket
-9	2026-11-05 01:02:01.300586	26	ramType
-10	2026-11-05 01:02:01.328207	27	ramType
-11	2026-11-05 01:02:01.355806	26	formFactor
-12	2026-11-05 01:02:01.384004	27	formFactor
+85	2026-11-06 22:41:32.340033	192	MOTHERBOARD
+86	2026-11-06 22:41:32.368639	192	MOTHERBOARD
+87	2026-11-06 22:41:32.394878	194	RAM
+88	2026-11-06 22:41:32.420473	195	RAM
+89	2026-11-06 22:41:32.44552	194	CASE
+90	2026-11-06 22:41:32.47158	195	CASE
+91	2026-11-06 22:45:25.428443	200	MOTHERBOARD
+92	2026-11-06 22:45:25.457293	200	MOTHERBOARD
+93	2026-11-06 22:45:25.485067	202	RAM
+94	2026-11-06 22:45:25.512402	203	RAM
+95	2026-11-06 22:45:25.540135	202	CASE
+96	2026-11-06 22:45:25.567823	203	CASE
+97	2026-11-06 22:45:39.775483	208	MOTHERBOARD
+98	2026-11-06 22:45:39.801804	208	MOTHERBOARD
+99	2026-11-06 22:45:39.828789	210	RAM
+100	2026-11-06 22:45:39.855109	211	RAM
+101	2026-11-06 22:45:39.881328	210	CASE
+102	2026-11-06 22:45:39.907212	211	CASE
+61	2026-11-06 22:28:45.243033	144	MOTHERBOARD
+62	2026-11-06 22:28:45.27053	144	MOTHERBOARD
+63	2026-11-06 22:28:45.296118	146	RAM
+64	2026-11-06 22:28:45.3218	147	RAM
+65	2026-11-06 22:28:45.347475	146	CASE
+66	2026-11-06 22:28:45.374048	147	CASE
+67	2026-11-06 22:30:19.289138	168	MOTHERBOARD
+68	2026-11-06 22:30:19.316174	168	MOTHERBOARD
+69	2026-11-06 22:30:19.34136	170	RAM
+70	2026-11-06 22:30:19.366097	171	RAM
+71	2026-11-06 22:30:19.391429	170	CASE
+72	2026-11-06 22:30:19.417123	171	CASE
+73	2026-11-06 22:38:51.477121	176	MOTHERBOARD
+74	2026-11-06 22:38:51.503392	176	MOTHERBOARD
+75	2026-11-06 22:38:51.527983	178	RAM
+76	2026-11-06 22:38:51.553367	179	RAM
+77	2026-11-06 22:38:51.577581	178	CASE
+78	2026-11-06 22:38:51.601951	179	CASE
+79	2026-11-06 22:40:01.407984	184	MOTHERBOARD
+80	2026-11-06 22:40:01.435206	184	MOTHERBOARD
+81	2026-11-06 22:40:01.462011	186	RAM
+82	2026-11-06 22:40:01.487461	187	RAM
+83	2026-11-06 22:40:01.513364	186	CASE
+84	2026-11-06 22:40:01.539389	187	CASE
 \.
 
 
@@ -446,14 +492,14 @@ COPY public.compatibility_rules (id, description, matching_field, source_categor
 -- Name: compatibility_checks_log_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.compatibility_checks_log_id_seq', 12, true);
+SELECT pg_catalog.setval('public.compatibility_checks_log_id_seq', 102, true);
 
 
 --
 -- Name: compatibility_rules_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.compatibility_rules_id_seq', 5, true);
+SELECT pg_catalog.setval('public.compatibility_rules_id_seq', 20, true);
 
 
 --
@@ -476,7 +522,7 @@ ALTER TABLE ONLY public.compatibility_rules
 -- PostgreSQL database dump complete
 --
 
-\unrestrict OSdpA73bugVqgpABoDMWOcLfWGrsMt7fQQ7Tq98bGjSIgMtSTAwfWuI05ykYjMn
+\unrestrict A3EpqomuIIBB0Kznr4RwcCgZyTn2qWHwZ2L24ueAqkbk0nZNhTP0RVHRK8r8Jx0
 
 --
 -- Database "order_db" dump
@@ -486,7 +532,7 @@ ALTER TABLE ONLY public.compatibility_rules
 -- PostgreSQL database dump
 --
 
-\restrict VTwSu32uqByLXvm7Rrs1yd4iQPAAtpVihzuBVagcrmkeBizw7Opl1u206KuclKY
+\restrict eWCY6Ifv8dzMKZn5chXf9SwZxnFpUfmyEfjJ41hjQVXDLF4VoJfyBp0aPOfuwU7
 
 -- Dumped from database version 15.19 (Debian 15.19-1.pgdg13+2)
 -- Dumped by pg_dump version 15.19 (Debian 15.19-1.pgdg13+2)
@@ -511,9 +557,9 @@ CREATE DATABASE order_db WITH TEMPLATE = template0 ENCODING = 'UTF8' LOCALE_PROV
 
 ALTER DATABASE order_db OWNER TO postgres;
 
-\unrestrict VTwSu32uqByLXvm7Rrs1yd4iQPAAtpVihzuBVagcrmkeBizw7Opl1u206KuclKY
+\unrestrict eWCY6Ifv8dzMKZn5chXf9SwZxnFpUfmyEfjJ41hjQVXDLF4VoJfyBp0aPOfuwU7
 \connect order_db
-\restrict VTwSu32uqByLXvm7Rrs1yd4iQPAAtpVihzuBVagcrmkeBizw7Opl1u206KuclKY
+\restrict eWCY6Ifv8dzMKZn5chXf9SwZxnFpUfmyEfjJ41hjQVXDLF4VoJfyBp0aPOfuwU7
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -529,6 +575,60 @@ SET row_security = off;
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
+
+--
+-- Name: cart_items; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.cart_items (
+    id bigint NOT NULL,
+    component_id bigint,
+    quantity integer,
+    cart_id bigint
+);
+
+
+ALTER TABLE public.cart_items OWNER TO postgres;
+
+--
+-- Name: cart_items_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+ALTER TABLE public.cart_items ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
+    SEQUENCE NAME public.cart_items_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Name: carts; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.carts (
+    id bigint NOT NULL,
+    user_id bigint
+);
+
+
+ALTER TABLE public.carts OWNER TO postgres;
+
+--
+-- Name: carts_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+ALTER TABLE public.carts ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
+    SEQUENCE NAME public.carts_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
 
 --
 -- Name: order_items; Type: TABLE; Schema: public; Owner: postgres
@@ -589,6 +689,45 @@ ALTER TABLE public.orders ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
 
 
 --
+-- Data for Name: cart_items; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.cart_items (id, component_id, quantity, cart_id) FROM stdin;
+26	219	1	22
+\.
+
+
+--
+-- Data for Name: carts; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.carts (id, user_id) FROM stdin;
+1	1
+2	5
+3	6
+4	7
+5	8
+6	9
+7	10
+8	11
+9	15
+10	16
+11	17
+12	18
+13	19
+14	20
+15	21
+16	22
+17	23
+18	24
+19	25
+20	26
+21	28
+22	30
+\.
+
+
+--
 -- Data for Name: order_items; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -602,6 +741,82 @@ COPY public.order_items (id, component_id, price_at_purchase, quantity, order_id
 7	29	1000.00	3	5
 8	29	1000.00	2	6
 9	30	250.00	4	6
+10	3	15000.00	1	7
+11	2	18000.00	1	7
+12	1	25000.00	1	8
+13	4	12000.00	1	8
+14	2	18000.00	1	8
+15	4	12000.00	1	9
+16	2	18000.00	1	9
+17	4	12000.00	1	10
+18	2	18000.00	1	11
+19	4	12000.00	1	11
+20	37	1000.00	3	12
+21	37	1000.00	2	13
+22	38	250.00	4	13
+23	45	1000.00	3	14
+24	45	1000.00	2	15
+25	46	250.00	4	15
+26	53	1000.00	3	16
+27	53	1000.00	2	17
+28	54	250.00	4	17
+29	61	1000.00	3	18
+30	61	1000.00	2	19
+31	62	250.00	4	19
+32	69	1000.00	3	20
+33	69	1000.00	2	21
+34	70	250.00	4	21
+35	77	1000.00	3	22
+36	77	1000.00	2	23
+37	78	250.00	4	23
+38	109	1000.00	3	24
+39	109	1000.00	2	25
+40	110	250.00	4	25
+41	117	1000.00	3	26
+42	117	1000.00	2	27
+43	118	250.00	4	27
+44	125	1000.00	3	28
+45	125	1000.00	2	29
+46	126	250.00	4	29
+47	133	1000.00	3	30
+48	133	1000.00	2	31
+49	134	250.00	4	31
+50	141	1000.00	3	32
+51	141	1000.00	2	33
+52	142	250.00	4	33
+53	149	1000.00	3	34
+54	149	1000.00	2	35
+55	150	250.00	4	35
+56	157	1000.00	3	36
+57	157	1000.00	2	37
+58	158	250.00	4	37
+59	165	1000.00	3	38
+60	165	1000.00	2	39
+61	166	250.00	4	39
+62	173	1000.00	3	40
+63	173	1000.00	2	41
+64	174	250.00	4	41
+65	181	1000.00	3	42
+66	181	1000.00	2	43
+67	182	250.00	4	43
+68	189	1000.00	3	44
+69	189	1000.00	2	45
+70	190	250.00	4	45
+71	197	1000.00	3	46
+72	197	1000.00	2	47
+73	198	250.00	4	47
+74	213	1000.00	3	48
+75	213	1000.00	2	49
+76	214	250.00	4	49
+77	224	105000.00	1	50
+78	227	15000.00	1	50
+79	5	6000.00	1	50
+80	4	12000.00	1	51
+81	219	12500.00	1	51
+82	2	18000.00	2	51
+83	221	32000.00	1	52
+84	245	5000.00	2	53
+85	228	19000.00	1	54
 \.
 
 
@@ -616,21 +831,99 @@ COPY public.orders (id, created_at, status, total_price, user_id) FROM stdin;
 3	2026-11-05 00:54:44.510025	PAID	3000.00	3
 6	2026-11-05 01:02:01.599448	NEW	3000.00	4
 5	2026-11-05 01:02:01.526383	PAID	3000.00	4
+7	2026-11-06 10:51:35.509765	NEW	33000.00	1
+8	2026-11-06 10:56:29.05628	NEW	55000.00	1
+9	2026-11-06 11:22:03.079251	NEW	30000.00	1
+10	2026-11-06 14:56:57.53171	NEW	12000.00	5
+11	2026-11-06 14:57:02.348438	NEW	30000.00	5
+13	2026-11-06 20:37:43.424255	NEW	3000.00	6
+12	2026-11-06 20:37:43.204223	PAID	3000.00	6
+15	2026-11-06 21:47:46.7459	NEW	3000.00	7
+14	2026-11-06 21:47:46.669531	PAID	3000.00	7
+17	2026-11-06 21:54:30.032234	NEW	3000.00	8
+16	2026-11-06 21:54:29.959272	PAID	3000.00	8
+19	2026-11-06 21:57:34.687938	NEW	3000.00	9
+18	2026-11-06 21:57:34.619562	PAID	3000.00	9
+21	2026-11-06 22:02:45.980103	NEW	3000.00	10
+20	2026-11-06 22:02:45.912762	PAID	3000.00	10
+23	2026-11-06 22:03:45.103029	NEW	3000.00	11
+22	2026-11-06 22:03:45.038778	PAID	3000.00	11
+25	2026-11-06 22:16:04.443526	NEW	3000.00	15
+24	2026-11-06 22:16:04.270767	PAID	3000.00	15
+27	2026-11-06 22:20:16.692581	NEW	3000.00	16
+26	2026-11-06 22:20:16.618586	PAID	3000.00	16
+29	2026-11-06 22:20:27.505684	NEW	3000.00	17
+28	2026-11-06 22:20:27.435203	PAID	3000.00	17
+31	2026-11-06 22:21:27.444311	NEW	3000.00	18
+30	2026-11-06 22:21:27.370356	PAID	3000.00	18
+33	2026-11-06 22:28:27.74991	NEW	3000.00	19
+32	2026-11-06 22:28:27.684049	PAID	3000.00	19
+35	2026-11-06 22:28:45.595275	NEW	3000.00	20
+34	2026-11-06 22:28:45.527512	PAID	3000.00	20
+37	2026-11-06 22:29:47.033677	NEW	3000.00	21
+36	2026-11-06 22:29:46.970302	PAID	3000.00	21
+39	2026-11-06 22:29:58.29559	NEW	3000.00	22
+38	2026-11-06 22:29:58.23547	PAID	3000.00	22
+41	2026-11-06 22:30:19.630444	NEW	3000.00	23
+40	2026-11-06 22:30:19.566008	PAID	3000.00	23
+43	2026-11-06 22:38:51.797304	NEW	3000.00	24
+42	2026-11-06 22:38:51.733578	PAID	3000.00	24
+45	2026-11-06 22:40:01.744066	NEW	3000.00	25
+44	2026-11-06 22:40:01.679919	PAID	3000.00	25
+47	2026-11-06 22:41:32.68082	NEW	3000.00	26
+46	2026-11-06 22:41:32.613173	PAID	3000.00	26
+49	2026-11-06 22:45:40.389665	NEW	3000.00	28
+48	2026-11-06 22:45:40.181177	PAID	3000.00	28
+50	2026-11-07 00:43:29.996521	NEW	126000.00	30
+51	2026-11-07 08:45:05.029587	NEW	60500.00	1
+52	2026-11-07 09:30:00.501102	NEW	32000.00	1
+53	2026-11-24 11:37:00.691874	NEW	10000.00	1
+54	2026-11-24 11:40:50.790266	NEW	19000.00	5
 \.
+
+
+--
+-- Name: cart_items_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.cart_items_id_seq', 30, true);
+
+
+--
+-- Name: carts_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.carts_id_seq', 22, true);
 
 
 --
 -- Name: order_items_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.order_items_id_seq', 9, true);
+SELECT pg_catalog.setval('public.order_items_id_seq', 85, true);
 
 
 --
 -- Name: orders_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.orders_id_seq', 6, true);
+SELECT pg_catalog.setval('public.orders_id_seq', 54, true);
+
+
+--
+-- Name: cart_items cart_items_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.cart_items
+    ADD CONSTRAINT cart_items_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: carts carts_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.carts
+    ADD CONSTRAINT carts_pkey PRIMARY KEY (id);
 
 
 --
@@ -658,10 +951,18 @@ ALTER TABLE ONLY public.order_items
 
 
 --
+-- Name: cart_items fkpcttvuq4mxppo8sxggjtn5i2c; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.cart_items
+    ADD CONSTRAINT fkpcttvuq4mxppo8sxggjtn5i2c FOREIGN KEY (cart_id) REFERENCES public.carts(id);
+
+
+--
 -- PostgreSQL database dump complete
 --
 
-\unrestrict VTwSu32uqByLXvm7Rrs1yd4iQPAAtpVihzuBVagcrmkeBizw7Opl1u206KuclKY
+\unrestrict eWCY6Ifv8dzMKZn5chXf9SwZxnFpUfmyEfjJ41hjQVXDLF4VoJfyBp0aPOfuwU7
 
 --
 -- Database "postgres" dump
@@ -673,7 +974,7 @@ ALTER TABLE ONLY public.order_items
 -- PostgreSQL database dump
 --
 
-\restrict RNYUGKZxObFn2KV7OKNisxRQGDZ9PwrXMPcFf3aWbYsT6abx24bP1eaSDtYs5JY
+\restrict uy58OpOg98hRHPFnwebRjxkNlD6vwJnToEfI7cjaBxWOLhjOY8nRBKSyVTsC7ZI
 
 -- Dumped from database version 15.19 (Debian 15.19-1.pgdg13+2)
 -- Dumped by pg_dump version 15.19 (Debian 15.19-1.pgdg13+2)
@@ -693,7 +994,7 @@ SET row_security = off;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict RNYUGKZxObFn2KV7OKNisxRQGDZ9PwrXMPcFf3aWbYsT6abx24bP1eaSDtYs5JY
+\unrestrict uy58OpOg98hRHPFnwebRjxkNlD6vwJnToEfI7cjaBxWOLhjOY8nRBKSyVTsC7ZI
 
 --
 -- Database "product_db" dump
@@ -703,7 +1004,7 @@ SET row_security = off;
 -- PostgreSQL database dump
 --
 
-\restrict 5fakyCwriWYdPA5HOOrIcyuHxVF8opWfPbZN0XfJtQXQ6HLyA8RBcQzRVkMAsWm
+\restrict 0ur1g37aQQnsfepIhZGgkzrUFpVciLH8FyqsVLG1PlMfhM4bNl1h4UaRNtgwlv2
 
 -- Dumped from database version 15.19 (Debian 15.19-1.pgdg13+2)
 -- Dumped by pg_dump version 15.19 (Debian 15.19-1.pgdg13+2)
@@ -728,9 +1029,9 @@ CREATE DATABASE product_db WITH TEMPLATE = template0 ENCODING = 'UTF8' LOCALE_PR
 
 ALTER DATABASE product_db OWNER TO postgres;
 
-\unrestrict 5fakyCwriWYdPA5HOOrIcyuHxVF8opWfPbZN0XfJtQXQ6HLyA8RBcQzRVkMAsWm
+\unrestrict 0ur1g37aQQnsfepIhZGgkzrUFpVciLH8FyqsVLG1PlMfhM4bNl1h4UaRNtgwlv2
 \connect product_db
-\restrict 5fakyCwriWYdPA5HOOrIcyuHxVF8opWfPbZN0XfJtQXQ6HLyA8RBcQzRVkMAsWm
+\restrict 0ur1g37aQQnsfepIhZGgkzrUFpVciLH8FyqsVLG1PlMfhM4bNl1h4UaRNtgwlv2
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -831,6 +1132,18 @@ ALTER TABLE public.categories ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTI
 
 
 --
+-- Name: component_images; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.component_images (
+    component_id bigint NOT NULL,
+    image_url character varying(255)
+);
+
+
+ALTER TABLE public.component_images OWNER TO postgres;
+
+--
 -- Name: components; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -874,9 +1187,19 @@ ALTER TABLE public.components ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTI
 --
 
 COPY public.build_items (id, quantity, build_id, component_id) FROM stdin;
-1	1	1	1
-2	1	1	3
-3	2	1	5
+73	1	29	1
+74	1	29	227
+75	2	29	233
+21	1	10	4
+22	1	10	2
+23	1	11	4
+24	1	11	2
+79	1	31	223
+80	1	31	228
+81	1	32	240
+82	1	32	221
+83	1	33	224
+84	1	33	222
 \.
 
 
@@ -885,7 +1208,12 @@ COPY public.build_items (id, quantity, build_id, component_id) FROM stdin;
 --
 
 COPY public.builds (id, created_at, name, total_price, user_id) FROM stdin;
-1	2026-11-04 22:06:33.985452	Игровой ПК (demo)	52000.00	1
+29	2026-11-06 23:50:09.180504	Игровой ПК (demo)	52000.00	1
+31	2026-11-07 09:28:29.939908	тест сборка	84000.00	1
+32	2026-11-24 11:37:30.264513	пк	37500.00	1
+33	2026-11-24 12:42:54.775606	Брбр	148000.00	1
+10	2026-11-06 13:56:35.115925	test	30000.00	1
+11	2026-11-06 14:00:39.678169	test	30000.00	1
 \.
 
 
@@ -906,16 +1234,141 @@ COPY public.categories (id, name) FROM stdin;
 
 
 --
+-- Data for Name: component_images; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.component_images (component_id, image_url) FROM stdin;
+215	https://images.unsplash.com/photo-1591799264318-7e6ef8ddb7ea?auto=format&fit=crop&w=900&q=85
+215	https://images.unsplash.com/photo-1591488320449-011701bb6704?auto=format&fit=crop&w=900&q=85
+216	https://images.unsplash.com/photo-1591799264318-7e6ef8ddb7ea?auto=format&fit=crop&w=900&q=85
+216	https://images.unsplash.com/photo-1591488320449-011701bb6704?auto=format&fit=crop&w=900&q=85
+217	https://images.unsplash.com/photo-1591799264318-7e6ef8ddb7ea?auto=format&fit=crop&w=900&q=85
+217	https://images.unsplash.com/photo-1591488320449-011701bb6704?auto=format&fit=crop&w=900&q=85
+218	https://images.unsplash.com/photo-1591799264318-7e6ef8ddb7ea?auto=format&fit=crop&w=900&q=85
+218	https://images.unsplash.com/photo-1591488320449-011701bb6704?auto=format&fit=crop&w=900&q=85
+219	https://images.unsplash.com/photo-1591799264318-7e6ef8ddb7ea?auto=format&fit=crop&w=900&q=85
+219	https://images.unsplash.com/photo-1591488320449-011701bb6704?auto=format&fit=crop&w=900&q=85
+220	https://images.unsplash.com/photo-1591799264318-7e6ef8ddb7ea?auto=format&fit=crop&w=900&q=85
+220	https://images.unsplash.com/photo-1591488320449-011701bb6704?auto=format&fit=crop&w=900&q=85
+221	https://images.unsplash.com/photo-1591488320449-011701bb6704?auto=format&fit=crop&w=900&q=85
+221	https://images.unsplash.com/photo-1587202372775-e229f172b9d7?auto=format&fit=crop&w=900&q=85
+222	https://images.unsplash.com/photo-1591488320449-011701bb6704?auto=format&fit=crop&w=900&q=85
+222	https://images.unsplash.com/photo-1587202372775-e229f172b9d7?auto=format&fit=crop&w=900&q=85
+223	https://images.unsplash.com/photo-1591488320449-011701bb6704?auto=format&fit=crop&w=900&q=85
+223	https://images.unsplash.com/photo-1587202372775-e229f172b9d7?auto=format&fit=crop&w=900&q=85
+224	https://images.unsplash.com/photo-1591488320449-011701bb6704?auto=format&fit=crop&w=900&q=85
+224	https://images.unsplash.com/photo-1587202372775-e229f172b9d7?auto=format&fit=crop&w=900&q=85
+225	https://images.unsplash.com/photo-1591488320449-011701bb6704?auto=format&fit=crop&w=900&q=85
+225	https://images.unsplash.com/photo-1587202372775-e229f172b9d7?auto=format&fit=crop&w=900&q=85
+226	https://images.unsplash.com/photo-1591488320449-011701bb6704?auto=format&fit=crop&w=900&q=85
+226	https://images.unsplash.com/photo-1587202372775-e229f172b9d7?auto=format&fit=crop&w=900&q=85
+227	https://images.unsplash.com/photo-1597872200969-2b65d56bd16b?auto=format&fit=crop&w=900&q=85
+227	https://images.unsplash.com/photo-1587202372775-e229f172b9d7?auto=format&fit=crop&w=900&q=85
+228	https://images.unsplash.com/photo-1597872200969-2b65d56bd16b?auto=format&fit=crop&w=900&q=85
+228	https://images.unsplash.com/photo-1587202372775-e229f172b9d7?auto=format&fit=crop&w=900&q=85
+229	https://images.unsplash.com/photo-1597872200969-2b65d56bd16b?auto=format&fit=crop&w=900&q=85
+229	https://images.unsplash.com/photo-1587202372775-e229f172b9d7?auto=format&fit=crop&w=900&q=85
+230	https://images.unsplash.com/photo-1597872200969-2b65d56bd16b?auto=format&fit=crop&w=900&q=85
+230	https://images.unsplash.com/photo-1587202372775-e229f172b9d7?auto=format&fit=crop&w=900&q=85
+231	https://images.unsplash.com/photo-1597872200969-2b65d56bd16b?auto=format&fit=crop&w=900&q=85
+231	https://images.unsplash.com/photo-1587202372775-e229f172b9d7?auto=format&fit=crop&w=900&q=85
+232	https://images.unsplash.com/photo-1597872200969-2b65d56bd16b?auto=format&fit=crop&w=900&q=85
+232	https://images.unsplash.com/photo-1587202372775-e229f172b9d7?auto=format&fit=crop&w=900&q=85
+233	https://images.unsplash.com/photo-1591799264318-7e6ef8ddb7ea?auto=format&fit=crop&w=900&q=85
+233	https://images.unsplash.com/photo-1591488320449-011701bb6704?auto=format&fit=crop&w=900&q=85
+234	https://images.unsplash.com/photo-1591799264318-7e6ef8ddb7ea?auto=format&fit=crop&w=900&q=85
+234	https://images.unsplash.com/photo-1591488320449-011701bb6704?auto=format&fit=crop&w=900&q=85
+235	https://images.unsplash.com/photo-1591799264318-7e6ef8ddb7ea?auto=format&fit=crop&w=900&q=85
+235	https://images.unsplash.com/photo-1591488320449-011701bb6704?auto=format&fit=crop&w=900&q=85
+236	https://images.unsplash.com/photo-1591799264318-7e6ef8ddb7ea?auto=format&fit=crop&w=900&q=85
+236	https://images.unsplash.com/photo-1591488320449-011701bb6704?auto=format&fit=crop&w=900&q=85
+237	https://images.unsplash.com/photo-1591799264318-7e6ef8ddb7ea?auto=format&fit=crop&w=900&q=85
+237	https://images.unsplash.com/photo-1591488320449-011701bb6704?auto=format&fit=crop&w=900&q=85
+238	https://images.unsplash.com/photo-1587202372775-e229f172b9d7?auto=format&fit=crop&w=900&q=85
+238	https://images.unsplash.com/photo-1593640408182-31c70c8268f5?auto=format&fit=crop&w=900&q=85
+239	https://images.unsplash.com/photo-1587202372775-e229f172b9d7?auto=format&fit=crop&w=900&q=85
+239	https://images.unsplash.com/photo-1593640408182-31c70c8268f5?auto=format&fit=crop&w=900&q=85
+240	https://images.unsplash.com/photo-1587202372775-e229f172b9d7?auto=format&fit=crop&w=900&q=85
+240	https://images.unsplash.com/photo-1593640408182-31c70c8268f5?auto=format&fit=crop&w=900&q=85
+241	https://images.unsplash.com/photo-1587202372775-e229f172b9d7?auto=format&fit=crop&w=900&q=85
+241	https://images.unsplash.com/photo-1593640408182-31c70c8268f5?auto=format&fit=crop&w=900&q=85
+242	https://images.unsplash.com/photo-1587202372775-e229f172b9d7?auto=format&fit=crop&w=900&q=85
+242	https://images.unsplash.com/photo-1593640408182-31c70c8268f5?auto=format&fit=crop&w=900&q=85
+243	https://images.unsplash.com/photo-1587202372775-e229f172b9d7?auto=format&fit=crop&w=900&q=85
+243	https://images.unsplash.com/photo-1593640408182-31c70c8268f5?auto=format&fit=crop&w=900&q=85
+244	https://images.unsplash.com/photo-1587202372775-e229f172b9d7?auto=format&fit=crop&w=900&q=85
+244	https://images.unsplash.com/photo-1593640408182-31c70c8268f5?auto=format&fit=crop&w=900&q=85
+245	https://images.unsplash.com/photo-1587202372775-e229f172b9d7?auto=format&fit=crop&w=900&q=85
+245	https://images.unsplash.com/photo-1593640408182-31c70c8268f5?auto=format&fit=crop&w=900&q=85
+246	https://images.unsplash.com/photo-1597872200969-2b65d56bd16b?auto=format&fit=crop&w=900&q=85
+246	https://images.unsplash.com/photo-1591488320449-011701bb6704?auto=format&fit=crop&w=900&q=85
+247	https://images.unsplash.com/photo-1597872200969-2b65d56bd16b?auto=format&fit=crop&w=900&q=85
+247	https://images.unsplash.com/photo-1591488320449-011701bb6704?auto=format&fit=crop&w=900&q=85
+248	https://images.unsplash.com/photo-1597872200969-2b65d56bd16b?auto=format&fit=crop&w=900&q=85
+248	https://images.unsplash.com/photo-1591488320449-011701bb6704?auto=format&fit=crop&w=900&q=85
+249	https://images.unsplash.com/photo-1597872200969-2b65d56bd16b?auto=format&fit=crop&w=900&q=85
+249	https://images.unsplash.com/photo-1591488320449-011701bb6704?auto=format&fit=crop&w=900&q=85
+250	https://images.unsplash.com/photo-1593640408182-31c70c8268f5?auto=format&fit=crop&w=900&q=85
+250	https://images.unsplash.com/photo-1587202372775-e229f172b9d7?auto=format&fit=crop&w=900&q=85
+251	https://images.unsplash.com/photo-1593640408182-31c70c8268f5?auto=format&fit=crop&w=900&q=85
+251	https://images.unsplash.com/photo-1587202372775-e229f172b9d7?auto=format&fit=crop&w=900&q=85
+252	https://images.unsplash.com/photo-1593640408182-31c70c8268f5?auto=format&fit=crop&w=900&q=85
+252	https://images.unsplash.com/photo-1587202372775-e229f172b9d7?auto=format&fit=crop&w=900&q=85
+253	https://images.unsplash.com/photo-1593640408182-31c70c8268f5?auto=format&fit=crop&w=900&q=85
+253	https://images.unsplash.com/photo-1587202372775-e229f172b9d7?auto=format&fit=crop&w=900&q=85
+\.
+
+
+--
 -- Data for Name: components; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.components (id, capacity, created_at, description, form_factor, manufacturer, name, price, ram_type, socket, stock_quantity, wattage, category_id) FROM stdin;
-1	\N	2026-11-04 22:06:33.96579	\N	\N	AMD	Ryzen 5 7600X	25000.00	\N	AM5	10	\N	1
-2	\N	2026-11-04 22:06:33.970324	\N	\N	Intel	Core i5-13400F	18000.00	\N	LGA1700	15	\N	1
-3	\N	2026-11-04 22:06:33.972815	\N	ATX	MSI	MSI B650 Gaming Plus	15000.00	DDR5	AM5	8	\N	3
-4	\N	2026-11-04 22:06:33.974764	\N	mATX	ASUS	ASUS B760M	12000.00	DDR4	LGA1700	10	\N	3
-5	16GB	2026-11-04 22:06:33.976993	\N	\N	Kingston	Kingston Fury 16GB DDR5	6000.00	DDR5	\N	20	\N	4
 6	16GB	2026-11-04 22:06:33.979497	\N	\N	Crucial	Crucial 16GB DDR4	4000.00	DDR4	\N	25	\N	4
+248	1TB	2026-11-06 23:50:09.053101	Высокоскоростной NVMe SSD.	\N	Western Digital	WD Black SN850X 1TB	10500.00	\N	\N	7	\N	7
+215	\N	2026-11-06 23:50:08.77042	8 ядер, 16 потоков для игр и работы.	\N	AMD	Ryzen 7 7700X	32000.00	\N	AM5	8	\N	1
+216	\N	2026-11-06 23:50:08.807327	Игровой процессор с технологией 3D V-Cache.	\N	AMD	Ryzen 7 7800X3D	42000.00	\N	AM5	5	\N	1
+217	\N	2026-11-06 23:50:08.815601	12 ядер, 24 потока для производительных систем.	\N	AMD	Ryzen 9 7900X	39000.00	\N	AM5	4	\N	1
+218	\N	2026-11-06 23:50:08.824472	Доступный процессор для игровых сборок.	\N	AMD	Ryzen 5 5600	10500.00	\N	AM4	12	\N	1
+220	\N	2026-11-06 23:50:08.847326	Высокая производительность для игр и работы.	\N	Intel	Core i7-13700K	35000.00	\N	LGA1700	5	\N	1
+222	8GB	2026-11-06 23:50:08.864677	Производительная видеокарта с поддержкой DLSS.	\N	MSI	GeForce RTX 4060 Ti	43000.00	\N	\N	7	\N	2
+223	12GB	2026-11-06 23:50:08.873472	Видеокарта для игр в высоком разрешении.	\N	ASUS	GeForce RTX 4070 SUPER	65000.00	\N	\N	5	\N	2
+225	8GB	2026-11-06 23:50:08.891108	Доступная видеокарта для Full HD.	\N	AMD	Radeon RX 7600	27000.00	\N	\N	8	\N	2
+226	16GB	2026-11-06 23:50:08.900309	Видеокарта для комфортного гейминга в 1440p.	\N	Sapphire	Radeon RX 7800 XT	52000.00	\N	\N	5	\N	2
+3	\N	2026-11-04 22:06:33.972815	\N	ATX	MSI	MSI B650 Gaming Plus	15000.00	DDR5	AM5	7	\N	3
+1	\N	2026-11-04 22:06:33.96579	\N	\N	AMD	Ryzen 5 7600X	25000.00	\N	AM5	9	\N	1
+229	\N	2026-11-06 23:50:08.924673	Компактная плата для процессоров AMD.	mATX	Gigabyte	Gigabyte B650M DS3H	12500.00	DDR5	AM5	9	\N	3
+230	\N	2026-11-06 23:50:08.932038	Материнская плата Intel с поддержкой DDR4.	mATX	ASUS	ASUS PRIME B760M-K	10500.00	DDR4	LGA1700	10	\N	3
+221	8GB	2026-11-06 23:50:08.855666	Видеокарта для современных игр в Full HD.	\N	NVIDIA	GeForce RTX 4060	32000.00	\N	\N	9	\N	2
+219	\N	2026-11-06 23:50:08.832473	6 ядер, 12 потоков.	\N	Intel	Core i5-12400F	12500.00	\N	LGA1700	9	\N	1
+231	\N	2026-11-06 23:50:08.940757	Плата для современных процессоров Intel.	ATX	MSI	MSI PRO B760-P	14500.00	DDR5	LGA1700	7	\N	3
+232	\N	2026-11-06 23:50:08.948406	Производительная плата на чипсете Z790.	ATX	Gigabyte	Gigabyte Z790 AORUS ELITE	28000.00	DDR5	LGA1700	4	\N	3
+233	16GB	2026-11-06 23:50:08.955219	Оперативная память DDR5.	\N	Kingston	Kingston Fury Beast 16GB DDR5	6000.00	DDR5	\N	20	\N	4
+249	1TB	2026-11-06 23:50:09.059159	Доступный SSD для повседневных задач.	\N	Kingston	Kingston NV2 1TB	5500.00	\N	\N	15	\N	7
+234	32GB	2026-11-06 23:50:08.961112	Комплект памяти для современных ПК.	\N	Kingston	Kingston Fury Beast 32GB DDR5	11000.00	DDR5	\N	15	\N	4
+235	32GB	2026-11-06 23:50:08.966955	Высокопроизводительная оперативная память.	\N	Corsair	Corsair Vengeance 32GB DDR5	12500.00	DDR5	\N	10	\N	4
+236	32GB	2026-11-06 23:50:08.977129	Память DDR5 для игровых систем.	\N	G.Skill	G.Skill Trident Z5 32GB	14500.00	DDR5	\N	6	\N	4
+237	32GB	2026-11-06 23:50:08.987055	Комплект оперативной памяти DDR4.	\N	Kingston	Kingston Fury Beast 32GB DDR4	7500.00	DDR4	\N	12	\N	4
+238	\N	2026-11-06 23:50:08.992478	Блок питания мощностью 750 Вт.	\N	Corsair	Corsair RM750e 750W	10500.00	\N	\N	8	750	5
+239	\N	2026-11-06 23:50:08.997859	Модульный блок питания 850 Вт.	\N	be quiet!	be quiet! Pure Power 12 M 850W	14500.00	\N	\N	5	850	5
+240	\N	2026-11-06 23:50:09.003917	Блок питания для игровых сборок.	\N	MSI	MSI MAG A650BN 650W	5500.00	\N	\N	12	650	5
+241	\N	2026-11-06 23:50:09.01005	Мощный блок питания 1000 Вт.	\N	DeepCool	DeepCool PQ1000M 1000W	15500.00	\N	\N	4	1000	5
+242	\N	2026-11-06 23:50:09.015679	Корпус с хорошей вентиляцией.	ATX	DeepCool	DeepCool CC560	5500.00	\N	\N	10	\N	6
+243	\N	2026-11-06 23:50:09.021699	Корпус с сетчатой передней панелью.	ATX	NZXT	NZXT H5 Flow	9500.00	\N	\N	6	\N	6
+244	\N	2026-11-06 23:50:09.027799	Популярный корпус с отличным охлаждением.	ATX	Corsair	Corsair 4000D Airflow	11000.00	\N	\N	5	\N	6
+246	1TB	2026-11-06 23:50:09.040267	Быстрый NVMe SSD PCIe 4.0.	\N	Samsung	Samsung 980 PRO 1TB	9500.00	\N	\N	10	\N	7
+247	2TB	2026-11-06 23:50:09.046855	SSD большого объёма для игр и работы.	\N	Samsung	Samsung 990 EVO 2TB	15500.00	\N	\N	6	\N	7
+250	\N	2026-11-06 23:50:09.065231	Башенный кулер с 120-мм вентилятором.	\N	DeepCool	DeepCool AK400	2800.00	\N	\N	12	\N	8
+251	\N	2026-11-06 23:50:09.071872	Двухбашенный кулер для мощных процессоров.	\N	DeepCool	DeepCool AK620	5500.00	\N	\N	8	\N	8
+252	\N	2026-11-06 23:50:09.078586	Высокопроизводительное воздушное охлаждение.	\N	Noctua	Noctua NH-D15	11500.00	\N	\N	4	\N	8
+253	\N	2026-11-06 23:50:09.084515	Жидкостная система охлаждения 360 мм.	\N	Arctic	Arctic Liquid Freezer III 360	11500.00	\N	\N	5	\N	8
+224	16GB	2026-11-06 23:50:08.882779	Мощная видеокарта для 4K.	\N	Gigabyte	GeForce RTX 4080 SUPER	105000.00	\N	\N	2	\N	2
+227	\N	2026-11-06 23:50:08.908728	Материнская плата AM5 с поддержкой DDR5.	ATX	MSI	MSI B650 Gaming Plus WiFi	15000.00	DDR5	AM5	7	\N	3
+5	16GB	2026-11-04 22:06:33.976993	\N	\N	Kingston	Kingston Fury 16GB DDR5	6000.00	DDR5	\N	19	\N	4
+4	\N	2026-11-04 22:06:33.974764	\N	mATX	ASUS	ASUS B760M	12000.00	DDR4	LGA1700	5	\N	3
+2	\N	2026-11-04 22:06:33.970324	\N	\N	Intel	Core i5-13400F	18000.00	\N	LGA1700	9	\N	1
+245	\N	2026-11-06 23:50:09.034326	Компактный корпус формата Micro-ATX.	mATX	Cooler Master	Cooler Master Q300L	5000.00	\N	\N	6	\N	6
+228	\N	2026-11-06 23:50:08.917195	Надёжная игровая материнская плата.	ATX	ASUS	ASUS TUF Gaming B650-PLUS	19000.00	DDR5	AM5	5	\N	3
 \.
 
 
@@ -923,28 +1376,28 @@ COPY public.components (id, capacity, created_at, description, form_factor, manu
 -- Name: build_items_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.build_items_id_seq', 15, true);
+SELECT pg_catalog.setval('public.build_items_id_seq', 84, true);
 
 
 --
 -- Name: builds_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.builds_id_seq', 7, true);
+SELECT pg_catalog.setval('public.builds_id_seq', 33, true);
 
 
 --
 -- Name: categories_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.categories_id_seq', 11, true);
+SELECT pg_catalog.setval('public.categories_id_seq', 34, true);
 
 
 --
 -- Name: components_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.components_id_seq', 30, true);
+SELECT pg_catalog.setval('public.components_id_seq', 253, true);
 
 
 --
@@ -988,6 +1441,14 @@ ALTER TABLE ONLY public.categories
 
 
 --
+-- Name: component_images fk5gp0e4u246ftqj6wbo4ehdfp; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.component_images
+    ADD CONSTRAINT fk5gp0e4u246ftqj6wbo4ehdfp FOREIGN KEY (component_id) REFERENCES public.components(id);
+
+
+--
 -- Name: build_items fkdy1qq2nl1hnyqo76c7j3dmr8t; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1015,7 +1476,7 @@ ALTER TABLE ONLY public.components
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 5fakyCwriWYdPA5HOOrIcyuHxVF8opWfPbZN0XfJtQXQ6HLyA8RBcQzRVkMAsWm
+\unrestrict 0ur1g37aQQnsfepIhZGgkzrUFpVciLH8FyqsVLG1PlMfhM4bNl1h4UaRNtgwlv2
 
 --
 -- PostgreSQL database cluster dump complete

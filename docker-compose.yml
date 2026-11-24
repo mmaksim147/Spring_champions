@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: postgres:15
+    image: postgres:18
     container_name: pc_builder_db
     restart: unless-stopped
 
@@ -10,10 +10,10 @@ services:
       POSTGRES_DB: postgres
 
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5433:5432"
 
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - pgdata18:/var/lib/postgresql
       - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
 
     healthcheck:
@@ -32,7 +32,7 @@ services:
       PGADMIN_DEFAULT_PASSWORD: admin
 
     ports:
-      - "5050:80"
+      - "127.0.0.1:5050:80"
 
     volumes:
       - pgadmin_data:/var/lib/pgadmin
@@ -42,8 +42,8 @@ services:
         condition: service_healthy
 
 volumes:
-  pgdata:
+  pgdata18:
     external: true
-    name: pract9_pgdata
+    name: pract9_pgdata18
 
   pgadmin_data:
